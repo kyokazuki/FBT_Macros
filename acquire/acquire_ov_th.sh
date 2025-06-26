@@ -1,21 +1,23 @@
 ### CONFIG ###
-DAQ_DIR=~/daq_setup6/beamtime-test2  # calibration, bias, mapping etc. files directory
-DATA_DIR=test2	# data directory (appended to DAQ_DIR)
-DATA_NAME=test  # data file name appended to run number
+BUILD_DIR=/home/daq/sw_daq_tofpet2-2024.08.12/build
+
+DAQ_DIR=~/daq_setup6/beamtime  # calibration, bias, mapping etc. files directory
+DATA_DIR=FBT	# data directory (appended to DAQ_DIR)
+DATA_NAME=beam  # data file name appended to run number
 
 # ASIC_ENUM=($(seq 0 1 15))	# change every ASIC's OV
 ASIC_ENUM=(0 1 2 3 5 6 7 8 9 12 13)  # change selected ASIC's OV
-# OV_ENUM=($(seq 1.0 0.2 3.0))
-OV_ENUM=(2.0)
+# OV_ENUM=($(seq 2.0 0.2 2.6))
+OV_ENUM=(3.4)
 # TH_ENUM=($(seq 20 1 60))
 TH_ENUM=(20)
 
-TIME=20    # aquisition time in secconds
+TIME=900    # aquisition time in secconds
 EXT=1	# external gate enabled if 1  (w/o ext gate if 0)
 
 VME=1	# VME starts if 1 (w/o if 0), need tmux session from init_tmux.sh
-VME_PADDING=5	# time in seconds of which VME starts after and ends before FBT
-VME_SHARED_DIR=/mnt/daq_shared
+VME_PADDING=10	# time in seconds of which VME starts after and ends before FBT
+VME_DATA_DIR=/mnt/daq_shared	# nfs directory for logs and run sheet
 
 ### ACQUIRE ###
 if [[ ${VME} -eq 1 ]]; then
@@ -26,6 +28,7 @@ if [[ ${VME} -eq 1 ]]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd ${BUILD_DIR}
 for ov in "${OV_ENUM[@]}"; do
 
 	for asic in "${ASIC_ENUM[@]}"; do
@@ -57,19 +60,23 @@ for ov in "${OV_ENUM[@]}"; do
 				-o $DAQ_DIR/$DATA_DIR/${file_name}.root \
 				--writeRoot
 		} &
+		pid=$!
 
 		if [[ $VME -eq 1 ]]; then
-			tmux send-keys -t daq:0.2 'babicon | tee '${VME_SHARED_DIR}'/babi_log' C-m
-			sleep ${VME_PADDING}
+			tmux send-keys -t daq:0.2 'babicon | tee '${VME_DATA_DIR}'/'${run_number}'_babicon.log' C-m
+			sleep $(echo "${VME_PADDING} + 2" | bc)
 			tmux send-keys -t daq:0.2 'start' C-m
 			sleep $(echo "${TIME} - ${VME_PADDING}*2" | bc)
 			tmux send-keys -t daq:0.2 'stop' C-m
 			tmux send-keys -t daq:0.2 '(automated) FBT run'${run_number} C-m
 			tmux send-keys -t daq:0.2 'exit' C-m
 			tmux send-keys -t daq:0.2 \
-				"echo '"${run_number}\
-				"    '\$(grep 'Run number' "${VME_SHARED_DIR}"/babi_log | awk 'END { print \$4 }') >> "\
-				${VME_SHARED_DIR}"/run_sheet" C-m
+				"echo -e '"${run_number}\
+				"\t'\$(printf '%04d\n' \$(grep 'Run number' "${VME_DATA_DIR}"/"${run_number}"_babicon.log | awk 'END { print \$4 }')) >> "\
+				${VME_DATA_DIR}"/run_sheet" C-m
 		fi
+
+		wait $pid
+		sleep 3
 	done
 done

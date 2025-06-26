@@ -7,9 +7,9 @@
 
 #include <unistd.h>
 
-void treeFriend(const TString& input_path_1, const TString& input_path_2, const Int_t offset) {
+void treeFriend(const TString& input_path_1, const TString& input_path_2) {
 	TString output_path = input_path_1;
-	output_path.ReplaceAll(".root", Form("_friended_offset%d.root", offset));
+	output_path.ReplaceAll(".root", "_friended.root");
 	TFile* input_file_1 = TFile::Open(input_path_1);
 	TFile* input_file_2 = TFile::Open(input_path_2);
 	TFile* output_file = new TFile(output_path, "RECREATE");
@@ -43,27 +43,18 @@ void treeFriend(const TString& input_path_1, const TString& input_path_2, const 
 
 	Long64_t n_entries_1 = input_tree_1->GetEntries();
 	Long64_t n_entries_2 = input_tree_2->GetEntries();
+	Long64_t loop_entries;
 	cout << "Input File 1: " << n_entries_1 << "entries" << endl;
 	cout << "Input File 2: " << n_entries_2 << "entries" << endl;
-
-	if (n_entries_1 == n_entries_2) {
-		for (Long64_t entry = 0; entry < n_entries_1; entry++) {
-			input_tree_1->GetEntry(entry);
-			input_tree_2->GetEntry(entry + offset);
-			output_tree->Fill();
-		}
-	} else if (n_entries_1 < n_entries_2) {
-		for (Long64_t entry = 0; entry < n_entries_1; entry++) {
-			input_tree_1->GetEntry(entry);
-			input_tree_2->GetEntry(entry + offset);
-			output_tree->Fill();
-		}
-	} else if (n_entries_1 > n_entries_2) {
-		for (Long64_t entry = 0; entry < n_entries_2; entry++) {
-			input_tree_1->GetEntry(entry + offset);
-			input_tree_2->GetEntry(entry);
-			output_tree->Fill();
-		}
+	if (n_entries_1 <= n_entries_2) {
+		loop_entries = n_entries_1;
+	} else {
+		loop_entries = n_entries_2;
+	}
+	for (Long64_t entry = 0; entry < loop_entries; entry++) {
+		input_tree_1->GetEntry(entry);
+		input_tree_2->GetEntry(entry);
+		output_tree->Fill();
 	}
 
 	output_file->cd();

@@ -38,3 +38,13 @@ f1->SetParameters(100, 14, 250./14)
 slice_py_of_->Fit("f1", "R")
 fi->Draw("same")
 
+# Beamtime
+TTree *tree = (TTree*) gDirectory->Get("data")
+tree->GetEntries()
+tree->Draw("xi", "xi==0 && energy==5")
+tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 900000)", "yi==0", "colz")
+tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 900000)", "yi==1", "colz")
+tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 2000000)", "yi==2", "colz")
+events->Draw("urq:totX>>(200, 0, 1000000, 200, 0, 1500)", "", "colz")
+events->Draw("pow(urq*ulq*drq*dlq, 0.25)", "", "colz")
+

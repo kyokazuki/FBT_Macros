@@ -7,12 +7,11 @@ for file in os.listdir(file_dir):
     if not os.path.isfile(os.path.join(file_dir, file)):
         continue
     
-    if not file[0:3].isdigit():
+    if not file[0:4].isdigit():
         continue
 
-    file_num = int(file[0:3])
+    file_num = int(file[0:4])
     if file_num > highest_num:
         highest_num = file_num
 
-print(f"{highest_num+1:03d}")
-
+print(f"{highest_num+1:04d}")

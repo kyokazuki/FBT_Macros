@@ -15,7 +15,6 @@ void treeGroupEvents(const TString& input_path) {
 	TFile* input_file = TFile::Open(input_path);
 	TFile* output_file = new TFile(output_path, "RECREATE");
 	TTree* input_tree = (TTree*)input_file->Get("data");
-	// TTree* output_tree = input_tree->CloneTree(0);
 	TTree* output_tree = new TTree("events", "output_tree");
 
 	Long64_t time; 
@@ -31,7 +30,6 @@ void treeGroupEvents(const TString& input_path) {
 	input_tree->SetBranchAddress("xi", &xi);
 	input_tree->SetBranchAddress("yi", &yi);
 
-	// Long64_t event_id = 0; 
 	vector<Long64_t> time_vector; 
 	vector<Float_t> energy_vector;
 	vector<Float_t> tot_vector;
@@ -39,7 +37,6 @@ void treeGroupEvents(const TString& input_path) {
 	vector<Int_t> xi_vector;
 	vector<Int_t> yi_vector;
 	vector<Int_t> zi_vector;
-	// output_tree->Branch("eventID", &event_id);
 	output_tree->Branch("time", &time_vector);
 	output_tree->Branch("energy", &energy_vector);
 	output_tree->Branch("tot", &tot_vector);
@@ -56,15 +53,8 @@ void treeGroupEvents(const TString& input_path) {
 		if (!(xi == 0 && energy == 5)) {
 			continue;
 		}
-		// time_vector.push_back(time);
-		// energy_vector.push_back(energy);
-		// tot_vector.push_back(tot);
-		// channel_id_vector.push_back(channel_id);
-		// xi_vector.push_back(xi);
-		// yi_vector.push_back(yi);
 
 		time_tgr = time;
-		// cout << "Tgr	entry=" << entry << "	time=" << time << "	eventID=" << event_id << endl;
 
 		for (Int_t i = -1; i <= 1; i += 2) {
 			for (Long64_t j = entry + i; j >= 0 && j < n_entries; j += i) {
@@ -91,7 +81,6 @@ void treeGroupEvents(const TString& input_path) {
 		}
 		output_tree->Fill();
 
-		// event_id++;
 		time_vector.clear();
 		energy_vector.clear();
 		tot_vector.clear();
