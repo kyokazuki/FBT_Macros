@@ -60,16 +60,16 @@ void treeGroupEvents(const TString& input_path) {
 			for (Long64_t j = entry + i; j >= 0 && j < n_entries; j += i) {
 				input_tree->GetEntry(j);
 				dt = time - time_tgr;
-				cout << "Fbr	entry=" << j << "	time=" << time << "	dt=" << dt << "	tot=" << tot;
+				// cout << "Fbr	entry=" << j << "	time=" << time << "	dt=" << dt << "	tot=" << tot;
 
 				if ((i == -1 && dt > DT_RANGE[1]) || (i == 1 && dt < DT_RANGE[0])) {
-					cout << "	skipped" << endl;
+					// cout << "	skipped" << endl;
 					continue;
 				} else if ((i == -1 && dt < DT_RANGE[0]) || (i == 1 && dt > DT_RANGE[1])) {
-					cout << "	ended" << endl;
+					// cout << "	ended" << endl;
 					break;
 				}
-				cout << "	filled" << endl;
+				// cout << "	filled" << endl;
 
 				time_vector.push_back(time);
 				energy_vector.push_back(energy);

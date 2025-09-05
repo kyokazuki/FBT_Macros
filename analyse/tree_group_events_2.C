@@ -9,7 +9,10 @@
 #include <unistd.h>
 
 void treeGroupEvents2(const TString& input_path) {
+	// Deutetrium
 	const Long64_t DT_RANGE[2] = {-285000, -250000};
+	// He3
+	// const Long64_t DT_RANGE[2] = {-295000, -270000};
 
 	TString output_path = input_path;
 	output_path.ReplaceAll(".root", "_grouped2.root");
@@ -66,16 +69,16 @@ void treeGroupEvents2(const TString& input_path) {
 			for (Long64_t j = entry + i; j >= 0 && j < n_entries; j += i) {
 				input_tree->GetEntry(j);
 				dt = time - time_tgr;
-				cout << "Fbr	entry=" << j << "	time=" << time << "	dt=" << dt << "	tot=" << tot;
+				// cout << "Fbr	entry=" << j << "	time=" << time << "	dt=" << dt << "	tot=" << tot;
 
 				if ((i == -1 && dt > DT_RANGE[1]) || (i == 1 && dt < DT_RANGE[0])) {
-					cout << "	skipped" << endl;
+					// cout << "	skipped" << endl;
 					continue;
 				} else if ((i == -1 && dt < DT_RANGE[0]) || (i == 1 && dt > DT_RANGE[1])) {
-					cout << "	ended" << endl;
+					// cout << "	ended" << endl;
 					break;
 				}
-				cout << "	filled" << endl;
+				// cout << "	filled" << endl;
 
 				time_vectors[yi].push_back(time);
 				energy_vectors[yi].push_back(energy);
@@ -120,7 +123,7 @@ void treeGroupEvents2(const TString& input_path) {
 			xi_sorted_vectors[i].clear();
 		}
 
-		cout << endl;
+		// cout << endl;
 	}
 
 	output_file->cd();

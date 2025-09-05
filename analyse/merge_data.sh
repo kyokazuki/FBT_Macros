@@ -1,11 +1,11 @@
 ### CONFIG ###
 FBT_DATA_DIR=~/daq_setup6/beamtime/FBT
 FBT_RUN_NUM=$1
-VME_LOGIN="daq@10.32.19.169"
+VME_LOGIN="daq@xdaq"
 VME_SCRIPT_DIR=/home/daq/exp/2505samurai/artemis2_off
 
-SHARED_DIR_FBT=/mnt/data1/daq_shared
-SHARED_DIR_VME=/mnt/daq_shared
+SHARED_DIR_FBT=/mnt/data1/daq_shared/FBT
+SHARED_DIR_VME=/mnt/daq_shared/FBT
 
 ### MERGE ###
 FBT_run_num_formatted=$(printf '%04d' ${FBT_RUN_NUM})

@@ -37,8 +37,9 @@ int plot_ov_effcy() {
 	// const UInt_t TIME 			= 600; //seconds
 
 	// const TString DATA_DIR 		= "/home/daq/daq_setup5/beamtime/heavy";
-	const TString DATA_DIR 		= "/home/daq/daq_setup5/beamtime/light/ov-effcy";
+	// const TString DATA_DIR 		= "/home/daq/daq_setup5/beamtime/light/ov-effcy";
 	// const TString DATA_DIR 		= "/home/daq/daq_setup5/beamtime/light2/ov-effcy_th40";
+	const TString DATA_DIR 		= "/home/daq/daq_setup6/beamtime/FBT";
 	const Float_t BD 			= 51.80;
 	const Float_t OV_ENUM[3] 	= {1.2, 3.0, 0.2};
 	// const Float_t OV_ENUM[3] 	= {2.2, 3.6, 0.2};
@@ -49,13 +50,13 @@ int plot_ov_effcy() {
 	const UInt_t EXT 			= 1; //1: enable, 0: disable
 
 	// conditions for multiplicity
-	UInt_t MULT_ARR_SIZE 		= 32; //expected largest multiplicity value
+	UInt_t MULT_ARR_SIZE 		= 64; //expected largest multiplicity value
 	Int_t XI_RANGE[2] 			= {1, 320};
 	Int_t YI_RANGE[2]		 	= {0, 0};
 	// Long64_t DT_RANGE[2] 		= {-475000, -455000}; //prototype
 	// Long64_t DT_RANGE[2] 		= {-265000, -245000}; //deployed
 	Long64_t DT_RANGE[2] 		= {-280000, -250000}; //deployed
-	Float_t TOT_RANGE[2] 		= {30000, 500000}; //default: >30k
+	// Float_t TOT_RANGE[2] 		= {30000, 500000}; //default: >30k
 	// Float_t TOT_RANGE[2] 		= {20000, 500000}; //default: >30k
 
 	TString data_fname;

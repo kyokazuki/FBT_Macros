@@ -44,8 +44,8 @@ void treeFriend(const TString& input_path_1, const TString& input_path_2) {
 	Long64_t n_entries_1 = input_tree_1->GetEntries();
 	Long64_t n_entries_2 = input_tree_2->GetEntries();
 	Long64_t loop_entries;
-	cout << "Input File 1: " << n_entries_1 << "entries" << endl;
-	cout << "Input File 2: " << n_entries_2 << "entries" << endl;
+	cout << "Input File 1: " << n_entries_1 << " entries" << endl;
+	cout << "Input File 2: " << n_entries_2 << " entries" << endl;
 	if (n_entries_1 <= n_entries_2) {
 		loop_entries = n_entries_1;
 	} else {

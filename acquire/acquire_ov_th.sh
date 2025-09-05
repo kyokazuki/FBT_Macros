@@ -1,23 +1,30 @@
 ### CONFIG ###
 BUILD_DIR=/home/daq/sw_daq_tofpet2-2024.08.12/build
 
-DAQ_DIR=~/daq_setup6/beamtime  # calibration, bias, mapping etc. files directory
-DATA_DIR=FBT	# data directory (appended to DAQ_DIR)
-DATA_NAME=beam  # data file name appended to run number
+# DAQ_DIR=~/daq_setup6/beamtime  # calibration, bias, mapping etc. files directory
+# DATA_DIR=FBT	# data directory (appended to DAQ_DIR)
+# DATA_NAME=beam  # data file name appended to run number
+
+DAQ_DIR=~/daq_setup7/zero_events2  # calibration, bias, mappin166312g etc. files directory
+DATA_DIR=threshold_remade	# data directory (appended to DAQ_DIR)
+DATA_NAME=bg  # data file name appended to run number (usually source name)
 
 # ASIC_ENUM=($(seq 0 1 15))	# change every ASIC's OV
-ASIC_ENUM=(0 1 2 3 5 6 7 8 9 12 13)  # change selected ASIC's OV
-# OV_ENUM=($(seq 2.0 0.2 2.6))
-OV_ENUM=(3.4)
-# TH_ENUM=($(seq 20 1 60))
+ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV
+# ASIC_ENUM=(0 7 9 12 13)  # change selected ASIC's OV
+# OV_ENUM=($(seq 1.0 0.1 3.4))
+OV_ENUM=(2.4)
+
+#TH_ENUM=($(seq 10 1 50))
 TH_ENUM=(20)
 
-TIME=900    # aquisition time in secconds
-EXT=1	# external gate enabled if 1  (w/o ext gate if 0)
+TIME=1 #aquisition time in secconds
+EXT=0	# external gate enabled if 1  (w/o ext gate if 0)
 
-VME=1	# VME starts if 1 (w/o if 0), need tmux session from init_tmux.sh
-VME_PADDING=10	# time in seconds of which VME starts after and ends before FBT
-VME_DATA_DIR=/mnt/daq_shared	# nfs directory for logs and run sheet
+VME=0	# VME starts if 1 (w/o if 0), need tmux session from init_tmux.sh
+
+VME_PADDING=10	# time in seconds of which VME starts later and ends earlier than FBT
+VME_DATA_DIR=/mnt/daq_shared/RICH	# nfs directory for logs and run sheet
 
 ### ACQUIRE ###
 if [[ ${VME} -eq 1 ]]; then
@@ -58,7 +65,8 @@ for ov in "${OV_ENUM[@]}"; do
 				--config $DAQ_DIR/config.ini \
 				-i $DAQ_DIR/$DATA_DIR/${file_name} \
 				-o $DAQ_DIR/$DATA_DIR/${file_name}.root \
-				--writeRoot
+				--writeRoot && \
+			echo "Saved to ${DAQ_DIR}/${DATA_DIR}/${file_name}"
 		} &
 		pid=$!
 

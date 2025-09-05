@@ -4,7 +4,7 @@
 
 #include "utils/get_mult_merged.C"
 
-int get_effcy_merged(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t> tot_range, vector <Long64_t> q_range) {
+int get_effcy_merged(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t> tot_range, vector <Double_t> q_range) {
 	Long64_t *mult_arr = get_mult_merged(fname, mult_arr_size, yi, tot_range, q_range);
 	Long64_t total = 0;
 	cout << "Multiplicity(0~" << mult_arr_size << ")	: ";

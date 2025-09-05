@@ -4,7 +4,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
-Long64_t* get_mult_merged(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t>& tot_range, vector <Long64_t> q_range) {
+Long64_t* get_mult_merged(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t>& tot_range, vector <Double_t> q_range) {
 
 	Long64_t *mult_arr = new Long64_t[mult_arr_size]();
 
@@ -29,7 +29,7 @@ Long64_t* get_mult_merged(const char *fname, const UInt_t mult_arr_size, Int_t y
 
 	Long64_t nentries = events->GetEntries();
 	cout << "Total Entries		: " << nentries << endl;
-	Long64_t q;
+	Double_t q;
 	UInt_t mult = 0;
 
 	for (Long64_t i = 0; i < nentries; i++) {

@@ -45,6 +45,8 @@ tree->Draw("xi", "xi==0 && energy==5")
 tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 900000)", "yi==0", "colz")
 tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 900000)", "yi==1", "colz")
 tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 2000000)", "yi==2", "colz")
-events->Draw("urq:totX>>(200, 0, 1000000, 200, 0, 1500)", "", "colz")
+events->Draw("totX:urq>>(200, 0, 4500, 200, 0, 300000)", "", "colz")
+events->Draw("totX:pow(urq*ulq*drq*dlq, 0.25)>>(200, 0, 4500, 200, 0, 300000)", "urq<4000 && ulq<4000 && drq<4000 && dlq<4000", "colz")
 events->Draw("pow(urq*ulq*drq*dlq, 0.25)", "", "colz")
+.L ~/FBT_Macros/analyse/get_effcy_merged.C+
 
