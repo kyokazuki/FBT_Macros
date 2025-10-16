@@ -1,4 +1,4 @@
-# GIS-MPPC_Macros
+# FBT_Macros
 ## Acquiring
 ### acquire_ov_th.sh  
 Acquire data for multiple voltage and threshold settings. Run numbers are automatically detected.  Edit the variables in the script and run from the `build/` directory:
