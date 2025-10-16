@@ -1,14 +1,11 @@
-export DAQ_DIR=~/daq_setup1/S10362-11-100P
-export DAQ_DIR=~/daq_setup1/S13360-1375PE
-export DAQ_DIR=~/daq_setup2/S13360-1350PE
+export DAQ_DIR=~/daq_setup7/sensor-board_all_fem1
 ./daqd  --socket-name=/tmp/d.sock --daq-type=GBE
 # create basic configuration files
 cp config.ini $DAQ_DIR/
 ./make_bias_calibration_table -o $DAQ_DIR/bias_calibration.tsv
 ./make_simple_bias_settings_table --config $DAQ_DIR/config.ini --offset 0.75 --prebd 56.0 --bd 70.0 --over 1.34 -o $DAQ_DIR/bias_settings.tsv
-./make_simple_bias_settings_table --config $DAQ_DIR/config.ini --offset 0.0 --prebd 41.46 --bd 51.83 --over 3.0 -o $DAQ_DIR/bias_settings.tsv
+./make_simple_bias_settings_table --config $DAQ_DIR/config.ini --offset 0.0 --prebd 41.44 --bd 51.8 --over 2.5 -o $DAQ_DIR/bias_settings.tsv
 ./make_simple_channel_map -o $DAQ_DIR/map
-cp ~/macro/map_channel.tsv $DAQ_DIR/
 # ASIC calibration
 sh ../configuration.template.sh $DAQ_DIR
 # set threshold values and acquire data
