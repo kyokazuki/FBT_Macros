@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 void treeGroupEvents2(const TString& input_path) {
-	// Deutetrium
+	// Deuterium
 	const Long64_t DT_RANGE[2] = {-285000, -250000};
 	// He3
 	// const Long64_t DT_RANGE[2] = {-295000, -270000};

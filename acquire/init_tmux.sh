@@ -1,6 +1,9 @@
+# Initiate aquisition environment on DAQ
+### Config ###
 SESSION=daq
 BUILD_DIR=~/sw_daq_tofpet2-2024.08.12/build
 VME_LOGIN="daq@10.32.19.169"
+##############
 
 cd ${BUILD_DIR}
 

@@ -1,9 +1,8 @@
-export DAQ_DIR=~/daq_setup7/sensor-board_all_fem1
+export DAQ_DIR=~/daq_setup8/true_cali
 ./daqd  --socket-name=/tmp/d.sock --daq-type=GBE
 # create basic configuration files
 cp config.ini $DAQ_DIR/
 ./make_bias_calibration_table -o $DAQ_DIR/bias_calibration.tsv
-./make_simple_bias_settings_table --config $DAQ_DIR/config.ini --offset 0.75 --prebd 56.0 --bd 70.0 --over 1.34 -o $DAQ_DIR/bias_settings.tsv
 ./make_simple_bias_settings_table --config $DAQ_DIR/config.ini --offset 0.0 --prebd 41.44 --bd 51.8 --over 2.5 -o $DAQ_DIR/bias_settings.tsv
 ./make_simple_channel_map -o $DAQ_DIR/map
 # ASIC calibration

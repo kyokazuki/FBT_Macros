@@ -1,26 +1,21 @@
 ### CONFIG ###
 BUILD_DIR=/home/daq/sw_daq_tofpet2-2025.08.04/build
 
-# DAQ_DIR=~/daq_setup6/beamtime  # calibration, bias, mapping etc. files directory
-# DATA_DIR=FBT	# data directory (appended to DAQ_DIR)
-# DATA_NAME=beam  # data file name appended to run number
+DAQ_DIR=~/daq_setup8/cali  # calibration, bias, mappin166312g etc. files directory
+DATA_DIR=mapping_check	# data directory (appended to DAQ_DIR)
+DATA_NAME=bg  # data file name appended to run number (usually source name)
 
-DAQ_DIR=~/daq_setup7/sensor-board_all_fem1  # calibration, bias, mappin166312g etc. files directory
-# DAQ_DIR=~/daq_setup7/latest_build_single  # calibration, bias, mappin166312g etc. files directory
-DATA_DIR=rad2	# data directory (appended to DAQ_DIR)
-DATA_NAME=Sr90  # data file name appended to run number (usually source name)
-
-# ASIC_ENUM=($(seq 0 1 15))	# change every ASIC's OV
-ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV
-# ASIC_ENUM=(5 6 7)  # change selected ASIC's OV
+# ASIC_ENUM=()
+ASIC_ENUM=($(seq 0 1 15))	# change every ASIC's OV
+# ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV
 # OV_ENUM=($(seq 1.0 0.1 3.4))
-OV_ENUM=(3.0)
+OV_ENUM=(2.2)
 
 #TH_ENUM=($(seq 10 1 50))
 TH_ENUM=(20)
 
 # TIME=30 #aquisition time in secconds
-TIME=30 #aquisition time in secconds
+TIME=1 #aquisition time in secconds
 EXT=0	# external gate enabled if 1  (w/o ext gate if 0)
 
 VME=0	# VME starts if 1 (w/o if 0), need tmux session from init_tmux.sh
@@ -47,13 +42,13 @@ for ov in "${OV_ENUM[@]}"; do
 	for th in "${TH_ENUM[@]}"; do
 		./make_simple_disc_settings_table \
 			--config $DAQ_DIR/config.ini \
-			--vth_t1 ${th} --vth_t2 60 --vth_e 60 \
+			--vth_t1 ${th} --vth_t2 1 --vth_e 1 \
 			-o $DAQ_DIR/disc_settings.tsv
 
 		run_number=$(python ${script_dir}/utils/get_run_num.py ${DAQ_DIR}/${DATA_DIR})
 		file_name="${run_number}_${DATA_NAME}_ov${ov}_th${th}_${TIME}s"
-		# acquire_script="acquire_sipm_data"
-		acquire_script="acquire_sipm_data_debug"
+		acquire_script="acquire_sipm_data"
+		# acquire_script="acquire_sipm_data_debug"
 		if [ $EXT -eq 1 ]; then
 			file_name+="_ext"
 			acquire_script+="_ext"

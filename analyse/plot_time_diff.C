@@ -21,7 +21,7 @@ int time_diff(char *fname) {
 
 	// const Long64_t DT_RANGE[2]	= {-3000000, 3000000}; //ps
 	// const Long64_t DT_RANGE[2]	= {-20000, 20000}; //ps
-	const Long64_t DT_RANGE[2]	= {-600000, 600000}; //ps
+	const Long64_t DT_RANGE[2]	= {-6000000, 6000000}; //ps
 	// const Int_t XI_RANGE[2]		= {1, 32};
 	const Int_t XI_RANGE[2]		= {1, 320};
 	// const Float_t TOT_RANGE[2]	= {-100000, 900000};
