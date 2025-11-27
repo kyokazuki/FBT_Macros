@@ -1,15 +1,15 @@
 ### CONFIG ###
 BUILD_DIR=/home/daq/sw_daq_tofpet2-2025.08.04/build
 
-DAQ_DIR=~/daq_setup8/cali  # calibration, bias, mappin166312g etc. files directory
-DATA_DIR=mapping_check	# data directory (appended to DAQ_DIR)
+DAQ_DIR=~/daq_setup8/true_cali  # calibration, bias, mappin166312g etc. files directory
+DATA_DIR=file_size	# data directory (appended to DAQ_DIR)
 DATA_NAME=bg  # data file name appended to run number (usually source name)
 
 # ASIC_ENUM=()
 ASIC_ENUM=($(seq 0 1 15))	# change every ASIC's OV
 # ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV
 # OV_ENUM=($(seq 1.0 0.1 3.4))
-OV_ENUM=(2.2)
+OV_ENUM=(2.8)
 
 #TH_ENUM=($(seq 10 1 50))
 TH_ENUM=(20)
