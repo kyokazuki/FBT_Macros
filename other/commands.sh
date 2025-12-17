@@ -1,4 +1,4 @@
-export DAQ_DIR=~/daq_setup8/true_cali
+export DAQ_DIR=~/daq_setup9/beamtime_final
 ./daqd  --socket-name=/tmp/d.sock --daq-type=GBE
 # create basic configuration files
 cp config.ini $DAQ_DIR/
@@ -38,6 +38,7 @@ fi->Draw("same")
 TTree *tree = (TTree*) gDirectory->Get("data")
 tree->GetEntries()
 tree->Draw("xi", "xi==0 && energy==5")
+tree->Draw("xi", "xi==0 && yi==63")
 tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 900000)", "yi==0", "colz")
 tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 900000)", "yi==1", "colz")
 tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 2000000)", "yi==2", "colz")

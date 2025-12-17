@@ -2,23 +2,25 @@
 BUILD_DIR=/home/daq/sw_daq_tofpet2-2025.08.04/build
 
 DAQ_DIR=~/daq_setup9/beamtime_final  # calibration, bias, mappin166312g etc. files directory
-DATA_DIR=test3	# data directory (appended to DAQ_DIR)
-DATA_NAME=none  # data file name appended to run number (usually source name)
+DATA_DIR=test2	# data directory (appended to DAQ_DIR)
+DATA_NAME=bg  # data file name appended to run number (usually source name)
 
 ASIC_ENUM=($(seq 0 1 13))	# change every ASIC's OV
 # ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV
 # OV_ENUM=($(seq 1.0 0.1 3.4))
 OV_ENUM=(2.8)
+
 #TH_ENUM=($(seq 10 1 50))
 TH_ENUM=(20)
 
-TIME=5 #aquisition time in secconds
-EXT=1	# external gate enabled if 1  (w/o ext gate if 0)
+# TIME=30 #aquisition time in secconds
+TIME=1 #aquisition time in secconds
+EXT=0	# external gate enabled if 1  (w/o ext gate if 0)
 
 VME=0	# VME starts if 1 (w/o if 0), need tmux session from init_tmux.sh
 
 VME_PADDING=10	# time in seconds of which VME starts later and ends earlier than FBT
-VME_LOG_DIR=/mnt/daq_shared/logs	# nfs directory for logs and run sheet
+VME_DATA_DIR=/mnt/daq_shared/RICH	# nfs directory for logs and run sheet
 
 ### ACQUIRE ###
 if [[ ${VME} -eq 1 ]]; then
@@ -50,10 +52,7 @@ for ov in "${OV_ENUM[@]}"; do
 			file_name+="_ext"
 			acquire_script+="_ext"
 		fi
-		if [ $VME -eq 1 ]; then
-			mkfifo $DAQ_DIR/$DATA_DIR/start_fifo
-			acquire_script+=" --wait-on $DAQ_DIR/$DATA_DIR/start_fifo"
-		fi
+
 		{
 			./${acquire_script} \
 				--config $DAQ_DIR/config.ini \
@@ -67,11 +66,10 @@ for ov in "${OV_ENUM[@]}"; do
 			echo "Saved to ${DAQ_DIR}/${DATA_DIR}/${file_name}"
 		} &
 		pid=$!
-		# sleep 5
+
 		if [[ $VME -eq 1 ]]; then
-			tmux send-keys -t daq:0.2 'babicon | tee '${VME_LOG_DIR}'/'${run_number}'_babicon.log' C-m
-			printf '\0' > $DAQ_DIR/$DATA_DIR/start_fifo
-			sleep $(echo "${VME_PADDING}" | bc)
+			tmux send-keys -t daq:0.2 'babicon | tee '${VME_DATA_DIR}'/'${run_number}'_babicon.log' C-m
+			sleep $(echo "${VME_PADDING} + 2" | bc)
 			tmux send-keys -t daq:0.2 'start' C-m
 			sleep $(echo "${TIME} - ${VME_PADDING}*2" | bc)
 			tmux send-keys -t daq:0.2 'stop' C-m
@@ -79,10 +77,10 @@ for ov in "${OV_ENUM[@]}"; do
 			tmux send-keys -t daq:0.2 'exit' C-m
 			tmux send-keys -t daq:0.2 \
 				"echo -e '"${run_number}\
-				"\t'\$(printf '%04d\n' \$(grep 'Run number' "${VME_LOG_DIR}"/"${run_number}"_babicon.log | awk 'END { print \$4 }')) >> "\
-				${VME_LOG_DIR}"/run_sheet" C-m
-			rm $DAQ_DIR/$DATA_DIR/start_fifo
+				"\t'\$(printf '%04d\n' \$(grep 'Run number' "${VME_DATA_DIR}"/"${run_number}"_babicon.log | awk 'END { print \$4 }')) >> "\
+				${VME_DATA_DIR}"/run_sheet" C-m
 		fi
+
 		wait $pid
 		sleep 3
 	done

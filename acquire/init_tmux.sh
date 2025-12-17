@@ -1,8 +1,15 @@
 # Initiate aquisition environment on DAQ
+# share public key beforehand
+ssh-copy-id daq@192.168.253.231
+# share NFS server
+sudo exportfs
+# mount on xdaq
+sudo mound -t nfs4 192.168.253.214:/mnt/daq_data/daq_shared /mnt/daq_shared
+
 ### Config ###
 SESSION=daq
 BUILD_DIR=~/sw_daq_tofpet2-2024.08.12/build
-VME_LOGIN="daq@10.32.19.169"
+VME_LOGIN="daq@192.168.253.231"
 ##############
 
 cd ${BUILD_DIR}

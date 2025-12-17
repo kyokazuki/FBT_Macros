@@ -14,6 +14,7 @@ TH2F* hdt_dxi = nullptr;
 TH2F* hdt_xi = nullptr;
 TH2F* hdt_tot = nullptr;
 TH2F* hdxi_tot = nullptr;
+TH1F* hdt_digi = nullptr;
 
 int time_diff(char *fname) {
 	TFile *inputFile = TFile::Open(fname);
@@ -25,7 +26,7 @@ int time_diff(char *fname) {
 	// const Int_t XI_RANGE[2]		= {1, 32};
 	const Int_t XI_RANGE[2]		= {1, 320};
 	// const Float_t TOT_RANGE[2]	= {-100000, 900000};
-	const Float_t TOT_RANGE[2]	= {0, 1000000};
+	const Float_t TOT_RANGE[2]	= {0, 300000};
 
 	// TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	// c1->SetGrid();
@@ -38,6 +39,7 @@ int time_diff(char *fname) {
 	hdt_tot = new TH2F("hdt_tot","hdt_tot", dt_bins, DT_RANGE[0], DT_RANGE[1], 600, TOT_RANGE[0], TOT_RANGE[1]);
 	hdt_dxi = new TH2F("hdt_dxi","hdt_dxi", dt_bins, DT_RANGE[0], DT_RANGE[1], XI_RANGE[1]-XI_RANGE[0]+1, XI_RANGE[0]-1-0.5, XI_RANGE[1]-1+0.5);
 	hdxi_tot = new TH2F("hdxi_tot","hdxi_tot", XI_RANGE[1]-XI_RANGE[0]+1, XI_RANGE[0]-1-0.5, XI_RANGE[1]-1+0.5, 600, TOT_RANGE[0], TOT_RANGE[1]);
+	hdt_digi = new TH1F("hdt","hdt", dt_bins, DT_RANGE[0], DT_RANGE[1]);
 
 	// Set up variables to read from tree1
 	Long64_t time; 
@@ -45,11 +47,13 @@ int time_diff(char *fname) {
 	Float_t tot; 
 	Float_t energy;
 	Int_t xi;
+	Int_t yi;
 	tree1->SetBranchAddress("time", &time);
 	tree1->SetBranchAddress("channelID", &channelID);
 	tree1->SetBranchAddress("tot", &tot);
 	tree1->SetBranchAddress("energy", &energy);
 	tree1->SetBranchAddress("xi", &xi);
+	tree1->SetBranchAddress("yi", &yi);
 
 	// loop through all events
 	Long64_t nentries = tree1->GetEntries();
@@ -87,8 +91,13 @@ int time_diff(char *fname) {
 					break;
 				}
 				tree1->GetEntry(row);
-
 				dt = time - time_ref;
+
+				// get digitized signal timing
+				if (xi == 0 && yi == 63) {
+					hdt_digi->Fill(dt);
+				}
+
 				if (!(dt >= DT_RANGE[0] && dt <= DT_RANGE[1])) {
 					break;
 				} else if (!(xi >= XI_RANGE[0] && xi <= XI_RANGE[1])) {
