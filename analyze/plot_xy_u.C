@@ -52,12 +52,11 @@ int plot_xy_u(const char *fname) {
 	for (Long64_t i = 0; i < nentries; i++) {
 		events->GetEntry(i);
 
-		if (!(xiY->size() > 0 && xiU->size() > 0)) {
+		if (!(xiX->size() > 0 && xiY->size() > 0 && xiU->size() > 0)) {
 			nskipped++;
 			continue;
 		}
 		if (!((*totU)[0] > 30000)) {
-			nskipped++;
 			continue;
 		}
 

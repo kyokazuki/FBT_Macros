@@ -1,10 +1,12 @@
 # Initiate aquisition environment on DAQ
 # share public key beforehand
-ssh-copy-id daq@192.168.253.231
+# ssh-copy-id daq@192.168.253.231
 # share NFS server
-sudo exportfs
+# sudo exportfs
 # mount on xdaq
-sudo mound -t nfs4 192.168.253.214:/mnt/daq_data/daq_shared /mnt/daq_shared
+# sudo mound -t nfs4 192.168.253.214:/mnt/daq_data/daq_shared /mnt/daq_shared
+# Si IP
+# trb@192.168.253.205:/home/trb
 
 ### Config ###
 SESSION=daq

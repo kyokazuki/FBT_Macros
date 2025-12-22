@@ -15,17 +15,16 @@ TH2F* hdt_xi = nullptr;
 TH2F* hdt_tot = nullptr;
 TH2F* hdxi_tot = nullptr;
 TH1F* hdt_digi = nullptr;
+TH1F* hdt_fall = nullptr;
 
-int time_diff(char *fname) {
+int time_diff(const char *fname) {
 	TFile *inputFile = TFile::Open(fname);
 	TTree *tree1 = (TTree*)inputFile->Get("data");
 
 	// const Long64_t DT_RANGE[2]	= {-3000000, 3000000}; //ps
 	// const Long64_t DT_RANGE[2]	= {-20000, 20000}; //ps
 	const Long64_t DT_RANGE[2]	= {-6000000, 6000000}; //ps
-	// const Int_t XI_RANGE[2]		= {1, 32};
 	const Int_t XI_RANGE[2]		= {1, 320};
-	// const Float_t TOT_RANGE[2]	= {-100000, 900000};
 	const Float_t TOT_RANGE[2]	= {0, 300000};
 
 	// TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
@@ -40,6 +39,7 @@ int time_diff(char *fname) {
 	hdt_dxi = new TH2F("hdt_dxi","hdt_dxi", dt_bins, DT_RANGE[0], DT_RANGE[1], XI_RANGE[1]-XI_RANGE[0]+1, XI_RANGE[0]-1-0.5, XI_RANGE[1]-1+0.5);
 	hdxi_tot = new TH2F("hdxi_tot","hdxi_tot", XI_RANGE[1]-XI_RANGE[0]+1, XI_RANGE[0]-1-0.5, XI_RANGE[1]-1+0.5, 600, TOT_RANGE[0], TOT_RANGE[1]);
 	hdt_digi = new TH1F("hdt","hdt", dt_bins, DT_RANGE[0], DT_RANGE[1]);
+	hdt_fall = new TH1F("hdt","hdt", dt_bins, DT_RANGE[0], DT_RANGE[1]);
 
 	// Set up variables to read from tree1
 	Long64_t time; 
@@ -84,6 +84,7 @@ int time_diff(char *fname) {
 
 		// look both ways
 		for (Long64_t j=-1; j<=1; j=j+2) {
+		// for (Long64_t j=1; j>=-1; j=j-3) {
 			row = i;
 			while (1) {
 				row = row + j;
@@ -92,11 +93,7 @@ int time_diff(char *fname) {
 				}
 				tree1->GetEntry(row);
 				dt = time - time_ref;
-
-				// get digitized signal timing
-				if (xi == 0 && yi == 63) {
-					hdt_digi->Fill(dt);
-				}
+				dxi = xi - xi_ref;
 
 				if (!(dt >= DT_RANGE[0] && dt <= DT_RANGE[1])) {
 					break;
@@ -105,7 +102,16 @@ int time_diff(char *fname) {
 				} else if (!(tot >= TOT_RANGE[0] && tot <= TOT_RANGE[1])) {
 					continue;
 				}
-				dxi = xi - xi_ref;
+				// get digitized signal timing
+				if (xi == 0 && yi == 63) {
+					hdt_digi->Fill(dt);
+					continue;
+				}
+				// get falling edge timing
+				if (xi == 0 && energy == -5) {
+					hdt_fall->Fill(dt);
+					continue;
+				}
 				hdt->Fill(dt);
 				hdxi->Fill(dxi);
 				hdt_dxi->Fill(dt, dxi);

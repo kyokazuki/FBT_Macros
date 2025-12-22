@@ -9,8 +9,11 @@
 #include <unistd.h>
 
 void treeGroupEvents2(const TString& input_path) {
+	// 2025/12 RARiS
+	const Long64_t DT_RANGE[2] = {-3880000, -3840000};
+	// const Long64_t DT_RANGE[2] = {-2380000, -2350000};
 	// Deuterium
-	const Long64_t DT_RANGE[2] = {-285000, -250000};
+	// const Long64_t DT_RANGE[2] = {-285000, -250000};
 	// He3
 	// const Long64_t DT_RANGE[2] = {-295000, -270000};
 
@@ -56,6 +59,7 @@ void treeGroupEvents2(const TString& input_path) {
 	Long64_t n_entries = input_tree->GetEntries();
 	Long64_t time_tgr;
 	Long64_t dt;
+	Long64_t gate_count = 0;
 
 	for (Long64_t entry = 0; entry < n_entries; entry++) {
 		input_tree->GetEntry(entry);
@@ -63,15 +67,22 @@ void treeGroupEvents2(const TString& input_path) {
 			continue;
 		}
 
+		gate_count += 1;
 		time_tgr = time;
 
 		for (Int_t i = -1; i <= 1; i += 2) {
 			for (Long64_t j = entry + i; j >= 0 && j < n_entries; j += i) {
 				input_tree->GetEntry(j);
 				dt = time - time_tgr;
-				// cout << "Fbr	entry=" << j << "	time=" << time << "	dt=" << dt << "	tot=" << tot;
+				// cout << "entry=" << j << "	time=" << time << "	dt=" << dt << "	tot=" << tot;
 
-				if ((i == -1 && dt > DT_RANGE[1]) || (i == 1 && dt < DT_RANGE[0])) {
+				if ((xi == 0 && energy == 5) || (xi == 0 && energy == -5)) {
+					// cout << "	gate overlap!" << endl;
+					break;
+				} else if (yi == 63) {
+					// cout << "	digitized pulse skipped" << endl;
+					continue;
+				} else if ((i == -1 && dt > DT_RANGE[1]) || (i == 1 && dt < DT_RANGE[0])) {
 					// cout << "	skipped" << endl;
 					continue;
 				} else if ((i == -1 && dt < DT_RANGE[0]) || (i == 1 && dt > DT_RANGE[1])) {
@@ -131,6 +142,7 @@ void treeGroupEvents2(const TString& input_path) {
 	output_file->Close();
 	input_file->Close();
 
+	cout << "Gate count: " << gate_count << endl;
 	cout << "Saved to: " << output_path << endl;
 }
 

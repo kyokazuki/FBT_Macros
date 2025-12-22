@@ -1,7 +1,7 @@
 ### CONFIG ###
 FBT_DATA_DIR=~/daq_setup6/beamtime/FBT
 FBT_RUN_NUM=$1
-VME_LOGIN="daq@xdaq"
+VME_LOGIN="daq@192.168.253.231"
 VME_SCRIPT_DIR=/home/daq/exp/2505samurai/artemis2_off
 
 SHARED_DIR_FBT=/mnt/data1/daq_shared/FBT
