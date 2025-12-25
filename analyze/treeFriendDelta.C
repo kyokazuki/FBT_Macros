@@ -3,20 +3,23 @@
 #include <TString.h>
 
 #include <iostream>
+#include <iomanip>
 #include <stdlib.h>
+#include <math.h>
 
 #include <unistd.h>
 
-int friendDelta(const TString& inputPath1, const TString& inputPath2) {
-	TString output_path = inputPath1;
-	output_path.ReplaceAll(".root", "_friendDelta.root");
+int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
+	TString outputPath = inputPath1;
+	outputPath.ReplaceAll(".root", "_friendDelta.root");
 	TFile* inputFile1 = TFile::Open(inputPath1);
 	TTree* inputTree1 = (TTree*)inputFile1->Get("events");
 	TFile* inputFile2 = TFile::Open(inputPath2);
 	TTree* inputTree2 = (TTree*)inputFile2->Get("tree");
-	TFile* outputFile = new TFile(output_path, "RECREATE");
+	TFile* outputFile = new TFile(outputPath, "RECREATE");
 	outputFile->cd();
 	TTree* outputTree = inputTree1->CloneTree(0);
+	cout << "Friending " << inputPath1 << " with " << inputPath2 << endl;
 
 	vector<Long64_t>* timeX = nullptr;
 	vector<Long64_t>* timeY = nullptr;
@@ -53,7 +56,7 @@ int friendDelta(const TString& inputPath1, const TString& inputPath2) {
 	outputTree->Branch("s1q", &s1q);
 	outputTree->Branch("rft", &rft);
 	outputTree->Branch("bbtime", &bbtime);
-	outputTree->Branch("scaler", &scaler);
+	outputTree->Branch("scaler", scaler);
 	Long64_t dtime, dbbtime;
 	outputTree->Branch("dtime", &dtime);
 	outputTree->Branch("dbbtime", &dbbtime);
@@ -70,20 +73,36 @@ int friendDelta(const TString& inputPath1, const TString& inputPath2) {
 	}
 
 	// dTime1[ps] = dTime2 * timeRatio +- timeRes[ps]
-	Long64_t timeRatio = 10000;
-	Long64_t timeRes = 10000;
+	inputTree1->GetEntry(0);
+	Long64_t firstTime1 = (*timeX)[timeX->size() - 1];
+	inputTree1->GetEntry(entries1 - 1);
+	Long64_t lastTime1 = (*timeX)[timeX->size() - 1];
+	inputTree2->GetEntry(0);
+	Long64_t firstTime2 = bbtime;
+	inputTree2->GetEntry(entries2 - 1);
+	Long64_t lastTime2 = bbtime;
 
-	Long64_t entry1, entry2 = 0;
-	Long64_t startEntry1, startEntry2 = -1;
-	Long64_t startTime1, endTime1, dTime1 = 0;
-	Long64_t startTime2, endTime2, dTime2 = 0;
+	Double_t timeRatio = (Double_t)(lastTime1 - firstTime1) / (Double_t)(lastTime2 - firstTime2);
+	cout << setprecision(8) << "Time ratio: (" << lastTime1 << "-" << firstTime1 << ")/(" << lastTime2 << "-" << firstTime2 << ") = " << timeRatio << endl;
+	Long64_t timeRes = 50000;
+
+	Long64_t entry1 = 0, entry2 = 0;
+	Long64_t startEntry1 = -1, startEntry2 = -1;
+	Long64_t startTime1 = 0, endTime1 = 0, dTime1 = 0;
+	Long64_t startTime2 = 0, endTime2 = 0, dTime2 = 0;
 
 	cout << "Looking for matching events..." << endl;
-	if (entries1 < entries2) {
+	if (entries1 == entries2) {
+		startEntry1 = 0;
+		startEntry2 = 0;
+		cout << "Event 0/" << entries1 - 1 << " in tree 1 matched with event 0/" << entries2 - 1 << " in tree 2" << endl;
+	} else if (entries1 < entries2) {
 		inputTree1->GetEntry(0);
-		startTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+		// startTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+		startTime1 = (*timeX)[timeX->size() - 1];
 		inputTree1->GetEntry(1);
-		endTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+		// endTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+		endTime1 = (*timeX)[timeX->size() - 1];
 		dTime1 = endTime1 - startTime1;
 
 		for (entry2 = 0; entry2 <= entries2 - entries1; entry2++) {
@@ -109,12 +128,14 @@ int friendDelta(const TString& inputPath1, const TString& inputPath2) {
 
 		for (entry1 = 0; entry1 <= entries1 - entries2; entry1++) {
 			inputTree1->GetEntry(entry1);
-			startTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+			// startTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+			startTime1 = (*timeX)[timeX->size() - 1];
 			inputTree1->GetEntry(entry1 + 1);
-			endTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+			// endTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+			endTime1 = (*timeX)[timeX->size() - 1];
 			dTime1 = endTime1 - startTime1;
 
-			if (dTime1 >= dTime * timeRatio - timeRes && dTime1 <= dTime * timeRatio + timeRes) {
+			if (dTime1 >= dTime2 * timeRatio - timeRes && dTime1 <= dTime2 * timeRatio + timeRes) {
 				cout << "Event " << entry1 << "/" << entries1 - 1 << " in tree 1 matched with event 0/" << entries2 - 1 << " in tree 2" << endl;
 				startEntry1 = entry1;
 				startEntry2 = 0;
@@ -124,24 +145,26 @@ int friendDelta(const TString& inputPath1, const TString& inputPath2) {
 	}
 	if (startEntry1 == -1 && startEntry2 == -1) {
 		cout << "Unable to match first event" << endl;
-		return -1;
+		return 1;
 	}
 
 	inputTree1->GetEntry(startEntry1);
 	inputTree2->GetEntry(startEntry2);
 	dtime = 0;
 	dbbtime = 0;
-	output_tree->Fill();
-	startTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+	outputTree->Fill();
+	// startTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+	startTime1 = (*timeX)[timeX->size() - 1];
 	startTime2 = bbtime;
 	Long64_t skippedEntries1 = startEntry1;
 	Long64_t skippedEntries2 = startEntry2;
-	bool goNext1, goNext2 = 1;
+	bool goNext1 = 1, goNext2 = 1;
 
 	for (entry1 = startEntry1 + 1, entry2 = startEntry2 + 1; entry1 < entries1 && entry2 < entries2; entry1 += goNext1, entry2 += goNext2) {
 		inputTree1->GetEntry(entry1);
 		inputTree2->GetEntry(entry2);
-		endTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+		// endTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+		endTime1 = (*timeX)[timeX->size() - 1];
 		endTime2 = bbtime;
 		dTime1 = endTime1 - startTime1;
 		dTime2 = endTime2 - startTime2;
@@ -150,22 +173,33 @@ int friendDelta(const TString& inputPath1, const TString& inputPath2) {
 			dtime = dTime1;
 			dbbtime = dTime2;
 			outputTree->Fill();
-			startTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+			// startTime1 = min({(*timeX)[0], (*timeY)[0], (*timeU)[0]});
+			startTime1 = (*timeX)[timeX->size() - 1];
 			startTime2 = bbtime;
-			bool goNext1, goNext2 = 1;
-		} else if (dTime1 < dTime2 * timeRation - timeRes) {
-			cout << "Skipping event " << entry1 << "/" << entries1 - 1 << " in tree 1" << endl;
+			goNext1 = 1;
+			goNext2 = 1;
+		} else if (dTime1 < dTime2 * timeRatio - timeRes) {
+			cout << "Skipping event " << entry1 << "/" << entries1 - 1 << " in tree 1 (" << dTime1 << ":" << dTime2 << ")" << endl;
 			goNext1 = 1;
 			goNext2 = 0;
 			skippedEntries1 += 1;
-		} else if (dTime1 > dTime2 * timeRation + timeRes) {
-			cout << "Skipping event " << entry2 << "/" << entries2 - 1 << " in tree 2" << endl;
+		} else if (dTime1 > dTime2 * timeRatio + timeRes) {
+			cout << "Skipping event " << entry2 << "/" << entries2 - 1 << " in tree 2 (" << dTime1 << ":" << dTime2 << ")" << endl;
 			goNext1 = 0;
 			goNext2 = 1;
 			skippedEntries2 += 1;
 		}
+
+		if (skippedEntries1 > entries1/100 || skippedEntries2 > entries2/100) {
+			if (skippedEntries1 > 10 && skippedEntries2 > 10) {
+				cout << "Skipping too many events!" << endl;
+				return 2;
+			}
+		}
 	}
 
+	entry1 -= 1;
+	entry2 -= 1;
 	if (entry1 != entries1 - 1) {
 		cout << "Leftover events " << entry1 << "~" << entries1 - 1 << "/" << entries1 - 1 << " in tree 1" << endl;
 		skippedEntries1 += entries1 - 1 - entry1;
@@ -174,6 +208,7 @@ int friendDelta(const TString& inputPath1, const TString& inputPath2) {
 		skippedEntries2 += entries2 - 1 - entry2;
 	} else {
 		cout << "No leftovers" << endl;
+	}
 	cout << "Total skipped events in tree 1: " << skippedEntries1 << "/" << entries1 - 1 << endl;
 	cout << "Total skipped events in tree 2: " << skippedEntries2 << "/" << entries2 - 1 << endl;
 
@@ -181,4 +216,7 @@ int friendDelta(const TString& inputPath1, const TString& inputPath2) {
 	outputFile->Close();
 	inputFile1->Close();
 	inputFile2->Close();
+	cout << "Saved to " << outputPath << endl;
+
+	return 0;
 }
