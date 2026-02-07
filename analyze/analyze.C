@@ -46,6 +46,42 @@ void analyzeSingles(const char *fileName) {
 
 }
 
+void analyzeGrouped(const char *fileName) {
+	TFile *inputFile = TFile::Open(fileName);
+	TTree *inputTree = (TTree*)inputFile->Get("events");
+
+	vector<vector <Float_t>*> 	totVectors(3, nullptr);
+	vector<vector <Int_t>*> 	xiVectors(3, nullptr);
+	vector<TH2F*>				htots(3, nullptr);
+	const char* surfaces[3] = {"X","Y","U"};
+	for (Int_t i = 0; i < 3; i++) {
+		inputTree->SetBranchAddress(Form("tot%s", surfaces[i]), &totVectors[i]);
+		inputTree->SetBranchAddress(Form("xi%s", surfaces[i]), &xiVectors[i]);
+		htots[i] = new TH2F(Form("htot%s", surfaces[i]), Form("htot%s", surfaces[i]), 320, 0.5, 320.5, 500, -20000, 300000);
+	}
+
+	Long64_t entries = inputTree->GetEntries();
+	for (Long64_t entry = 0; entry < entries; entry++) {
+		inputTree->GetEntry(entry);
+
+		for (Int_t i = 0; i < 3; i++) {
+			for (UInt_t j = 0; j < totVectors[i]->size(); j++) {
+				htots[i]->Fill((*xiVectors[i])[j], (*totVectors[i])[j]);
+			}
+		}
+	}
+
+	gStyle->SetOptStat(11111111);
+	TCanvas *c2 = new TCanvas("c2","c2"); 
+	c2->Divide(3, 1);
+
+	for (Int_t i = 0; i < 3; i++) {
+		gPad->SetLogz();
+		c2->cd(i + 1);
+		htots[i]->Draw();
+	}
+}
+
 void analyzeFriended(const char *fileName) {
 	TFile *inputFile = TFile::Open(fileName);
 	TTree *tree = (TTree*)inputFile->Get("events");
@@ -77,3 +113,4 @@ void analyzeFriended(const char *fileName) {
 	gPad->SetLogz();
 	tree->Draw("xiX:(m1t-m2t)>>hxiX-mt(100, -50, 50, 320, 0.5, 320.5)", "totX > 30000", "colz");
 }
+

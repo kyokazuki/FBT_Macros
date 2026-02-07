@@ -40,27 +40,28 @@ void treeGroup(const TString& inputPath) {
 
 	vector<vector <Long64_t>> timeVectors(3);
 	vector<vector <Long64_t>> timeVectorsSorted(3);
-	vector<vector <Long64_t>> energyVectors(3);
-	vector<vector <Long64_t>> energyVectorsSorted(3);
-	vector<vector <Long64_t>> totVectors(3);
-	vector<vector <Long64_t>> totVectorsSorted(3);
-	vector<vector <Long64_t>> channelIdVectors(3);
-	vector<vector <Long64_t>> channelIdVectorsSorted(3);
-	vector<vector <Long64_t>> xiVectors(3);
-	vector<vector <Long64_t>> xiVectorsSorted(3);
-	vector<string> surface = {"X", "Y", "U"};
+	vector<vector <Float_t>> energyVectors(3);
+	vector<vector <Float_t>> energyVectorsSorted(3);
+	vector<vector <Float_t>> totVectors(3);
+	vector<vector <Float_t>> totVectorsSorted(3);
+	vector<vector <UInt_t>> channelIdVectors(3);
+	vector<vector <UInt_t>> channelIdVectorsSorted(3);
+	vector<vector <Int_t>> xiVectors(3);
+	vector<vector <Int_t>> xiVectorsSorted(3);
+	vector<Long64_t> timeGate;
+	const char* surfaces[3] = {"X","Y","U"};
 	for (Int_t i = 0; i < 3; i++) {
-		outputTree->Branch(Form("time%s", surface[i].c_str()), &timeVectorsSorted[i]);
-		outputTree->Branch(Form("energy%s", surface[i].c_str()), &energyVectorsSorted[i]);
-		outputTree->Branch(Form("tot%s", surface[i].c_str()), &totVectorsSorted[i]);
-		outputTree->Branch(Form("channelID%s", surface[i].c_str()), &channelIdVectorsSorted[i]);
-		outputTree->Branch(Form("xi%s", surface[i].c_str()), &xiVectorsSorted[i]);
+		outputTree->Branch(Form("time%s", surfaces[i]), &timeVectorsSorted[i]);
+		outputTree->Branch(Form("energy%s", surfaces[i]), &energyVectorsSorted[i]);
+		outputTree->Branch(Form("tot%s", surfaces[i]), &totVectorsSorted[i]);
+		outputTree->Branch(Form("channelID%s", surfaces[i]), &channelIdVectorsSorted[i]);
+		outputTree->Branch(Form("xi%s", surfaces[i]), &xiVectorsSorted[i]);
 	}
+	outputTree->Branch("timeGate", &timeGate);
 
 	Long64_t entries = inputTree->GetEntries();
-	Long64_t time_tgr;
+	Long64_t gateRise;
 	Long64_t dt;
-	Long64_t gate_count = 0;
 
 	for (Long64_t entry = 0; entry < entries; entry++) {
 		if (entry % 10000 == 0 || entry == entries - 1) {
@@ -68,32 +69,32 @@ void treeGroup(const TString& inputPath) {
 		}
 
 		inputTree->GetEntry(entry);
-		if (!(xi == 0 && energy == 5)) {
+		if (!(channelId == 4128 && energy == 5)) {
 			continue;
 		}
 
-		gate_count += 1;
-		time_tgr = time;
-
-		// group trigger entry as well
-		for (Int_t y = 0; y < 3; y++) {
-			timeVectors[y].push_back(time);
-			energyVectors[y].push_back(energy); //=5
-			totVectors[y].push_back(tot); //=0
-			channelIdVectors[y].push_back(channelId); //=4128
-			xiVectors[y].push_back(xi); //=0
+		// append gate entries to timeGate
+		gateRise = time;
+		timeGate.push_back(gateRise);
+		for (Long64_t entry2 = entry + 1; entry2 >= 0 && entry2 < entries; entry2++) {
+			inputTree->GetEntry(entry2);
+			if (!(channelId == 4128 && energy == -5)) {
+				continue;
+			} else {
+				timeGate.push_back(time);
+				break;
+			}
 		}
 
-		for (Int_t i = -1; i <= 1; i += 2) {
-			for (Long64_t j = entry + i; j >= 0 && j < entries; j += i) {
-				inputTree->GetEntry(j);
-				dt = time - time_tgr;
+		// append fiber entries
+		for (Int_t dir = -1; dir <= 1; dir += 2) {
+			for (Long64_t entry2 = entry + dir; entry2 >= 0 && entry2 < entries; entry2 += dir) {
+				inputTree->GetEntry(entry2);
+				dt = time - gateRise;
 
-				if ((xi == 0 && energy == 5) || (xi == 0 && energy == -5)) {
-					break;
-				} else if ((i == -1 && dt > DT_RANGE[1]) || (i == 1 && dt < DT_RANGE[0])) {
+				if ((dir == -1 && dt > DT_RANGE[1]) || (dir == 1 && dt < DT_RANGE[0])) {
 					continue;
-				} else if ((i == -1 && dt < DT_RANGE[0]) || (i == 1 && dt > DT_RANGE[1])) {
+				} else if ((dir == -1 && dt < DT_RANGE[0]) || (dir == 1 && dt > DT_RANGE[1])) {
 					break;
 				}
 
@@ -111,7 +112,7 @@ void treeGroup(const TString& inputPath) {
 				indices[i].push_back(j);
 			}
 
-			vector<Long64_t> tot_sort = totVectors[i];
+			vector<Float_t> tot_sort = totVectors[i];
 			sort(indices[i].begin(), indices[i].end(), [&tot_sort](size_t i1, size_t i2) {
 				return tot_sort[i1] > tot_sort[i2];
 			});
@@ -138,6 +139,7 @@ void treeGroup(const TString& inputPath) {
 			channelIdVectorsSorted[i].clear();
 			xiVectors[i].clear();
 			xiVectorsSorted[i].clear();
+			timeGate.clear();
 		}
 	}
 

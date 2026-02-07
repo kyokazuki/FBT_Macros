@@ -20,12 +20,9 @@ int time_diff(char *fname) {
 	TFile *inputFile = TFile::Open(fname);
 	TTree *tree1 = (TTree*)inputFile->Get("data");
 
-	// const Long64_t DT_RANGE[2]	= {-3000000, 3000000}; //ps
-	// const Long64_t DT_RANGE[2]	= {-20000, 20000}; //ps
-	const Long64_t DT_RANGE[2]	= {-6000000, 6000000}; //ps
-	// const Int_t XI_RANGE[2]		= {1, 32};
+	// const Long64_t DT_RANGE[2]	= {-4500000, 4500000}; //ps
+	const Long64_t DT_RANGE[2]	= {-21000000, 21000000}; //ps
 	const Int_t XI_RANGE[2]		= {1, 320};
-	// const Float_t TOT_RANGE[2]	= {-100000, 900000};
 	const Float_t TOT_RANGE[2]	= {0, 300000};
 
 	// TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
@@ -35,11 +32,10 @@ int time_diff(char *fname) {
 	hdt = new TH1F("hdt","hdt", dt_bins, DT_RANGE[0], DT_RANGE[1]);
 	hdxi = new TH1F("hdxi","hdxi", XI_RANGE[1]-XI_RANGE[0]+1, XI_RANGE[0]-1-0.5, XI_RANGE[1]-1+0.5);
 	hdt_xi = new TH2F("hdt_xi","hdt_xi", dt_bins, DT_RANGE[0], DT_RANGE[1], XI_RANGE[1]-XI_RANGE[0]+1, XI_RANGE[0]-0.5, XI_RANGE[1]+0.5);
-	// hdt_tot = new TH2F("hdt_tot","hdt_tot", dt_bins, DT_RANGE[0], DT_RANGE[1], 100, TOT_RANGE[0], TOT_RANGE[1]);
 	hdt_tot = new TH2F("hdt_tot","hdt_tot", dt_bins, DT_RANGE[0], DT_RANGE[1], 600, TOT_RANGE[0], TOT_RANGE[1]);
 	hdt_dxi = new TH2F("hdt_dxi","hdt_dxi", dt_bins, DT_RANGE[0], DT_RANGE[1], XI_RANGE[1]-XI_RANGE[0]+1, XI_RANGE[0]-1-0.5, XI_RANGE[1]-1+0.5);
 	hdxi_tot = new TH2F("hdxi_tot","hdxi_tot", XI_RANGE[1]-XI_RANGE[0]+1, XI_RANGE[0]-1-0.5, XI_RANGE[1]-1+0.5, 600, TOT_RANGE[0], TOT_RANGE[1]);
-	hdt_gate = new TH1F("hdt","hdt", dt_bins, DT_RANGE[0], DT_RANGE[1]);
+	hdt_gate = new TH1F("hdt_gate","hdt_gate", dt_bins, DT_RANGE[0], DT_RANGE[1]);
 
 	// Set up variables to read from tree1
 	Long64_t time; 
@@ -73,7 +69,7 @@ int time_diff(char *fname) {
 		}
 
 		tree1->GetEntry(i);
-		if (!(xi == 0 && yi == 63)) {
+		if (!(xi == 0 && energy == 5)) {
 			continue;
 		}
 
@@ -91,25 +87,30 @@ int time_diff(char *fname) {
 				tree1->GetEntry(row);
 				dt = time - time_ref;
 
-				// get digitized signal timing
-				if (xi == 0 && energy == 5) {
-					hdt_gate->Fill(dt);
+				if ((j == -1 && dt > DT_RANGE[1]) || (j == 1 && dt < DT_RANGE[0])) {
+					continue;
+				} else if ((j == -1 && dt < DT_RANGE[0]) || (j == 1 && dt > DT_RANGE[1])) {
+					break;
 				}
 
-				if (!(dt >= DT_RANGE[0] && dt <= DT_RANGE[1])) {
+				// get gate signal timing
+				if (xi == 0 && energy == 5) {
+					hdt_gate->Fill(dt);
 					break;
-				} else if (!(xi >= XI_RANGE[0] && xi <= XI_RANGE[1])) {
+				}
+
+				if (!(xi >= XI_RANGE[0] && xi <= XI_RANGE[1])) {
 					continue;
 				} else if (!(tot >= TOT_RANGE[0] && tot <= TOT_RANGE[1])) {
 					continue;
 				}
 				dxi = xi - xi_ref;
-				hdt->Fill(dt);
-				hdxi->Fill(dxi);
-				hdt_dxi->Fill(dt, dxi);
-				hdt_xi->Fill(dt, xi);
-				hdt_tot->Fill(dt, tot);
-				hdxi_tot->Fill(dxi, tot);
+				// hdt->Fill(dt);
+				// hdxi->Fill(dxi);
+				// hdt_xi->Fill(dt, xi);
+				// hdt_dxi->Fill(dt, dxi);
+				// hdt_tot->Fill(dt, tot);
+				// hdxi_tot->Fill(dxi, tot);
 			}
 		}
 	}

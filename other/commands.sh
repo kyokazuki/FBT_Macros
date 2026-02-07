@@ -22,20 +22,20 @@ export DAQ_RESULTS_DIR=tot_vs_qdc
 
 ### ANALYSIS ###
 TTree *tree = (TTree*) gDirectory->Get("data")
-tree->GetEntries("xi==0 && energy==5")
+tree->GetEntries("channelID==4128 && energy==5")
+tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 200000)", "yi==0", "colz")
+events->Scan("timeX:energyX:totX:channelIDX:xiX:timeY:energyY:totY:channelIDY:xiY:timeU:energyU:totU:channelIDU:xiU:timeGate", "", "colsize=10")
+events->Scan("timeX:totX:xiX:timeY:totY:xiY:timeU:totU:xiU:timeGate", "", "colsize=10")
+
 tree->Scan("*", "", "colsize=20")
 tree->Draw("xi", "xi==0 && energy==5")
 tree->Draw("time", "xi==0 && energy==5")
 tree->Draw("xi", "xi==0 && yi==63")
-tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 200000)", "yi==0", "colz")
 events->Draw("totX:urq>>(200, 0, 4500, 200, 0, 300000)", "", "colz")
 events->Draw("totX:pow(urq*ulq*drq*dlq, 0.25)>>(200, 0, 4500, 200, 0, 300000)", "urq<4000 && ulq<4000 && drq<4000 && dlq<4000", "colz")
 events->Draw("pow(urq*ulq*drq*dlq, 0.25)", "", "colz")
 .L ~/FBT_Macros/analyse/plot_time_diff_gate.C+
 hdt_fall->Integral(24001, 24120)
-.L ~/FBT_Macros/analyse/tree_group_events_2.C+
-treeGroupEvents2()
-.L ~/FBT_Macros/analyse/tree_friend_2.C+
 events->Scan("bbtime:dtime:dbbtime","","colsize=20")
 events->Scan("timeX:timeY:timeU:bbtime:dtime:dbbtime","","colsize=20")
 events->Draw("(dtime+1)/(dbbtime+1):bbtime", "", "colz")

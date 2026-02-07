@@ -1,20 +1,20 @@
 ### CONFIG ###
 BUILD_DIR=/home/daq/sw_daq_tofpet2-2025.08.04/build
 
-# DAQ_DIR=~/daq_setup9/beamtime_final  # calibration, bias, mappin166312g etc. files directory
-DAQ_DIR=/mnt/daq_data/beamtime2  # calibration, bias, mappin166312g etc. files directory
-DATA_DIR=data1	# data directory (appended to DAQ_DIR)
-DATA_NAME=Sr90 # data file name appended to run number (usually source name)
+DAQ_DIR=~/daq_setup10/riken1  # calibration, bias, mappin166312g etc. files directory
+# DAQ_DIR=/mnt/daq_data/beamtime2  # calibration, bias, mappin166312g etc. files directory
+DATA_DIR=ext_test5	# data directory (appended to DAQ_DIR)
+DATA_NAME=100kHz # data file name appended to run number (usually source name)
 
 ASIC_ENUM=($(seq 0 1 13))	# change every ASIC's OV
 # ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV
 # OV_ENUM=($(seq 1.0 0.1 1.4))
-OV_ENUM=(2.8)
-#TH_ENUM=($(seq 10 1 50))
-TH_ENUM=(20)
+OV_ENUM=(3.0)
+# TH_ENUM=($(seq 10 1 50))
+TH_ENUM=(19)
 
-TIME=60	#aquisition time in secconds
-EXT=0	# external gate enabled if 1  (w/o ext gate if 0)
+TIME=10	#aquisition time in secconds
+EXT=1	# external gate enabled if 1  (w/o ext gate if 0)
 
 VME=0	# VME starts if 1 (w/o if 0), need tmux session from init_tmux.sh
 
@@ -40,7 +40,7 @@ for ov in "${OV_ENUM[@]}"; do
 	for th in "${TH_ENUM[@]}"; do
 		./make_simple_disc_settings_table \
 			--config $DAQ_DIR/config.ini \
-			--vth_t1 ${th} --vth_t2 1 --vth_e 1 \
+			--vth_t1 ${th} --vth_t2 0 --vth_e 0 \
 			-o $DAQ_DIR/disc_settings.tsv
 
 		run_number=$(python ${script_dir}/utils/get_run_num.py ${DAQ_DIR}/${DATA_DIR})
