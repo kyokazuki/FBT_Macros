@@ -23,18 +23,14 @@ export DAQ_RESULTS_DIR=tot_vs_qdc
 ### ANALYSIS ###
 TTree *tree = (TTree*) gDirectory->Get("data")
 tree->GetEntries("channelID==4128 && energy==5")
-tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 200000)", "yi==0", "colz")
+tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 200000)", "yi==0 && channelID!=4128", "colz")
+tree->Draw("xi>>(320, 0.5, 320.5)", "yi==0 && channelID!=4128")
 events->Scan("timeX:energyX:totX:channelIDX:xiX:timeY:energyY:totY:channelIDY:xiY:timeU:energyU:totU:channelIDU:xiU:timeGate", "", "colsize=10")
 events->Scan("timeX:totX:xiX:timeY:totY:xiY:timeU:totU:xiU:timeGate", "", "colsize=10")
 
-tree->Scan("*", "", "colsize=20")
-tree->Draw("xi", "xi==0 && energy==5")
-tree->Draw("time", "xi==0 && energy==5")
-tree->Draw("xi", "xi==0 && yi==63")
 events->Draw("totX:urq>>(200, 0, 4500, 200, 0, 300000)", "", "colz")
 events->Draw("totX:pow(urq*ulq*drq*dlq, 0.25)>>(200, 0, 4500, 200, 0, 300000)", "urq<4000 && ulq<4000 && drq<4000 && dlq<4000", "colz")
 events->Draw("pow(urq*ulq*drq*dlq, 0.25)", "", "colz")
-.L ~/FBT_Macros/analyse/plot_time_diff_gate.C+
 hdt_fall->Integral(24001, 24120)
 events->Scan("bbtime:dtime:dbbtime","","colsize=20")
 events->Scan("timeX:timeY:timeU:bbtime:dtime:dbbtime","","colsize=20")
@@ -47,3 +43,4 @@ f1->SetParameters(100, 14, 250./14)
 slice_py_of_->Fit("f1", "R")
 fi->Draw("same")
 
+plotRateTot({"0028_200k_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root", "0029_200k_ov2.8_th20_1800s_ext_scaled_grouped_friended_rated.root", "0030_200k_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root", "0031_200k_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root", "0032_200k_ov2.8_th20_1800s_ext_scaled_grouped_friended_rated.root", "0033_200k_ov2.8_th20_1800s_ext_scaled_grouped_friended_rated.root", "0034_200k_ov2.8_th20_1800s_ext_scaled_grouped_friended_rated.root"})

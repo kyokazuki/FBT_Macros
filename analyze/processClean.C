@@ -8,7 +8,7 @@
 
 #include <unistd.h>
 
-void treeClean(const TString& inputPath) {
+void processClean(const TString& inputPath) {
 	TString output_path = inputPath;
 	output_path.ReplaceAll(".root", "_cleaned.root");
 	TFile* inputFile = TFile::Open(inputPath);
@@ -31,14 +31,15 @@ void treeClean(const TString& inputPath) {
 	const char* surfaces[3] = {"X","Y","U"};
 	for (Int_t i = 0; i < 3; i++) {
 		inputTree->SetBranchAddress(Form("time%s", surfaces[i]), &timeVectors[i]);
-		outputTree->SetBranchAddress(Form("time%s", surfaces[i]), &timeVectorsCleaned[i]);
 		inputTree->SetBranchAddress(Form("energy%s", surfaces[i]), &energyVectors[i]);
-		outputTree->SetBranchAddress(Form("energy%s", surfaces[i]), &energyVectorsCleaned[i]);
 		inputTree->SetBranchAddress(Form("tot%s", surfaces[i]), &totVectors[i]);
-		outputTree->SetBranchAddress(Form("tot%s", surfaces[i]), &totVectorsCleaned[i]);
 		inputTree->SetBranchAddress(Form("channelID%s", surfaces[i]), &channelIdVectors[i]);
-		outputTree->SetBranchAddress(Form("channelID%s", surfaces[i]), &channelIdVectorsCleaned[i]);
 		inputTree->SetBranchAddress(Form("xi%s", surfaces[i]), &xiVectors[i]);
+
+		outputTree->SetBranchAddress(Form("time%s", surfaces[i]), &timeVectorsCleaned[i]);
+		outputTree->SetBranchAddress(Form("energy%s", surfaces[i]), &energyVectorsCleaned[i]);
+		outputTree->SetBranchAddress(Form("tot%s", surfaces[i]), &totVectorsCleaned[i]);
+		outputTree->SetBranchAddress(Form("channelID%s", surfaces[i]), &channelIdVectorsCleaned[i]);
 		outputTree->SetBranchAddress(Form("xi%s", surfaces[i]), &xiVectorsCleaned[i]);
 	}
 
@@ -52,7 +53,7 @@ void treeClean(const TString& inputPath) {
 	for (Long64_t entry = 0; entry < entries; entry++) {
 	// for (Long64_t entry = 0; entry < 1; entry++) {
 		if (entry % 10000 == 0 || entry == entries - 1) {
-			cout << "\rEntry: " << entry << "/" << entries << flush;
+			cout << "\rEntry: " << entry + 1 << "/" << entries << flush;
 		}
 
 		inputTree->GetEntry(entry);

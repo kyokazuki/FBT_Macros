@@ -4,7 +4,7 @@
 # share NFS server
 # sudo exportfs
 # mount on xdaq
-# sudo mound -t nfs4 192.168.253.214:/mnt/daq_data/daq_shared /mnt/daq_shared
+# sudo mount -t nfs4 192.168.253.214:/mnt/daq_data/daq_shared /mnt/daq_shared
 # Si IP
 # trb@192.168.253.205:/home/trb
 

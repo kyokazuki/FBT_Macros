@@ -9,9 +9,9 @@ DATA_NAME=100kHz # data file name appended to run number (usually source name)
 ASIC_ENUM=($(seq 0 1 13))	# change every ASIC's OV
 # ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV
 # OV_ENUM=($(seq 1.0 0.1 1.4))
-OV_ENUM=(3.0)
+OV_ENUM=(2.8)
 # TH_ENUM=($(seq 10 1 50))
-TH_ENUM=(19)
+TH_ENUM=(20)
 
 TIME=10	#aquisition time in secconds
 EXT=1	# external gate enabled if 1  (w/o ext gate if 0)

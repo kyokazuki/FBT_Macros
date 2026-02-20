@@ -13,10 +13,11 @@
 
 #include <unistd.h>
 
-TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
-TGraph *gDdtime = nullptr;
+int processFriend(const TString& inputPath1, const TString& inputPath2) {
+	bool SAVE_GRAPH = 1;
+	TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
+	TGraph *gDdtime = nullptr;
 
-int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	// Load input and output files
 	if (gSystem->AccessPathName(inputPath1)) {
 		cout << inputPath1 << " does not exist!" << endl;
@@ -28,27 +29,21 @@ int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	}
 	TFile* inputFile1 = TFile::Open(inputPath1);
 	TFile* inputFile2 = TFile::Open(inputPath2);
-	TString outputPath = inputPath1;
-	outputPath.ReplaceAll(".root", "_friended.root");
-	TFile* outputFile = new TFile(outputPath, "RECREATE");
-	outputFile->cd();
+	TString runNumber = TString(gSystem->BaseName(inputPath1))(0,4);
 	cout << "Friending " << inputPath1 << " with " << inputPath2 << endl;
 
 	// Load input and output trees
 	TTree* inputTree1 = (TTree*)inputFile1->Get("events");
 	TTree* inputTree2 = (TTree*)inputFile2->Get("tree");
+	TString outputPath = inputPath1;
+	outputPath.ReplaceAll(".root", "_friended.root");
+	TFile* outputFile = new TFile(outputPath, "RECREATE");
+	outputFile->cd();
 	TTree* outputTree = inputTree1->CloneTree(0);
 	// Load branches for input trees
-	vector<Long64_t>* timeX = nullptr;
-	vector<Long64_t>* timeY = nullptr;
-	vector<Long64_t>* timeU = nullptr;
-	vector<Long64_t>* energyX = nullptr;
 	vector<Long64_t>* timeGate = nullptr;
-	inputTree1->SetBranchAddress("timeX", &timeX);
-	inputTree1->SetBranchAddress("timeY", &timeY);
-	inputTree1->SetBranchAddress("timeU", &timeU);
-	inputTree1->SetBranchAddress("energyX", &energyX);
 	inputTree1->SetBranchAddress("timeGate", &timeGate);
+
 	Double_t l1t, l2t, m1t, m2t, s1t, l1q, l2q, m1q, m2q, s1q, rft;
 	Long64_t bbtime;
 	Int_t scaler[32];
@@ -78,7 +73,7 @@ int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	outputTree->Branch("s1q", &s1q);
 	outputTree->Branch("rft", &rft);
 	outputTree->Branch("bbtime", &bbtime);
-	outputTree->Branch("scaler", scaler);
+	outputTree->Branch("scaler", scaler, "scaler[32]/I");
 	Long64_t dtime, dbbtime;
 	outputTree->Branch("dtime", &dtime);
 	outputTree->Branch("dbbtime", &dbbtime);
@@ -88,6 +83,12 @@ int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	Long64_t entries2 = inputTree2->GetEntries();
 	cout << "Input File 1: " << entries1 << " entries" << endl;
 	cout << "Input File 2: " << entries2 << " entries" << endl;
+
+	// Only read time branches at first
+	// inputTree1->SetBranchStatus("*", 0);
+	// inputTree1->SetBranchStatus("timeGate", 1);
+	// inputTree2->SetBranchStatus("*", 0);
+	// inputTree2->SetBranchStatus("bbtime", 1);
 
 	// Set appropriate time ratio and time resolution
 	inputTree1->GetEntry(0);
@@ -162,15 +163,20 @@ int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	}
 
 	// Configure graph
-	TString graphPath = inputPath1;
-	graphPath.ReplaceAll(".root", "_friendDelta.pdf");
-	c1->SetGridx(true);
-	c1->SetGridy(true);
-	TGraph *gDdtime = new TGraph();
-	gDdtime->SetTitle("Ddtime;babi time[~ns];d(FBT time)-d(babi time)*timeRatio[ps]");
-	gDdtime->GetXaxis()->SetLimits(firstTime2, lastTime2);
-	// gDdtime->SetMaximum(timeRes);
-	// gDdtime->SetMinimum(-1*timeRes);
+	TString graphPath = Form("%s_friend.pdf", runNumber.Data());
+	if (SAVE_GRAPH) {
+		c1->SetGridx(true);
+		c1->SetGridy(true);
+		gDdtime = new TGraph();
+		gDdtime->SetTitle("Ddtime;babi time[~ns];d(FBT time)-d(babi time)*timeRatio[ps]");
+		gDdtime->GetXaxis()->SetLimits(firstTime2, lastTime2);
+		// gDdtime->SetMaximum(timeRes);
+		// gDdtime->SetMinimum(-1*timeRes);
+	}
+
+	// load everything for filling
+	// inputTree1->SetBranchStatus("*", 1);
+	// inputTree2->SetBranchStatus("*", 1);
 
 	// Go through all entries and match events
 	inputTree1->GetEntry(startEntry1);
@@ -192,7 +198,9 @@ int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 		dTime1 = endTime1 - startTime1;
 		dTime2 = endTime2 - startTime2;
 
-		gDdtime->SetPoint(graphPoint++, endTime2, dTime1 - dTime2 * timeRatio);
+		if (SAVE_GRAPH && entry1 % 100 == 0) {
+			gDdtime->SetPoint(graphPoint++, endTime2, dTime1 - dTime2 * timeRatio);
+		}
 
 		if (dTime1 >= dTime2 * timeRatio - timeRes && dTime1 <= dTime2 * timeRatio + timeRes) {
 			dtime = dTime1;
@@ -217,9 +225,14 @@ int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 		if (skippedEntries1 > entries1/50 || skippedEntries2 > entries2/50) {
 			if (skippedEntries1 > 10 && skippedEntries2 > 10) {
 				cout << "Skipping too many events!" << endl;
-				// Save graph
-				gDdtime->Draw("ALP");
-				c1->Print(graphPath);
+				outputTree->Write();
+				outputFile->Close();
+				// gSystem->Unlink(outputPath);
+
+				if (SAVE_GRAPH) {
+					gDdtime->Draw("ALP");
+					c1->Print(graphPath);
+				}
 				return 2;
 			}
 		}
@@ -248,9 +261,13 @@ int treeFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	cout << "Saved to " << outputPath << endl;
 
 	// Save graph
-	gDdtime->Draw("ALP");
-	c1->Update();
-	c1->Print(graphPath);
+	if (SAVE_GRAPH) {
+		gDdtime->Draw("ALP");
+		c1->Update();
+		c1->Print(graphPath);
+		delete c1;
+		delete gDdtime;
+	}
 
 	return 0;
 }

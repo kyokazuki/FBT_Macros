@@ -8,7 +8,7 @@
 
 #include <unistd.h>
 
-void treeGroup(const TString& inputPath) {
+void processGroup(const TString& inputPath) {
 	// 2025/12 RARiS
 	const Long64_t DT_RANGE[2] = {-3880000, -3840000};
 	// const Long64_t DT_RANGE[2] = {-2380000, -2350000};
@@ -38,6 +38,14 @@ void treeGroup(const TString& inputPath) {
 	inputTree->SetBranchAddress("xi", &xi);
 	inputTree->SetBranchAddress("yi", &yi);
 
+	inputTree->SetBranchStatus("*", 0);
+	inputTree->SetBranchStatus("time", 1);
+	inputTree->SetBranchStatus("energy", 1);
+	inputTree->SetBranchStatus("tot", 1);
+	inputTree->SetBranchStatus("channelID", 1);
+	inputTree->SetBranchStatus("xi", 1);
+	inputTree->SetBranchStatus("yi", 1);
+
 	vector<vector <Long64_t>> timeVectors(3);
 	vector<vector <Long64_t>> timeVectorsSorted(3);
 	vector<vector <Float_t>> energyVectors(3);
@@ -65,7 +73,7 @@ void treeGroup(const TString& inputPath) {
 
 	for (Long64_t entry = 0; entry < entries; entry++) {
 		if (entry % 10000 == 0 || entry == entries - 1) {
-			cout << "\rEntry: " << entry << "/" << entries << flush;
+			cout << "\rEntry: " << entry + 1 << "/" << entries << flush;
 		}
 
 		inputTree->GetEntry(entry);
