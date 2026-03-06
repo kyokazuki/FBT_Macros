@@ -21,7 +21,7 @@ void processFriendOffset(const TString& inputPath1, const TString& inputPath2, c
 	TFile* inputFile2 = TFile::Open(inputPath2);
 	TTree* inputTree1 = (TTree*)inputFile1->Get("events");
 	TTree* inputTree2 = (TTree*)inputFile2->Get("mtree");
-	TTree* inputTree3 = (TTree*)inputFile2->Get("stree_offset");
+	// TTree* inputTree3 = (TTree*)inputFile2->Get("stree_offset");
 	TString runNumber = TString(gSystem->BaseName(inputPath1))(0,4);
 
 	Long64_t events1 = inputTree1->GetEntries();
@@ -39,7 +39,7 @@ void processFriendOffset(const TString& inputPath1, const TString& inputPath2, c
 	inputTree2->SetBranchAddress("dlq", &dlq);
 	inputTree2->SetBranchAddress("drq", &drq);
 	Long64_t scaler;
-	inputTree3->SetBranchAddress("scaler32", &scaler);
+	inputTree2->SetBranchAddress("scaler32", &scaler);
 	
 	TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	TString graphPath = Form("%s_friendOffset_%d-%d.pdf", runNumber.Data(), offsets.front(), offsets.back());
