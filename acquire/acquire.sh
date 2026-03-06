@@ -34,7 +34,7 @@ cd ${BUILD_DIR}
 for ov in "${OV_ENUM[@]}"; do
 
 	for asic in "${ASIC_ENUM[@]}"; do
-		python ${script_dir}/utils/change_ov.py ${DAQ_DIR}/bias_settings.tsv ${asic} ${ov}
+		python ${script_dir}/utils/changeOV.py ${DAQ_DIR}/bias_settings.tsv ${asic} ${ov}
 	done
 
 	for th in "${TH_ENUM[@]}"; do
@@ -43,7 +43,7 @@ for ov in "${OV_ENUM[@]}"; do
 			--vth_t1 ${th} --vth_t2 0 --vth_e 0 \
 			-o $DAQ_DIR/disc_settings.tsv
 
-		run_number=$(python ${script_dir}/utils/get_run_num.py ${DAQ_DIR}/${DATA_DIR})
+		run_number=$(python ${script_dir}/utils/getRunNumber.py ${DAQ_DIR}/${DATA_DIR})
 		file_name="${run_number}_${DATA_NAME}_ov${ov}_th${th}_${TIME}s"
 		acquire_script="acquire_sipm_data"
 		# acquire_script="acquire_sipm_data_debug"

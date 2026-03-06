@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "utils/get_mult_merged.C"
+#include "utils/getMultFriended.C"
 
-int get_effcy_merged(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t> tot_range, vector <Double_t> q_range) {
-	Long64_t *mult_arr = get_mult_merged(fname, mult_arr_size, yi, tot_range, q_range);
+int getEffcyFriended(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t> tot_range, vector <Double_t> q_range) {
+	Long64_t *mult_arr = getMultFriended(fname, mult_arr_size, yi, tot_range, q_range);
 	Long64_t total = 0;
 	cout << "Multiplicity(0~" << mult_arr_size << ")	: ";
 	for (UInt_t i = 0; i < mult_arr_size; i++) {
@@ -20,7 +20,7 @@ int get_effcy_merged(const char *fname, const UInt_t mult_arr_size, Int_t yi, ve
 		cout << "Efficiency		: (none)\n" << endl;
 		effcy = 0;
 	} else {
-		effcy = (Float_t)(total - mult_arr[0])/total;
+		effcy = (Float_t) (total - mult_arr[0]) / (Float_t) total;
 		cout << "Efficiency		: " << effcy << "\n" << endl;
 	}
 

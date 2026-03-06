@@ -8,6 +8,8 @@
 #include <fstream>
 #include <iomanip>
 
+#include "utils/printProgress.C"
+
 const char* layers[3] = {"X", "Y", "U"};
 const Int_t layerChannels[3] = {320, 224, 320};
 
@@ -32,15 +34,13 @@ void getBeamProfile(const TString& inputPath) {
 	// count entries
 	cout << "Counting entries..." << endl;
 	Long64_t entries = inputTree->GetEntries();
-	for (Int_t entry = 0; entry < entries; entry++) {
-		if (entry % 10000 == 0 || entry == entries - 1) {
-			cout << "\rEntry: " << entry + 1 << "/" << entries << flush;
-		}
+	for (Long64_t entry = 0; entry < entries; entry++) {
+		printProgress(entry, entries);
+
 		inputTree->GetEntry(entry);
 		if (xi == 0) continue;
 		fiberEntries[yi][xi]++;
 	}
-	cout << endl;
 
 	// print to tsv
 	cout << "Printing to tsv..." << endl;

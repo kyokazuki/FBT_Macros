@@ -16,14 +16,14 @@ TH2F* hdt_tot = nullptr;
 TH2F* hdxi_tot = nullptr;
 TH1F* hdt_gate = nullptr;
 
-int time_diff(char *fname) {
+int plotDtGate(char *fname) {
 	TFile *inputFile = TFile::Open(fname);
 	TTree *tree1 = (TTree*)inputFile->Get("data");
 
 	// const Long64_t DT_RANGE[2]	= {-4500000, 4500000}; //ps
 	const Long64_t DT_RANGE[2]	= {-21000000, 21000000}; //ps
 	const Int_t XI_RANGE[2]		= {1, 320};
-	const Float_t TOT_RANGE[2]	= {0, 300000};
+	const Float_t TOT_RANGE[2]	= {0, 500000};
 
 	// TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	// c1->SetGrid();
@@ -44,6 +44,15 @@ int time_diff(char *fname) {
 	Float_t energy;
 	Int_t xi;
 	Int_t yi;
+
+	tree1->SetBranchStatus("*", 0);
+	tree1->SetBranchStatus("time", 1);
+	tree1->SetBranchStatus("channelID", 1);
+	tree1->SetBranchStatus("tot", 1);
+	tree1->SetBranchStatus("energy", 1);
+	tree1->SetBranchStatus("xi", 1);
+	tree1->SetBranchStatus("yi", 1);
+
 	tree1->SetBranchAddress("time", &time);
 	tree1->SetBranchAddress("channelID", &channelID);
 	tree1->SetBranchAddress("tot", &tot);
@@ -63,9 +72,9 @@ int time_diff(char *fname) {
 	Long64_t freq = pow(10, floor(log10(nentries))-1);
 
 	for (Long64_t i = 0; i < nentries; i++) {
-		// print for debug
-		if (i%freq == 0) {
-			cout << i << endl;
+		if (i % 10000 == 0 || i == nentries - 1) {
+			Int_t progress = (Float_t) (i + 1) / (Float_t) nentries * 100;
+			cout << "\rEvent: " << i + 1 << "/" << nentries << " (" << progress << "%)" << flush;
 		}
 
 		tree1->GetEntry(i);
@@ -105,12 +114,12 @@ int time_diff(char *fname) {
 					continue;
 				}
 				dxi = xi - xi_ref;
-				// hdt->Fill(dt);
-				// hdxi->Fill(dxi);
-				// hdt_xi->Fill(dt, xi);
-				// hdt_dxi->Fill(dt, dxi);
-				// hdt_tot->Fill(dt, tot);
-				// hdxi_tot->Fill(dxi, tot);
+				hdt->Fill(dt);
+				hdxi->Fill(dxi);
+				hdt_xi->Fill(dt, xi);
+				hdt_dxi->Fill(dt, dxi);
+				hdt_tot->Fill(dt, tot);
+				hdxi_tot->Fill(dxi, tot);
 			}
 		}
 	}

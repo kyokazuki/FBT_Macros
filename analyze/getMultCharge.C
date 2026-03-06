@@ -4,7 +4,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
-Long64_t* get_mult_merged(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t>& tot_range, vector <Double_t> q_range) {
+Long64_t* getMultCharge(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t>& tot_range, vector <Double_t> q_range) {
 
 	Long64_t *mult_arr = new Long64_t[mult_arr_size]();
 
@@ -18,7 +18,7 @@ Long64_t* get_mult_merged(const char *fname, const UInt_t mult_arr_size, Int_t y
 	// 	cout << i << endl;
 	// 	events->SetBranchAddress(Form("tot%s", surface[i].c_str()), &tot_vectors[i]);
 	// }
-	vector<Long64_t>* tot;
+	vector<Float_t>* tot;
 	vector <string> surface = {"X", "Y", "U"};
 	events->SetBranchAddress(Form("tot%s", surface[yi].c_str()), &tot);
 	Double_t ulq, urq, dlq, drq;

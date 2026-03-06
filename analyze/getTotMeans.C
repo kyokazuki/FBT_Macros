@@ -13,6 +13,13 @@
 #include <stdlib.h>
 #include <fstream>
 
+const Float_t TOT_RANGE[2] 		= {20e3, 250e3};	// samurai2506
+// const Float_t TOT_RANGE[2] 	= {50e3, 190e3};	// raris2512
+const Int_t XI_RANGE[3] 		= {320, 224, 320};
+const char* LAYERS[3] 			= {"X", "Y", "U"};
+const Float_t totBins 			= (TOT_RANGE[1] - TOT_RANGE[0]) / 1.e4 * 2.;
+const Long64_t fitThreshold 	= 1000;
+
 void getTotMeans(const TString& inputPath) {
 	gROOT->SetBatch(kTRUE);
 
@@ -20,12 +27,6 @@ void getTotMeans(const TString& inputPath) {
 	TTree* inputTree = (TTree*)inputFile->Get("data");
 	TString runNumber = TString(gSystem->BaseName(inputPath))(0,4);
 	cout << "Getting tot means from " << inputPath << endl;
-
-	const Float_t TOT_RANGE[2] = {50e3, 190e3};
-	const Int_t XI_RANGE[3] = {320, 224, 320};
-	const char* LAYERS[3] = {"X", "Y", "U"};
-	// const Float_t totBins = (TOT_RANGE[1] - TOT_RANGE[0]) / 1.e4;
-	const Float_t totBins = (TOT_RANGE[1] - TOT_RANGE[0]) / 1.e4 * 2.;
 
 	TCanvas *c1 = nullptr;
 	TH1D *py = nullptr;
@@ -54,12 +55,16 @@ void getTotMeans(const TString& inputPath) {
 		for (Int_t xbin = 1; xbin <= XI_RANGE[layer]; xbin++) {
 			py = h2->ProjectionY(Form("py_x%d", xbin), xbin, xbin);
 
-			TF1 gaus(Form("g_y%d", xbin), "gaus", TOT_RANGE[0], TOT_RANGE[1]);
-			gaus.SetParameters(py->GetMaximum(), py->GetMean(), py->GetRMS());
+			if (py->GetEntries() <= fitThreshold) {
+				out << xbin << "\t0\t0" << endl;
+			} else {
+				TF1 gaus(Form("g_y%d", xbin), "gaus", TOT_RANGE[0], TOT_RANGE[1]);
+				gaus.SetParameters(py->GetMaximum(), py->GetMean(), py->GetRMS());
 
-			auto r = py->Fit(&gaus, "QSR"); // quiet, save result, use range
-			
-			out << xbin << "\t" << gaus.GetParameter(1) << "\t" << gaus.GetParError(1) << endl;
+				auto r = py->Fit(&gaus, "QSR"); // quiet, save result, use range
+				
+				out << xbin << "\t" << gaus.GetParameter(1) << "\t" << gaus.GetParError(1) << endl;
+			}
 
 			c1->SetGrid();
 			c1->Print(graph_fname);

@@ -10,9 +10,11 @@
 #include <sstream>
 #include <string>
 
-void processScale(const TString& inputPath, const char* runNumber) {
-	const Float_t TOT_TARGET = 120000;
+#include "utils/printProgress.C"
 
+const Float_t TOT_TARGET = 120000;
+
+void processScale(const TString& inputPath, const char* runNumber) {
 	// load trees
 	TString output_path = inputPath;
 	output_path.ReplaceAll(".root", "_scaled.root");
@@ -68,12 +70,12 @@ void processScale(const TString& inputPath, const char* runNumber) {
 	// scale tot in events
 	Long64_t entries = inputTree->GetEntries();
 	for (Long64_t entry = 0; entry < entries; entry++) {
-		if (entry % 10000 == 0 || entry == entries - 1) {
-			cout << "\rEntry: " << entry + 1 << "/" << entries << flush;
-		}
+		printProgress(entry, entries);
 
 		inputTree->GetEntry(entry);
-		if (!(channelId == 4128 && energy == 5)) {
+		if ((channelId == 4128 && energy ==5) || totMeans[yi][xi] == 0) {
+			totShifted = tot;
+		} else {
 			totShifted = tot * TOT_TARGET / totMeans[yi][xi];
 		}
 

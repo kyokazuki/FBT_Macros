@@ -4,7 +4,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
-Long64_t* getMultGrouped(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t>& tot_range) {
+Long64_t* getMult(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t>& tot_range) {
 
 	Long64_t *mult_arr = new Long64_t[mult_arr_size]();
 
@@ -12,7 +12,7 @@ Long64_t* getMultGrouped(const char *fname, const UInt_t mult_arr_size, Int_t yi
 	cout << fname << endl;
 	TTree *events = (TTree*)inputFile->Get("events");
 
-	vector<Long64_t>* tot = nullptr;
+	vector<Float_t>* tot = nullptr;
 	vector <string> surface = {"X", "Y", "U"};
 	events->SetBranchAddress(Form("tot%s", surface[yi].c_str()), &tot);
 

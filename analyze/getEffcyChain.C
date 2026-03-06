@@ -1,19 +1,21 @@
+#include <TChain.h>
+
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
 
-#include "utils/get_mult_grouped.C"
+#include "utils/getMultChain.C"
+#include "initChain.C"
 
-Float_t getEffcyGrouped(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t> tot_range) {
-	Long64_t *mult_arr = getMultGrouped(fname, mult_arr_size, yi, tot_range);
+int getEffcyChain(TChain *chain, const UInt_t mult_arr_size, Int_t yi, vector <Float_t> tot_range, vector <Float_t> rate_range) {
+	Long64_t *mult_arr = getMultChain(chain, mult_arr_size, yi, tot_range, rate_range);
 	Long64_t total = 0;
 	cout << "Multiplicity(0~" << mult_arr_size << ")	: ";
 	for (UInt_t i = 0; i < mult_arr_size; i++) {
 		cout << mult_arr[i] << " ";
 		total = total + mult_arr[i];
 	}
-	// cout << endl << "Gate Entries		: " << total << endl;
-	cout << endl;
+	cout << endl << "Events			: " << total << endl;
 
 	Float_t effcy;
 	//return 0 if no entries
@@ -21,7 +23,7 @@ Float_t getEffcyGrouped(const char *fname, const UInt_t mult_arr_size, Int_t yi,
 		cout << "Efficiency		: (none)\n" << endl;
 		effcy = 0;
 	} else {
-		effcy = (Float_t)(total - mult_arr[0])/total;
+		effcy = (Float_t) (total - mult_arr[0]) / (Float_t) total;
 		cout << "Efficiency		: " << effcy << "\n" << endl;
 	}
 

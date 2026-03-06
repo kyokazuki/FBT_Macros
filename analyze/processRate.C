@@ -9,6 +9,8 @@
 #include <iostream>
 #include <stdlib.h>
 
+#include "utils/printProgress.C"
+
 int processRate(const TString& inputPath) {
 	const bool SAVE_GRAPH = 1;
 	const Int_t windowHalfWidth = 100;
@@ -56,9 +58,7 @@ int processRate(const TString& inputPath) {
 
 	// fill rate banch
 	for (Int_t entry = 0; entry < entries; entry++) {
-		if (entry % 10000 == 0 || entry == entries - 1) {
-			cout << "\rEntry: " << entry + 1 << "/" << entries << flush;
-		}
+		printProgress(entry, entries);
 
 		if (entry < windowHalfWidth || entry >= entries - windowHalfWidth) {
 			rate = 0.f;

@@ -5,12 +5,13 @@
 #include <iostream>
 #include <algorithm>
 #include <stdlib.h>
-
 #include <unistd.h>
 
-void processClean(const TString& inputPath) {
+#include "utils/printProgress.C"
+
+void processCleanGeometry(const TString& inputPath) {
 	TString output_path = inputPath;
-	output_path.ReplaceAll(".root", "_cleaned.root");
+	output_path.ReplaceAll(".root", "_cleanedG.root");
 	TFile* inputFile = TFile::Open(inputPath);
 	TTree* inputTree = (TTree*)inputFile->Get("events");
 	TFile* outputFile = new TFile(output_path, "RECREATE");
@@ -43,20 +44,17 @@ void processClean(const TString& inputPath) {
 		outputTree->SetBranchAddress(Form("xi%s", surfaces[i]), &xiVectorsCleaned[i]);
 	}
 
-	Long64_t entries = inputTree->GetEntries();
+	Long64_t events = inputTree->GetEntries();
 	struct totEntry {
 		Float_t tot;
 		Int_t surface;
 	};
 	vector<totEntry> totEntries;
 
-	for (Long64_t entry = 0; entry < entries; entry++) {
-	// for (Long64_t entry = 0; entry < 1; entry++) {
-		if (entry % 10000 == 0 || entry == entries - 1) {
-			cout << "\rEntry: " << entry + 1 << "/" << entries << flush;
-		}
+	for (Long64_t event = 0; event < events; event++) {
+		printProgress(event, events);
 
-		inputTree->GetEntry(entry);
+		inputTree->GetEntry(event);
 
 		// fill directly if not enough entries in each surface
 		if (xiVectors[0]->size() == 0 || xiVectors[1]->size() == 0 || xiVectors[2]->size() == 0) {
@@ -129,6 +127,6 @@ void processClean(const TString& inputPath) {
 	outputFile->Close();
 	inputFile->Close();
 
-	cout << endl << "Saved to: " << output_path << endl;
+	cout << "Saved to: " << output_path << endl;
 }
 

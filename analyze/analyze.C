@@ -57,7 +57,7 @@ void analyzeGrouped(const char *fileName) {
 	for (Int_t i = 0; i < 3; i++) {
 		inputTree->SetBranchAddress(Form("tot%s", surfaces[i]), &totVectors[i]);
 		inputTree->SetBranchAddress(Form("xi%s", surfaces[i]), &xiVectors[i]);
-		htots[i] = new TH2F(Form("htot%s", surfaces[i]), Form("htot%s", surfaces[i]), 320, 0.5, 320.5, 500, -20000, 300000);
+		htots[i] = new TH2F(Form("htot%s", surfaces[i]), Form("htot%s", surfaces[i]), 320, 0.5, 320.5, 500, -20000, 500000);
 	}
 
 	Long64_t entries = inputTree->GetEntries();

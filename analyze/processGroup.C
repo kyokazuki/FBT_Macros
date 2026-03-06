@@ -5,18 +5,15 @@
 #include <iostream>
 #include <algorithm>
 #include <stdlib.h>
-
 #include <unistd.h>
 
-void processGroup(const TString& inputPath) {
-	// 2025/12 RARiS
-	const Long64_t DT_RANGE[2] = {-3880000, -3840000};
-	// const Long64_t DT_RANGE[2] = {-2380000, -2350000};
-	// Deuterium
-	// const Long64_t DT_RANGE[2] = {-285000, -250000};
-	// He3
-	// const Long64_t DT_RANGE[2] = {-295000, -270000};
+#include "utils/printProgress.C"
 
+// const Long64_t DT_RANGE[2] 		= {-285000, -250000};	// deuterium
+const Long64_t DT_RANGE[2] 		= {-295000, -270000};	// He3
+// const Long64_t DT_RANGE[2] 		= {-3880000, -3840000};	// 2512 RARiS
+
+void processGroup(const TString& inputPath) {
 	TString output_path = inputPath;
 	output_path.ReplaceAll(".root", "_grouped.root");
 	TFile* inputFile = TFile::Open(inputPath);
@@ -72,9 +69,7 @@ void processGroup(const TString& inputPath) {
 	Long64_t dt;
 
 	for (Long64_t entry = 0; entry < entries; entry++) {
-		if (entry % 10000 == 0 || entry == entries - 1) {
-			cout << "\rEntry: " << entry + 1 << "/" << entries << flush;
-		}
+		printProgress(entry, entries);
 
 		inputTree->GetEntry(entry);
 		if (!(channelId == 4128 && energy == 5)) {

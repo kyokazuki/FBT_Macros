@@ -13,7 +13,7 @@
 
 #include <unistd.h>
 
-int processFriend(const TString& inputPath1, const TString& inputPath2) {
+int processFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	bool SAVE_GRAPH = 1;
 	TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	TGraph *gDdtime = nullptr;
@@ -40,6 +40,7 @@ int processFriend(const TString& inputPath1, const TString& inputPath2) {
 	TFile* outputFile = new TFile(outputPath, "RECREATE");
 	outputFile->cd();
 	TTree* outputTree = inputTree1->CloneTree(0);
+
 	// Load branches for input trees
 	vector<Long64_t>* timeGate = nullptr;
 	inputTree1->SetBranchAddress("timeGate", &timeGate);
@@ -74,6 +75,7 @@ int processFriend(const TString& inputPath1, const TString& inputPath2) {
 	outputTree->Branch("rft", &rft);
 	outputTree->Branch("bbtime", &bbtime);
 	outputTree->Branch("scaler", scaler, "scaler[32]/I");
+	// new branches
 	Long64_t dtime, dbbtime;
 	outputTree->Branch("dtime", &dtime);
 	outputTree->Branch("dbbtime", &dbbtime);
@@ -163,7 +165,7 @@ int processFriend(const TString& inputPath1, const TString& inputPath2) {
 	}
 
 	// Configure graph
-	TString graphPath = Form("%s_friend.pdf", runNumber.Data());
+	TString graphPath = Form("%s_friendDelta.pdf", runNumber.Data());
 	if (SAVE_GRAPH) {
 		c1->SetGridx(true);
 		c1->SetGridy(true);
