@@ -10,7 +10,6 @@
 #include <math.h>
 #include <vector>
 
-#include "utils/loadData.C"
 #include "utils/printProgress.C"
 
 TH2F* hPos = nullptr;

@@ -13,42 +13,51 @@
 #include "utils/printProgress.C"
 
 int processRate(const TString& inputPath) {
-	cout << "Rating " << inputPath << endl;
-
 	const bool SAVE_GRAPH = 1;
 	const Int_t windowHalfWidth = 100;
 	const Int_t windowFullWidth = 2 * windowHalfWidth + 1;
 
-	DataFBT4 inData({inputPath}, "events");
+	// load input and output files
+	TFile* inputFile = TFile::Open(inputPath);
+	TTree* inputTree = (TTree*)inputFile->Get("events");
+	cout << "Rating " << inputPath << endl;
 
+	cout << "Loading tree..." << endl;
 	TString outputPath = inputPath;
 	outputPath.ReplaceAll(".root", "_rated.root");
 	TFile* outputFile = new TFile(outputPath, "RECREATE");
 	outputFile->cd();
-	TTree* outputTree = inData.tree->CloneTree();
+	TTree* outputTree = inputTree->CloneTree();
+
+	// load input tree
+	vector<Long64_t>* timeGate = nullptr;
+	Int_t scaler[32];
+	inputTree->SetBranchAddress("timeGate", &timeGate);
+	inputTree->SetBranchAddress("scaler", scaler);
+
+	inputTree->SetBranchStatus("*", 0);
+	inputTree->SetBranchStatus("timeGate", 1);
+	inputTree->SetBranchStatus("scaler", 1);
 
 	// preload
-	vector <Long64_t> timeGateEntries(inData.entries);
-	vector <Int_t> scalerEntries(inData.entries);
-	for (Long64_t i = 0; i < inData.entries; i++) {
-		inData.tree->GetEntry(i);
-		timeGateEntries[i]  = (*inData.timeGate)[0];
-		scalerEntries[i] = inData.scaler[10];
+	Long64_t entries = inputTree->GetEntries();
+	vector <Long64_t> timeGateEntries(entries);
+	vector <Int_t> scalerEntries(entries);
+	for (Long64_t i = 0; i < entries; i++) {
+		inputTree->GetEntry(i);
+		timeGateEntries[i]  = (*timeGate)[0];
+		scalerEntries[i] = scaler[10];
 	}
 
 	// load branches for output tree
 	Float_t rate;
 	TBranch* rateBranch = outputTree->Branch("rate", &rate);
 
-	inData.tree->SetBranchStatus("*", 0);
-	inData.tree->SetBranchStatus("timeGate", 1);
-	inData.tree->SetBranchStatus("scaler", 1);
-
 	// fill rate banch
-	for (Int_t entry = 0; entry < inData.entries; entry++) {
-		printProgress(entry, inData.entries);
+	for (Int_t entry = 0; entry < entries; entry++) {
+		printProgress(entry, entries);
 
-		if (entry < windowHalfWidth || entry >= inData.entries - windowHalfWidth) {
+		if (entry < windowHalfWidth || entry >= entries - windowHalfWidth) {
 			rate = 0.f;
 		} else {
 			Long64_t dt = timeGateEntries[entry + windowHalfWidth] - timeGateEntries[entry - windowHalfWidth];
@@ -72,6 +81,7 @@ int processRate(const TString& inputPath) {
 	// Save output file
 	outputTree->Write();
 	outputFile->Close();
+	inputFile->Close();
 	cout << "Saved to " << outputPath << endl;
 
 	return 0;

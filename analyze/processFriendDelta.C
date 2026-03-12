@@ -13,94 +13,54 @@
 
 #include <unistd.h>
 
-int processFriendDelta(const TString& inputPath1, const TString& inputPath2) {
+#include "utils/loadData.C"
+
+int processFriendDelta(const TString& inPath1, const TString& inPath2) {
+	cout << "Friending " << inPath1 << " with " << inPath2 << endl;
+
 	bool SAVE_GRAPH = 1;
 	TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	TGraph *gDdtime = nullptr;
+	TString runNumber = TString(gSystem->BaseName(inPath1))(0,4);
 
-	// Load input and output files
-	if (gSystem->AccessPathName(inputPath1)) {
-		cout << inputPath1 << " does not exist!" << endl;
-		return 2;
-	}
-	if (gSystem->AccessPathName(inputPath2)) {
-		cout << inputPath2 << " does not exist!" << endl;
-		return 2;
-	}
-	TFile* inputFile1 = TFile::Open(inputPath1);
-	TFile* inputFile2 = TFile::Open(inputPath2);
-	TString runNumber = TString(gSystem->BaseName(inputPath1))(0,4);
-	cout << "Friending " << inputPath1 << " with " << inputPath2 << endl;
+	DataFBT2 inData1({inPath1}, "events");
+	DataVME2 inData2({inPath2}, "tree");
 
-	// Load input and output trees
-	TTree* inputTree1 = (TTree*)inputFile1->Get("events");
-	TTree* inputTree2 = (TTree*)inputFile2->Get("tree");
-	TString outputPath = inputPath1;
-	outputPath.ReplaceAll(".root", "_friended.root");
-	TFile* outputFile = new TFile(outputPath, "RECREATE");
-	outputFile->cd();
-	TTree* outputTree = inputTree1->CloneTree(0);
-
-	// Load branches for input trees
-	vector<Long64_t>* timeGate = nullptr;
-	inputTree1->SetBranchAddress("timeGate", &timeGate);
-
-	Double_t l1t, l2t, m1t, m2t, s1t, l1q, l2q, m1q, m2q, s1q, rft;
-	Long64_t bbtime;
-	Int_t scaler[32];
-	inputTree2->SetBranchAddress("l1t", &l1t);
-	inputTree2->SetBranchAddress("l2t", &l2t);
-	inputTree2->SetBranchAddress("m1t", &m1t);
-	inputTree2->SetBranchAddress("m2t", &m2t);
-	inputTree2->SetBranchAddress("s1t", &s1t);
-	inputTree2->SetBranchAddress("l1q", &l1q);
-	inputTree2->SetBranchAddress("l2q", &l2q);
-	inputTree2->SetBranchAddress("m1q", &m1q);
-	inputTree2->SetBranchAddress("m2q", &m2q);
-	inputTree2->SetBranchAddress("s1q", &s1q);
-	inputTree2->SetBranchAddress("rft", &rft);
-	inputTree2->SetBranchAddress("bbtime", &bbtime);
-	inputTree2->SetBranchAddress("scaler", scaler);
-	// Load branches for output tree
-	outputTree->Branch("l1t", &l1t);
-	outputTree->Branch("l2t", &l2t);
-	outputTree->Branch("m1t", &m1t);
-	outputTree->Branch("m2t", &m2t);
-	outputTree->Branch("s1t", &s1t);
-	outputTree->Branch("l1q", &l1q);
-	outputTree->Branch("l2q", &l2q);
-	outputTree->Branch("m1q", &m1q);
-	outputTree->Branch("m2q", &m2q);
-	outputTree->Branch("s1q", &s1q);
-	outputTree->Branch("rft", &rft);
-	outputTree->Branch("bbtime", &bbtime);
-	outputTree->Branch("scaler", scaler, "scaler[32]/I");
-	// new branches
+	TString outPath = inPath1;
+	outPath.ReplaceAll(".root", "_friended.root");
+	TFile* outFile = new TFile(outPath, "RECREATE");
+	outFile->cd();
+	TTree* outTree = inData1.tree->CloneTree(0);
+	outTree->Branch("l1t", &inData2.l1t);
+	outTree->Branch("l2t", &inData2.l2t);
+	outTree->Branch("m1t", &inData2.m1t);
+	outTree->Branch("m2t", &inData2.m2t);
+	outTree->Branch("s1t", &inData2.s1t);
+	outTree->Branch("l1q", &inData2.l1q);
+	outTree->Branch("l2q", &inData2.l2q);
+	outTree->Branch("m1q", &inData2.m1q);
+	outTree->Branch("m2q", &inData2.m2q);
+	outTree->Branch("s1q", &inData2.s1q);
+	outTree->Branch("rft", &inData2.rft);
+	outTree->Branch("bbtime", &inData2.bbtime);
+	outTree->Branch("scaler", &inData2.scaler, "scaler[32]/I");
 	Long64_t dtime, dbbtime;
-	outputTree->Branch("dtime", &dtime);
-	outputTree->Branch("dbbtime", &dbbtime);
+	outTree->Branch("dtime", &dtime);
+	outTree->Branch("dbbtime", &dbbtime);
 
 	// Get input trees' entry counts
-	Long64_t entries1 = inputTree1->GetEntries();
-	Long64_t entries2 = inputTree2->GetEntries();
-	cout << "Input File 1: " << entries1 << " entries" << endl;
-	cout << "Input File 2: " << entries2 << " entries" << endl;
-
-	// Only read time branches at first
-	// inputTree1->SetBranchStatus("*", 0);
-	// inputTree1->SetBranchStatus("timeGate", 1);
-	// inputTree2->SetBranchStatus("*", 0);
-	// inputTree2->SetBranchStatus("bbtime", 1);
+	cout << "Input File 1: " << inData1.entries << " entries" << endl;
+	cout << "Input File 2: " << inData2.entries << " entries" << endl;
 
 	// Set appropriate time ratio and time resolution
-	inputTree1->GetEntry(0);
-	Long64_t firstTime1 = (*timeGate)[0];
-	inputTree1->GetEntry(entries1 - 1);
-	Long64_t lastTime1 = (*timeGate)[0];
-	inputTree2->GetEntry(0);
-	Long64_t firstTime2 = bbtime;
-	inputTree2->GetEntry(entries2 - 1);
-	Long64_t lastTime2 = bbtime;
+	inData1.tree->GetEntry(0);
+	Long64_t firstTime1 = (*inData1.timeGate)[0];
+	inData1.tree->GetEntry(inData1.entries - 1);
+	Long64_t lastTime1 = (*inData1.timeGate)[0];
+	inData2.tree->GetEntry(0);
+	Long64_t firstTime2 = inData2.bbtime;
+	inData2.tree->GetEntry(inData2.entries - 1);
+	Long64_t lastTime2 = inData2.bbtime;
 	Double_t timeRatio = (Double_t)(lastTime1 - firstTime1) / (Double_t)(lastTime2 - firstTime2);
 	cout << setprecision(10) << "Time ratio: (" << lastTime1 << "-" << firstTime1 << ")/(" << lastTime2 << "-" << firstTime2 << ") = " << timeRatio << endl;
 	Long64_t timeRes = 50000;
@@ -112,47 +72,47 @@ int processFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	Long64_t startEntry1 = -1, startEntry2 = -1;
 	Long64_t startTime1 = 0, endTime1 = 0, dTime1 = 0;
 	Long64_t startTime2 = 0, endTime2 = 0, dTime2 = 0;
-	if (entries1 == entries2) {
+	if (inData1.entries == inData2.entries) {
 		startEntry1 = 0;
 		startEntry2 = 0;
-		cout << "Event 0/" << entries1 - 1 << " in tree 1 matched with event 0/" << entries2 - 1 << " in tree 2" << endl;
-	} else if (entries1 < entries2) {
-		inputTree1->GetEntry(0);
-		startTime1 = (*timeGate)[0];
-		inputTree1->GetEntry(1);
-		endTime1 = (*timeGate)[0];
+		cout << "Event 0/" << inData1.entries - 1 << " in tree 1 matched with event 0/" << inData2.entries - 1 << " in tree 2" << endl;
+	} else if (inData1.entries < inData2.entries) {
+		inData1.tree->GetEntry(0);
+		startTime1 = (*inData1.timeGate)[0];
+		inData1.tree->GetEntry(1);
+		endTime1 = (*inData1.timeGate)[0];
 		dTime1 = endTime1 - startTime1;
 
-		for (entry2 = 0; entry2 <= entries2 - entries1; entry2++) {
-			inputTree2->GetEntry(entry2);
-			startTime2 = bbtime;
-			inputTree2->GetEntry(entry2 + 1);
-			endTime2 = bbtime;
+		for (entry2 = 0; entry2 <= inData2.entries - inData1.entries; entry2++) {
+			inData2.tree->GetEntry(entry2);
+			startTime2 = inData2.bbtime;
+			inData2.tree->GetEntry(entry2 + 1);
+			endTime2 = inData2.bbtime;
 			dTime2 = endTime2 - startTime2;
 
 			if (dTime1 >= dTime2 * timeRatio - timeRes && dTime1 <= dTime2 * timeRatio + timeRes) {
-				cout << "Event 0/" << entries1 - 1 << " in tree 1 matched with event " << entry2 << "/" << entries2 - 1 << " in tree 2" << endl;
+				cout << "Event 0/" << inData1.entries - 1 << " in tree 1 matched with event " << entry2 << "/" << inData2.entries - 1 << " in tree 2" << endl;
 				startEntry1 = 0;
 				startEntry2 = entry2;
 				break;
 			}
 		}
-	} else if (entries1 > entries2) {
-		inputTree2->GetEntry(0);
-		startTime2 = bbtime;
-		inputTree2->GetEntry(1);
-		endTime2 = bbtime;
+	} else if (inData1.entries > inData2.entries) {
+		inData2.tree->GetEntry(0);
+		startTime2 = inData2.bbtime;
+		inData2.tree->GetEntry(1);
+		endTime2 = inData2.bbtime;
 		dTime2 = endTime2 - startTime2;
 
-		for (entry1 = 0; entry1 <= entries1 - entries2; entry1++) {
-			inputTree1->GetEntry(entry1);
-			startTime1 = (*timeGate)[0];
-			inputTree1->GetEntry(entry1 + 1);
-			endTime1 = (*timeGate)[0];
+		for (entry1 = 0; entry1 <= inData1.entries - inData2.entries; entry1++) {
+			inData1.tree->GetEntry(entry1);
+			startTime1 = (*inData1.timeGate)[0];
+			inData1.tree->GetEntry(entry1 + 1);
+			endTime1 = (*inData1.timeGate)[0];
 			dTime1 = endTime1 - startTime1;
 
 			if (dTime1 >= dTime2 * timeRatio - timeRes && dTime1 <= dTime2 * timeRatio + timeRes) {
-				cout << "Event " << entry1 << "/" << entries1 - 1 << " in tree 1 matched with event 0/" << entries2 - 1 << " in tree 2" << endl;
+				cout << "Event " << entry1 << "/" << inData1.entries - 1 << " in tree 1 matched with event 0/" << inData2.entries - 1 << " in tree 2" << endl;
 				startEntry1 = entry1;
 				startEntry2 = 0;
 				break;
@@ -176,27 +136,23 @@ int processFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 		// gDdtime->SetMinimum(-1*timeRes);
 	}
 
-	// load everything for filling
-	// inputTree1->SetBranchStatus("*", 1);
-	// inputTree2->SetBranchStatus("*", 1);
-
 	// Go through all entries and match events
-	inputTree1->GetEntry(startEntry1);
-	inputTree2->GetEntry(startEntry2);
+	inData1.tree->GetEntry(startEntry1);
+	inData2.tree->GetEntry(startEntry2);
 	dtime = 0;
 	dbbtime = 0;
-	outputTree->Fill();
-	startTime1 = (*timeGate)[0];
-	startTime2 = bbtime;
+	outTree->Fill();
+	startTime1 = (*inData1.timeGate)[0];
+	startTime2 = inData2.bbtime;
 	Long64_t skippedEntries1 = startEntry1;
 	Long64_t skippedEntries2 = startEntry2;
 	bool goNext1 = 1, goNext2 = 1;
 	Long64_t graphPoint = 0;
-	for (entry1 = startEntry1 + 1, entry2 = startEntry2 + 1; entry1 < entries1 && entry2 < entries2; entry1 += goNext1, entry2 += goNext2) {
-		inputTree1->GetEntry(entry1);
-		inputTree2->GetEntry(entry2);
-		endTime1 = (*timeGate)[0];
-		endTime2 = bbtime;
+	for (entry1 = startEntry1 + 1, entry2 = startEntry2 + 1; entry1 < inData1.entries && entry2 < inData2.entries; entry1 += goNext1, entry2 += goNext2) {
+		inData1.tree->GetEntry(entry1);
+		inData2.tree->GetEntry(entry2);
+		endTime1 = (*inData1.timeGate)[0];
+		endTime2 = inData2.bbtime;
 		dTime1 = endTime1 - startTime1;
 		dTime2 = endTime2 - startTime2;
 
@@ -207,29 +163,29 @@ int processFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 		if (dTime1 >= dTime2 * timeRatio - timeRes && dTime1 <= dTime2 * timeRatio + timeRes) {
 			dtime = dTime1;
 			dbbtime = dTime2;
-			outputTree->Fill();
-			startTime1 = (*timeGate)[0];
-			startTime2 = bbtime;
+			outTree->Fill();
+			startTime1 = (*inData1.timeGate)[0];
+			startTime2 = inData2.bbtime;
 			goNext1 = 1;
 			goNext2 = 1;
 		} else if (dTime1 < dTime2 * timeRatio - timeRes) {
-			cout << "Skipping event " << entry1 << "/" << entries1 - 1 << " in tree 1 (" << dTime1 << ":" << dTime2 << ")" << endl;
+			cout << "Skipping event " << entry1 << "/" << inData1.entries - 1 << " in tree 1 (" << dTime1 << ":" << dTime2 << ")" << endl;
 			goNext1 = 1;
 			goNext2 = 0;
 			skippedEntries1 += 1;
 		} else if (dTime1 > dTime2 * timeRatio + timeRes) {
-			cout << "Skipping event " << entry2 << "/" << entries2 - 1 << " in tree 2 (" << dTime1 << ":" << dTime2 << ")" << endl;
+			cout << "Skipping event " << entry2 << "/" << inData2.entries - 1 << " in tree 2 (" << dTime1 << ":" << dTime2 << ")" << endl;
 			goNext1 = 0;
 			goNext2 = 1;
 			skippedEntries2 += 1;
 		}
 
-		if (skippedEntries1 > entries1/50 || skippedEntries2 > entries2/50) {
+		if (skippedEntries1 > inData1.entries/50 || skippedEntries2 > inData2.entries/50) {
 			if (skippedEntries1 > 10 && skippedEntries2 > 10) {
 				cout << "Skipping too many events!" << endl;
-				outputTree->Write();
-				outputFile->Close();
-				// gSystem->Unlink(outputPath);
+				outTree->Write();
+				outFile->Close();
+				// gSystem->Unlink(outPath);
 
 				if (SAVE_GRAPH) {
 					gDdtime->Draw("ALP");
@@ -243,24 +199,22 @@ int processFriendDelta(const TString& inputPath1, const TString& inputPath2) {
 	// Check for leftover entries
 	entry1 -= 1;
 	entry2 -= 1;
-	if (entry1 != entries1 - 1) {
-		cout << "Leftover events " << entry1 << "~" << entries1 - 1 << "/" << entries1 - 1 << " in tree 1" << endl;
-		skippedEntries1 += entries1 - 1 - entry1;
-	} else if (entry2 != entries2 - 1) {
-		cout << "Leftover events " << entry2 << "~" << entries2 - 1 << "/" << entries2 - 1 << " in tree 2" << endl;
-		skippedEntries2 += entries2 - 1 - entry2;
+	if (entry1 != inData1.entries - 1) {
+		cout << "Leftover events " << entry1 << "~" << inData1.entries - 1 << "/" << inData1.entries - 1 << " in tree 1" << endl;
+		skippedEntries1 += inData1.entries - 1 - entry1;
+	} else if (entry2 != inData2.entries - 1) {
+		cout << "Leftover events " << entry2 << "~" << inData2.entries - 1 << "/" << inData2.entries - 1 << " in tree 2" << endl;
+		skippedEntries2 += inData2.entries - 1 - entry2;
 	} else {
 		cout << "No leftovers" << endl;
 	}
-	cout << "Total skipped events in tree 1: " << skippedEntries1 << "/" << entries1 - 1 << endl;
-	cout << "Total skipped events in tree 2: " << skippedEntries2 << "/" << entries2 - 1 << endl;
+	cout << "Total skipped events in tree 1: " << skippedEntries1 << "/" << inData1.entries - 1 << endl;
+	cout << "Total skipped events in tree 2: " << skippedEntries2 << "/" << inData2.entries - 1 << endl;
 
 	// Save output file
-	outputTree->Write();
-	outputFile->Close();
-	inputFile1->Close();
-	inputFile2->Close();
-	cout << "Saved to " << outputPath << endl;
+	outTree->Write();
+	outFile->Close();
+	cout << "Saved to " << outPath << endl;
 
 	// Save graph
 	if (SAVE_GRAPH) {

@@ -3,10 +3,9 @@
 #include <TStyle.h>
 #include <iostream>
 
-#include "plot_time_diff_gate.C"
-
-#include "plot_xy_u.C"
-#include "get_effcy_grouped.C"
+#include "plotDtGate.C"
+#include "plotPosition.C"
+#include "getEffcyGrouped.C"
 
 void analyzeSingles(const char *fileName) {
 	TFile *inputFile = TFile::Open(fileName);

@@ -10,46 +10,38 @@
 #include <sstream>
 #include <string>
 
+#include "utils/loadData.C"
 #include "utils/printProgress.C"
 
 const Float_t TOT_TARGET = 120000;
 
-void processScale(const TString& inputPath, const char* runNumber) {
+void processScale(const TString& inPath, const char* runNumber) {
+	cout << "Scaling events for " << inPath << " with totMeans_" << runNumber << ".tsv" << endl;
+
 	// load trees
-	TString output_path = inputPath;
-	output_path.ReplaceAll(".root", "_scaled.root");
-	TFile* inputFile = TFile::Open(inputPath);
-	TTree* inputTree = (TTree*)inputFile->Get("data");
-	TFile* outputFile = new TFile(output_path, "RECREATE");
-	outputFile->cd();
-	TTree* outputTree = inputTree->CloneTree(0);
-	cout << "Scaling events for " << inputPath << " with totMeans_" << runNumber << ".tsv" << endl;
+	DataFBT1 inData({inPath}, "data");
+	inData.tree->SetBranchStatus("*", 0);
+	inData.tree->SetBranchStatus("time", 1);
+	inData.tree->SetBranchStatus("energy", 1);
+	inData.tree->SetBranchStatus("tot", 1);
+	inData.tree->SetBranchStatus("channelID", 1);
+	inData.tree->SetBranchStatus("xi", 1);
+	inData.tree->SetBranchStatus("yi", 1);
 
-	Float_t energy;
-	Float_t tot, totShifted;
-	UInt_t channelId; 
-	Int_t xi;
-	Int_t yi;
-	inputTree->SetBranchAddress("energy", &energy);
-	inputTree->SetBranchAddress("tot", &tot);
-	inputTree->SetBranchAddress("channelID", &channelId);
-	inputTree->SetBranchAddress("xi", &xi);
-	inputTree->SetBranchAddress("yi", &yi);
+	// output tree
+	TString outPath = inPath;
+	outPath.ReplaceAll(".root", "_scaled.root");
+	TFile* outFile = new TFile(outPath, "RECREATE");
+	outFile->cd();
+	TTree* outTree = inData.tree->CloneTree(0);
 
-	inputTree->SetBranchStatus("*", 0);
-	inputTree->SetBranchStatus("time", 1);
-	inputTree->SetBranchStatus("energy", 1);
-	inputTree->SetBranchStatus("tot", 1);
-	inputTree->SetBranchStatus("channelID", 1);
-	inputTree->SetBranchStatus("xi", 1);
-	inputTree->SetBranchStatus("yi", 1);
-
-	outputTree->SetBranchAddress("tot", &totShifted);
+	Float_t totShifted;
+	outTree->SetBranchAddress("tot", &totShifted);
 
 	// load tot means from tsv
 	const char* layers[3] = {"X","Y","U"};
 	vector <vector <Float_t>> totMeans(3);
-	for (Int_t i = 0; i < 3; i++) {
+	for (size_t i = 0; i < 3; i++) {
 		ifstream tsv(Form("totMeans%s_%s.tsv", layers[i], runNumber));
 		string line;
 
@@ -68,24 +60,22 @@ void processScale(const TString& inputPath, const char* runNumber) {
 	}
 
 	// scale tot in events
-	Long64_t entries = inputTree->GetEntries();
-	for (Long64_t entry = 0; entry < entries; entry++) {
-		printProgress(entry, entries);
+	for (Long64_t entry = 0; entry < inData.entries; entry++) {
+		printProgress(entry, inData.entries);
 
-		inputTree->GetEntry(entry);
-		if ((channelId == 4128 && energy ==5) || totMeans[yi][xi] == 0) {
-			totShifted = tot;
+		inData.tree->GetEntry(entry);
+		if (inData.channelId == 4128 || totMeans[inData.yi][inData.xi] == 0) {
+			totShifted = inData.tot;
 		} else {
-			totShifted = tot * TOT_TARGET / totMeans[yi][xi];
+			totShifted = inData.tot * TOT_TARGET / totMeans[inData.yi][inData.xi];
 		}
 
-		outputTree->Fill();
+		outTree->Fill();
 	}
 
-	outputTree->Write();
-	outputFile->Close();
-	inputFile->Close();
+	outTree->Write();
+	outFile->Close();
 
-	cout << endl << "Saved to: " << output_path << endl;
+	cout << endl << "Saved to: " << outPath << endl;
 }
 

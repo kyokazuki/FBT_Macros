@@ -12,82 +12,67 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "utils/loadData.C"
 #include "utils/printProgress.C"
 
-void processFriendOffset(const TString& inputPath1, const TString& inputPath2, const vector <Int_t>& offsets) {
+void processFriendOffset(const TString& inPath1, const TString& inPath2, const vector <Int_t>& offsets) {
 	gROOT->SetBatch(kTRUE);
 
-	TFile* inputFile1 = TFile::Open(inputPath1);
-	TFile* inputFile2 = TFile::Open(inputPath2);
-	TTree* inputTree1 = (TTree*)inputFile1->Get("events");
-	TTree* inputTree2 = (TTree*)inputFile2->Get("mtree");
-	// TTree* inputTree3 = (TTree*)inputFile2->Get("stree_offset");
-	TString runNumber = TString(gSystem->BaseName(inputPath1))(0,4);
+	TString runNumber = TString(gSystem->BaseName(inPath1))(0,4);
 
-	Long64_t events1 = inputTree1->GetEntries();
-	Long64_t events2 = inputTree2->GetEntries();
-	cout << "Input File 1: " << events1 << " entries" << endl;
-	cout << "Input File 2: " << events2 << " entries" << endl;
+	DataFBT2 inData1({inPath1}, "events");
+	DataVME1 inData2({inPath2}, "mtree");
 
-	Double_t ult, urt, dlt, drt, ulq, urq, dlq, drq;
-	inputTree2->SetBranchAddress("ult", &ult);
-	inputTree2->SetBranchAddress("urt", &urt);
-	inputTree2->SetBranchAddress("dlt", &dlt);
-	inputTree2->SetBranchAddress("drt", &drt);
-	inputTree2->SetBranchAddress("ulq", &ulq);
-	inputTree2->SetBranchAddress("urq", &urq);
-	inputTree2->SetBranchAddress("dlq", &dlq);
-	inputTree2->SetBranchAddress("drq", &drq);
-	Long64_t scaler;
-	inputTree2->SetBranchAddress("scaler32", &scaler);
+	cout << "Input File 1: " << inData1.entries << " entries" << endl;
+	cout << "Input File 2: " << inData2.entries << " entries" << endl;
 	
 	TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	TString graphPath = Form("%s_friendOffset_%d-%d.pdf", runNumber.Data(), offsets.front(), offsets.back());
 	c1->Print(Form("%s[", graphPath.Data()));
 
 	for (UInt_t i = 0; i < offsets.size(); i++) {
-		TString output_path = inputPath1;
-		output_path.ReplaceAll(".root", Form("_friended_offset%d.root", offsets[i]));
-		TFile* outputFile = new TFile(output_path, "RECREATE");
+		TString outPath = inPath1;
+		outPath.ReplaceAll(".root", Form("_friended_offset%d.root", offsets[i]));
+		TFile* outFile = new TFile(outPath, "RECREATE");
+		outFile->cd();
+		TTree* outTree = inData1.tree->CloneTree(0);
+		outTree->Branch("ult", &inData2.ult);
+		outTree->Branch("urt", &inData2.urt);
+		outTree->Branch("dlt", &inData2.dlt);
+		outTree->Branch("drt", &inData2.drt);
+		outTree->Branch("ulq", &inData2.ulq);
+		outTree->Branch("urq", &inData2.urq);
+		outTree->Branch("dlq", &inData2.dlq);
+		outTree->Branch("drq", &inData2.drq);
+		outTree->Branch("scaler32", &inData2.scaler);
 
-		TTree* outputTree = inputTree1->CloneTree(0);
-		outputTree->Branch("ult", &ult);
-		outputTree->Branch("urt", &urt);
-		outputTree->Branch("dlt", &dlt);
-		outputTree->Branch("drt", &drt);
-		outputTree->Branch("ulq", &ulq);
-		outputTree->Branch("urq", &urq);
-		outputTree->Branch("dlq", &dlq);
-		outputTree->Branch("drq", &drq);
-		outputTree->Branch("scaler32", &scaler);
+		if (inData1.entries == inData2.entries) {
+			for (Long64_t entry = 0; entry < inData1.entries; entry++) {
+				printProgress(entry, inData1.entries);
 
-		if (events1 == events2) {
-			for (Long64_t event = 0; event < events1; event++) {
-				printProgress(event, events1);
-
-				inputTree1->GetEntry(event);
-				inputTree2->GetEntry(event + offsets[i]);
-				outputTree->Fill();
+				inData1.tree->GetEntry(entry);
+				inData2.tree->GetEntry(entry + offsets[i]);
+				outTree->Fill();
 			}
-		} else if (events1 < events2) {
-			for (Long64_t event = 0; event < events1; event++) {
-				printProgress(event, events1);
+		} else if (inData1.entries < inData2.entries) {
+			for (Long64_t entry = 0; entry < inData1.entries; entry++) {
+				printProgress(entry, inData1.entries);
 
-				inputTree1->GetEntry(event);
-				inputTree2->GetEntry(event + offsets[i]);
-				outputTree->Fill();
+				inData1.tree->GetEntry(entry);
+				inData2.tree->GetEntry(entry + offsets[i]);
+				outTree->Fill();
 			}
-		} else if (events1 > events2) {
-			for (Long64_t event = 0; event < events2; event++) {
-				printProgress(event, events2);
+		} else if (inData1.entries > inData2.entries) {
+			for (Long64_t entry = 0; entry < inData2.entries; entry++) {
+				printProgress(entry, inData2.entries);
 
-				inputTree1->GetEntry(event + offsets[i]);
-				inputTree2->GetEntry(event);
-				outputTree->Fill();
+				inData1.tree->GetEntry(entry + offsets[i]);
+				inData2.tree->GetEntry(entry);
+				outTree->Fill();
 			}
 		}
 
-		outputTree->Draw("totX:pow(ulq*urq*dlq*drq,0.25)", "", "AP");
+		outTree->Draw("totX:pow(ulq*urq*dlq*drq,0.25)", "", "AP");
 		TGraph* gr = (TGraph*)gPad->GetPrimitive("Graph");
 		gr->GetXaxis()->SetLimits(0, 8000);
 		gr->SetMinimum(0);
@@ -95,12 +80,9 @@ void processFriendOffset(const TString& inputPath1, const TString& inputPath2, c
 		gr->SetTitle(Form("offset=%d", offsets[i]));
 		c1->Print(graphPath.Data());
 
-		outputFile->cd();
-		outputTree->Write();
-		outputTree->Reset();
-		outputFile->Close();
+		outTree->Write();
+		outTree->Reset();
+		outFile->Close();
 	}
 	c1->Print(Form("%s]", graphPath.Data()));
-	inputFile1->Close();
-	inputFile2->Close();
 }

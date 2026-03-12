@@ -7,87 +7,75 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "utils/loadData.C"
 #include "utils/printProgress.C"
 
 const Double_t dtimeRange[2] = {0, 20e3};
 const Float_t totRatioRange[2] = {0, 0.2};
 const Int_t dxiRange[2] = {-3, 3};
+const char* layers[3] = {"X","Y","U"};
 
-void processCleanCrosstalk(const TString& inputPath) {
-	TString output_path = inputPath;
-	output_path.ReplaceAll(".root", "_cleanedC.root");
-	TFile* inputFile = TFile::Open(inputPath);
-	TTree* inputTree = (TTree*)inputFile->Get("events");
-	TFile* outputFile = new TFile(output_path, "RECREATE");
-	TTree* outputTree = inputTree->CloneTree(0);
-	outputFile->cd();
-	cout << "Cleaning events for " << inputPath << endl;
+void processCleanCrosstalk(const TString& inPath) {
+	cout << "Cleaning events for " << inPath << endl;
 
-	vector<vector <Long64_t>*> 	timeVectors(3, nullptr);
-	vector<vector <Long64_t>*> 	timeVectorsCleaned(3, nullptr);
-	vector<vector <Float_t>*> 	energyVectors(3, nullptr);
-	vector<vector <Float_t>*> 	energyVectorsCleaned(3, nullptr);
-	vector<vector <Float_t>*> 	totVectors(3, nullptr);
-	vector<vector <Float_t>*> 	totVectorsCleaned(3, nullptr);
-	vector<vector <UInt_t>*> 	channelIdVectors(3, nullptr);
-	vector<vector <UInt_t>*> 	channelIdVectorsCleaned(3, nullptr);
-	vector<vector <Int_t>*> 	xiVectors(3, nullptr);
-	vector<vector <Int_t>*> 	xiVectorsCleaned(3, nullptr);
-	const char* layers[3] = {"X","Y","U"};
+	DataFBT2 inData({inPath}, "events");
+
+	TString outPath = inPath;
+	outPath.ReplaceAll(".root", "_cleanedC.root");
+	TFile* outFile = new TFile(outPath, "RECREATE");
+	TTree* outTree = inData.tree->CloneTree(0);
+	outFile->cd();
+	vector<vector <Long64_t>*> 	timeVCleaned(3, nullptr);
+	vector<vector <Float_t>*> 	energyVCleaned(3, nullptr);
+	vector<vector <Float_t>*> 	totVCleaned(3, nullptr);
+	vector<vector <UInt_t>*> 	channelIdVCleaned(3, nullptr);
+	vector<vector <Int_t>*> 	xiVCleaned(3, nullptr);
 	for (Int_t i = 0; i < 3; i++) {
-		inputTree->SetBranchAddress(Form("time%s", layers[i]), &timeVectors[i]);
-		inputTree->SetBranchAddress(Form("energy%s", layers[i]), &energyVectors[i]);
-		inputTree->SetBranchAddress(Form("tot%s", layers[i]), &totVectors[i]);
-		inputTree->SetBranchAddress(Form("channelID%s", layers[i]), &channelIdVectors[i]);
-		inputTree->SetBranchAddress(Form("xi%s", layers[i]), &xiVectors[i]);
-
-		outputTree->SetBranchAddress(Form("time%s", layers[i]), &timeVectorsCleaned[i]);
-		outputTree->SetBranchAddress(Form("energy%s", layers[i]), &energyVectorsCleaned[i]);
-		outputTree->SetBranchAddress(Form("tot%s", layers[i]), &totVectorsCleaned[i]);
-		outputTree->SetBranchAddress(Form("channelID%s", layers[i]), &channelIdVectorsCleaned[i]);
-		outputTree->SetBranchAddress(Form("xi%s", layers[i]), &xiVectorsCleaned[i]);
+		outTree->SetBranchAddress(Form("time%s", layers[i]), &timeVCleaned[i]);
+		outTree->SetBranchAddress(Form("energy%s", layers[i]), &energyVCleaned[i]);
+		outTree->SetBranchAddress(Form("tot%s", layers[i]), &totVCleaned[i]);
+		outTree->SetBranchAddress(Form("channelID%s", layers[i]), &channelIdVCleaned[i]);
+		outTree->SetBranchAddress(Form("xi%s", layers[i]), &xiVCleaned[i]);
 	}
 
-	Long64_t events = inputTree->GetEntries();
+	for (Long64_t entry = 0; entry < inData.entries; entry++) {
+		printProgress(entry, inData.entries);
 
-	for (Long64_t event = 0; event < events; event++) {
-		printProgress(event, events);
-
-		inputTree->GetEntry(event);
+		inData.tree->GetEntry(entry);
 
 		// reset cleaned vectors
 		for (Int_t layer = 0; layer < 3; layer++) {
-			timeVectorsCleaned[layer]->clear();
-			energyVectorsCleaned[layer]->clear();
-			totVectorsCleaned[layer]->clear();
-			channelIdVectorsCleaned[layer]->clear();
-			xiVectorsCleaned[layer]->clear();
+			timeVCleaned[layer]->clear();
+			energyVCleaned[layer]->clear();
+			totVCleaned[layer]->clear();
+			channelIdVCleaned[layer]->clear();
+			xiVCleaned[layer]->clear();
 		}
 
 		for (Int_t layer = 0; layer < 3; layer++) {
 			// fill directly if 0 or 1 entry
-			if (timeVectors[layer]->size() <= 1) {
-				*timeVectorsCleaned[layer] = *timeVectors[layer];
-				*energyVectorsCleaned[layer] = *energyVectors[layer];
-				*totVectorsCleaned[layer] = *totVectors[layer];
-				*channelIdVectorsCleaned[layer] = *channelIdVectors[layer];
-				*xiVectorsCleaned[layer] = *xiVectors[layer];
+			if (inData.timeV[layer]->size() <= 1) {
+				*timeVCleaned[layer] = *inData.timeV[layer];
+				*energyVCleaned[layer] = *inData.energyV[layer];
+				*totVCleaned[layer] = *inData.totV[layer];
+				*channelIdVCleaned[layer] = *inData.channelIdV[layer];
+				*xiVCleaned[layer] = *inData.xiV[layer];
 
 				continue;
 			}
 
 			// fill biggest tot regardless
-			timeVectorsCleaned[layer]->push_back((*timeVectors[layer])[0]);
-			energyVectorsCleaned[layer]->push_back((*energyVectors[layer])[0]);
-			totVectorsCleaned[layer]->push_back((*totVectors[layer])[0]);
-			channelIdVectorsCleaned[layer]->push_back((*channelIdVectors[layer])[0]);
-			xiVectorsCleaned[layer]->push_back((*xiVectors[layer])[0]);
+			timeVCleaned[layer]			->push_back((*inData.timeV[layer])[0]);
+			energyVCleaned[layer]		->push_back((*inData.energyV[layer])[0]);
+			totVCleaned[layer]			->push_back((*inData.totV[layer])[0]);
+			channelIdVCleaned[layer]	->push_back((*inData.channelIdV[layer])[0]);
+			xiVCleaned[layer]			->push_back((*inData.xiV[layer])[0]);
 
 			// check for crosstalk
-			for (UInt_t i = 1; i < timeVectors[layer]->size(); i++) {
-				Long64_t dtime = (*timeVectors[layer])[i] - (*timeVectors[layer])[0];
-				Int_t dxi = (*xiVectors[layer])[i] - (*xiVectors[layer])[0];
-				Float_t totRatio = (Float_t) (*totVectors[layer])[i] / (Float_t) (*totVectors[layer])[0];
+			for (UInt_t i = 1; i < inData.timeV[layer]->size(); i++) {
+				Long64_t dtime = (*inData.timeV[layer])[i] - (*inData.timeV[layer])[0];
+				Int_t dxi = (*inData.xiV[layer])[i] - (*inData.xiV[layer])[0];
+				Float_t totRatio = (Float_t) (*inData.totV[layer])[i] / (Float_t) (*inData.totV[layer])[0];
 
 				// fill if not crosstalk
 				if (!(
@@ -95,22 +83,21 @@ void processCleanCrosstalk(const TString& inputPath) {
 					totRatio > totRatioRange[0] && totRatio < totRatioRange[1] && 
 					dxi >= dxiRange[0] && dxi <= dxiRange[1]
 				)) {
-					timeVectorsCleaned[layer]->push_back((*timeVectors[layer])[i]);
-					energyVectorsCleaned[layer]->push_back((*energyVectors[layer])[i]);
-					totVectorsCleaned[layer]->push_back((*totVectors[layer])[i]);
-					channelIdVectorsCleaned[layer]->push_back((*channelIdVectors[layer])[i]);
-					xiVectorsCleaned[layer]->push_back((*xiVectors[layer])[i]);
+					timeVCleaned[layer]			->push_back((*inData.timeV[layer])[i]);
+					energyVCleaned[layer]		->push_back((*inData.energyV[layer])[i]);
+					totVCleaned[layer]			->push_back((*inData.totV[layer])[i]);
+					channelIdVCleaned[layer]	->push_back((*inData.channelIdV[layer])[i]);
+					xiVCleaned[layer]			->push_back((*inData.xiV[layer])[i]);
 				}
 			}
 		}
-		outputTree->Fill();
+		outTree->Fill();
 	}
 
-	outputFile->cd();
-	outputTree->Write();
-	outputFile->Close();
-	inputFile->Close();
+	outFile->cd();
+	outTree->Write();
+	outFile->Close();
 
-	cout << "Saved to: " << output_path << endl;
+	cout << "Saved to: " << outPath << endl;
 }
 

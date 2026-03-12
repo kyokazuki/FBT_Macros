@@ -163,7 +163,7 @@ void plotPositionRated(TChain* inputTree) {
 		for (Int_t posBin = posBins / 2 - 1; posBin <= posBins / 2 + 4; posBin++) {
 			posAlignedIntegral += hPosAlignedRate->GetBinContent(posBin, rateBin);
 		}
-		gRatePosAligned->SetPoint(rateBin, (rateRange[1] - rateRange[0]) / (Float_t) rateBins * ((Float_t) rateBin - 0.5), posAlignedIntegral / stripIntegral);
+		gRatePosAligned->SetPoint(rateBin, (Float_t)(rateRange[1] - rateRange[0]) / (Float_t)rateBins * ((Float_t)rateBin - 0.5), posAlignedIntegral / stripIntegral);
 	}
 
 	hPos->SetTitle(";xiX+xiY;xiU");

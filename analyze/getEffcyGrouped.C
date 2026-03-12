@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "utils/getMultGrouped.C"
+#include "getMultCharge.C"
 
 Float_t getEffcyGrouped(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t> tot_range) {
 	Long64_t *mult_arr = getMultGrouped(fname, mult_arr_size, yi, tot_range);
