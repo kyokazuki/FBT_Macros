@@ -1,22 +1,29 @@
 ### CALIBRATION ###
-export DAQ_DIR=/mnt/daq_data/beamtime2
+export DAQ_DIR=/home/daq/daq_setup11/SAMURAI
 ./daqd  --socket-name=/tmp/d.sock --daq-type=GBE
 cp config.ini $DAQ_DIR/
 ./make_bias_calibration_table -o $DAQ_DIR/bias_calibration.tsv
 ./make_simple_bias_settings_table --config $DAQ_DIR/config.ini --offset 0.0 --prebd 41.44 --bd 51.8 --over 2.5 -o $DAQ_DIR/bias_settings.tsv
 ./make_simple_channel_map -o $DAQ_DIR/map
 sh ../configuration.template.sh $DAQ_DIR
+sh ../configuration.template.sh $DAQ_DIR --enable-dark-scans
 cp ~/FBT_Macros/other/config.ini $DAQ_DIR/
 cp ~/FBT_Macros/other/bias_settings.tsv $DAQ_DIR/
 cp ~/FBT_Macros/other/map_channel.tsv $DAQ_DIR/
 cp ~/FBT_Macros/other/map_trigger.tsv $DAQ_DIR/
 
 ### AQUISITION ###
-export DAQ_RESULTS_DIR=tot_vs_qdc
-./make_simple_disc_settings_table --config $DAQ_DIR/config.ini --vth_t1 10 --vth_t2 10 --vth_e 5 -o $DAQ_DIR/disc_settings.tsv
+export DAQ_RESULTS_DIR=test_speed
+./make_simple_disc_settings_table --config $DAQ_DIR/config.ini --vth_t1 20 --vth_t2 0 --vth_e 0 -o $DAQ_DIR/disc_settings.tsv
 ./read_temperature_sensors --startup
-./acquire_sipm_data --config $DAQ_DIR/config.ini --mode qdc --time 1 -o $DAQ_DIR/$DAQ_RESULTS_DIR/test
-./acquire_sipm_data_ext --config $DAQ_DIR/config.ini --mode tot --time 1 -o $DAQ_DIR/$DAQ_RESULTS_DIR/test
+mkfifo $DAQ_DIR/$DAQ_RESULTS_DIR/start_fifo
+mkfifo $DAQ_DIR/$DAQ_RESULTS_DIR/stop_fifo
+printf '\0' > $DAQ_DIR/$DATA_DIR/start_fifo
+printf '\0' > $DAQ_DIR/$DATA_DIR/stop_fifo
+./acquire_sipm_data --config $DAQ_DIR/config.ini --mode tot --time 1 -o $DAQ_DIR/$DAQ_RESULTS_DIR/test
+./acquire_sipm_data_ext --config $DAQ_DIR/config.ini --mode tot --time 600 -o $DAQ_DIR/$DAQ_RESULTS_DIR/bg
+./acquire_sipm_data_ext --config $DAQ_DIR/config.ini --mode tot --time 600 -o $DAQ_DIR/$DAQ_RESULTS_DIR/bg --wait-on $DAQ_DIR/$DAQ_RESULTS_DIR/start_fifo --stop-on $DAQ_DIR/$DAQ_RESULTS_DIR/stop_fifo
+
 ./convert_raw_to_singles --config $DAQ_DIR/config.ini -i $DAQ_DIR/$DAQ_RESULTS_DIR/test -o $DAQ_DIR/$DAQ_RESULTS_DIR/test_singles.root --writeRoot
 ./convert_raw_to_group --config $DAQ_DIR/config.ini -i $DAQ_DIR/$DAQ_RESULTS_DIR/test -o $DAQ_DIR/$DAQ_RESULTS_DIR/test_group.root --writeMultipleHits 64 --writeRoot
 
@@ -44,3 +51,7 @@ slice_py_of_->Fit("f1", "R")
 fi->Draw("same")
 
 plotRateTot({"0028_200k_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root", "0029_200k_ov2.8_th20_1800s_ext_scaled_grouped_friended_rated.root", "0030_200k_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root", "0031_200k_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root", "0032_200k_ov2.8_th20_1800s_ext_scaled_grouped_friended_rated.root", "0033_200k_ov2.8_th20_1800s_ext_scaled_grouped_friended_rated.root", "0034_200k_ov2.8_th20_1800s_ext_scaled_grouped_friended_rated.root"})
+
+### UPDATE FIRMWARE ###
+./update_prom --port 0 --slave 0 --bin feb_d2_gbe_fem128n_2023.11.27_0000.bit --method alternate
+

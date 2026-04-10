@@ -8,25 +8,23 @@
 #include <TDirectory.h>
 #include <TSystem.h>
 #include <TCanvas.h>
-
 #include <iostream>
 #include <stdlib.h>
 #include <fstream>
 
-const Float_t TOT_RANGE[2] 		= {20e3, 250e3};	// samurai2506
-// const Float_t TOT_RANGE[2] 	= {50e3, 190e3};	// raris2512
-const Int_t XI_RANGE[3] 		= {320, 224, 320};
-const char* LAYERS[3] 			= {"X", "Y", "U"};
+#include "utils/parameters.C"
+#include "utils/loadData.C"
+
 const Float_t totBins 			= (TOT_RANGE[1] - TOT_RANGE[0]) / 1.e4 * 2.;
 const Long64_t fitThreshold 	= 1000;
 
-void getTotMeans(const TString& inputPath) {
+void getTotMeans(const TString& inPath) {
 	gROOT->SetBatch(kTRUE);
 
-	TFile* inputFile = TFile::Open(inputPath, "READ");
-	TTree* inputTree = (TTree*)inputFile->Get("data");
-	TString runNumber = TString(gSystem->BaseName(inputPath))(0,4);
-	cout << "Getting tot means from " << inputPath << endl;
+	DataFBT1 inData({inPath}, "data");
+
+	TString runNumber = TString(gSystem->BaseName(inPath))(0,4);
+	cout << "Getting tot means from " << inPath << endl;
 
 	TCanvas *c1 = nullptr;
 	TH1D *py = nullptr;
@@ -37,10 +35,10 @@ void getTotMeans(const TString& inputPath) {
 		c1 = new TCanvas("c1", "c1", 800, 600);
 		c1->Print(Form("%s[", graph_fname.Data()));
 
-		inputTree->Draw(
+		inData.tree->Draw(
 			Form(
 				"tot:xi>>%s(%d, 0.5, %.1f, %.1f, %.1f, %.1f)", 
-				hName.Data(), XI_RANGE[layer], XI_RANGE[layer] + 0.5, totBins, TOT_RANGE[0], TOT_RANGE[1]
+				hName.Data(), LAYER_CHANNELS[layer], LAYER_CHANNELS[layer] + 0.5, totBins, TOT_RANGE[0], TOT_RANGE[1]
 			),
 			Form("yi==%d", layer),
 			"goff"
@@ -52,7 +50,7 @@ void getTotMeans(const TString& inputPath) {
 		ofstream out(Form("totMeans%s_%s.tsv", LAYERS[layer], runNumber.Data()));
 		out << "xi\tmean\terror" << endl;
 
-		for (Int_t xbin = 1; xbin <= XI_RANGE[layer]; xbin++) {
+		for (Int_t xbin = 1; xbin <= LAYER_CHANNELS[layer]; xbin++) {
 			py = h2->ProjectionY(Form("py_x%d", xbin), xbin, xbin);
 
 			if (py->GetEntries() <= fitThreshold) {
@@ -74,5 +72,4 @@ void getTotMeans(const TString& inputPath) {
 		c1->Print(Form("%s]", graph_fname.Data()));
 		delete c1;
 	}
-	inputFile->Close();
 }

@@ -1,18 +1,15 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TString.h>
-
 #include <iostream>
 #include <algorithm>
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "utils/parameters.C"
 #include "utils/loadData.C"
+#include "utils/createOutFile.C"
 #include "utils/printProgress.C"
-
-// const Long64_t DT_RANGE[2] 		= {-285000, -250000};	// deuterium
-// const Long64_t DT_RANGE[2] 		= {-295000, -270000};	// He3
-const Long64_t DT_RANGE[2] 		= {-3880000, -3840000};	// 2512 RARiS
 
 void processGroup(const TString& inPath) {
 	cout << "Grouping events for " << inPath << endl;
@@ -26,10 +23,7 @@ void processGroup(const TString& inPath) {
 	inData.tree->SetBranchStatus("xi", 1);
 	inData.tree->SetBranchStatus("yi", 1);
 
-	TString outPath = inPath;
-	outPath.ReplaceAll(".root", "_grouped.root");
-	TFile* outFile = new TFile(outPath, "RECREATE");
-	outFile->cd();
+	TFile* outFile = createOutFile(inPath, "_grouped.root");
 	TTree* outTree = new TTree("events", "outTree");
 
 	vector<vector <Long64_t>> timeV(3);
@@ -43,13 +37,12 @@ void processGroup(const TString& inPath) {
 	vector<vector <Int_t>> xiV(3);
 	vector<vector <Int_t>> xiVSorted(3);
 	vector<Long64_t> timeGate;
-	const char* surfaces[3] = {"X","Y","U"};
 	for (Int_t i = 0; i < 3; i++) {
-		outTree->Branch(Form("time%s", surfaces[i]), &timeVSorted[i]);
-		outTree->Branch(Form("energy%s", surfaces[i]), &energyVSorted[i]);
-		outTree->Branch(Form("tot%s", surfaces[i]), &totVSorted[i]);
-		outTree->Branch(Form("channelID%s", surfaces[i]), &channelIdVSorted[i]);
-		outTree->Branch(Form("xi%s", surfaces[i]), &xiVSorted[i]);
+		outTree->Branch(Form("time%s", LAYERS[i]), &timeVSorted[i]);
+		outTree->Branch(Form("energy%s", LAYERS[i]), &energyVSorted[i]);
+		outTree->Branch(Form("tot%s", LAYERS[i]), &totVSorted[i]);
+		outTree->Branch(Form("channelID%s", LAYERS[i]), &channelIdVSorted[i]);
+		outTree->Branch(Form("xi%s", LAYERS[i]), &xiVSorted[i]);
 	}
 	outTree->Branch("timeGate", &timeGate);
 
@@ -130,13 +123,11 @@ void processGroup(const TString& inPath) {
 			channelIdVSorted[i].clear();
 			xiV[i].clear();
 			xiVSorted[i].clear();
-			timeGate.clear();
 		}
+		timeGate.clear();
 	}
 
 	outTree->Write();
 	outFile->Close();
-
-	cout << endl << "Saved to: " << outPath << endl;
 }
 

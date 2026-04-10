@@ -6,13 +6,14 @@
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TAxis.h>
-
 #include <vector>
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "utils/parameters.C"
 #include "utils/loadData.C"
+#include "utils/createOutFile.C"
 #include "utils/printProgress.C"
 
 void processFriendOffset(const TString& inPath1, const TString& inPath2, const vector <Int_t>& offsets) {
@@ -31,10 +32,7 @@ void processFriendOffset(const TString& inPath1, const TString& inPath2, const v
 	c1->Print(Form("%s[", graphPath.Data()));
 
 	for (UInt_t i = 0; i < offsets.size(); i++) {
-		TString outPath = inPath1;
-		outPath.ReplaceAll(".root", Form("_friended_offset%d.root", offsets[i]));
-		TFile* outFile = new TFile(outPath, "RECREATE");
-		outFile->cd();
+		TFile* outFile = createOutFile(inPath1, Form("_friended_offset%d.root", offsets[i]));
 		TTree* outTree = inData1.tree->CloneTree(0);
 		outTree->Branch("ult", &inData2.ult);
 		outTree->Branch("urt", &inData2.urt);

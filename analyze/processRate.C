@@ -5,27 +5,25 @@
 #include <TSystem.h>
 #include <TCanvas.h>
 #include <vector>
-
 #include <iostream>
 #include <stdlib.h>
 
+#include "utils/parameters.C"
 #include "utils/loadData.C"
+#include "utils/createOutFile.C"
 #include "utils/printProgress.C"
 
-int processRate(const TString& inputPath) {
-	cout << "Rating " << inputPath << endl;
+int processRate(const TString& inPath) {
+	cout << "Rating " << inPath << endl;
 
 	const bool SAVE_GRAPH = 1;
 	const Int_t windowHalfWidth = 100;
 	const Int_t windowFullWidth = 2 * windowHalfWidth + 1;
 
-	DataFBT4 inData({inputPath}, "events");
+	DataFBT4 inData({inPath}, "events");
 
-	TString outputPath = inputPath;
-	outputPath.ReplaceAll(".root", "_rated.root");
-	TFile* outputFile = new TFile(outputPath, "RECREATE");
-	outputFile->cd();
-	TTree* outputTree = inData.tree->CloneTree();
+	TFile* outFile = createOutFile(inPath, "_rated.root");
+	TTree* outTree = inData.tree->CloneTree();
 
 	// preload
 	vector <Long64_t> timeGateEntries(inData.entries);
@@ -38,7 +36,7 @@ int processRate(const TString& inputPath) {
 
 	// load branches for output tree
 	Float_t rate;
-	TBranch* rateBranch = outputTree->Branch("rate", &rate);
+	TBranch* rateBranch = outTree->Branch("rate", &rate);
 
 	inData.tree->SetBranchStatus("*", 0);
 	inData.tree->SetBranchStatus("timeGate", 1);
@@ -62,17 +60,16 @@ int processRate(const TString& inputPath) {
 	// save rate graph
 	TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	if (SAVE_GRAPH) {
-		TString runNumber = TString(gSystem->BaseName(inputPath))(0,4);
+		TString runNumber = TString(gSystem->BaseName(inPath))(0,4);
 		TString graphPath = Form("%s_rate.pdf", runNumber.Data());
-		outputTree->Draw("rate:timeGate", "Entry$ % 100 == 0");
+		outTree->Draw("rate:timeGate", "Entry$ % 100 == 0");
 		c1->Print(graphPath);
 	}
 	delete c1;
 
 	// Save output file
-	outputTree->Write();
-	outputFile->Close();
-	cout << "Saved to " << outputPath << endl;
+	outTree->Write();
+	outFile->Close();
 
 	return 0;
 }

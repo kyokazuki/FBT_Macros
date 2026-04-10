@@ -39,10 +39,10 @@ void plotPositionRated(TChain* inputTree) {
 	vector <Long64_t>* timeGate = nullptr;
 	inputTree->SetBranchStatus("*", 0);
 	const char* layers[3] = {"X","Y","U"};
-	// inputTree->SetBranchStatus("m1q", 1);
-	// inputTree->SetBranchAddress("m1q", &m1q);
-	// inputTree->SetBranchStatus("m2q", 1);
-	// inputTree->SetBranchAddress("m2q", &m2q);
+	inputTree->SetBranchStatus("m1q", 1);
+	inputTree->SetBranchAddress("m1q", &m1q);
+	inputTree->SetBranchStatus("m2q", 1);
+	inputTree->SetBranchAddress("m2q", &m2q);
 	// inputTree->SetBranchStatus("s1q", 1);
 	// inputTree->SetBranchAddress("s1q", &s1q);
 	inputTree->SetBranchStatus("timeGate", 1);
@@ -120,10 +120,10 @@ void plotPositionRated(TChain* inputTree) {
 			nskipped++;
 			continue;
 		}
-		// if (!(pow(m1q*m2q, 0.5) >= qRange[0] && pow(m1q*m2q, 0.5) < qRange[1])) {
-		// 	nskipped++;
-		// 	continue;
-		// } 
+		if (!(pow(m1q*m2q, 0.5) >= qRange[0] && pow(m1q*m2q, 0.5) < qRange[1])) {
+			nskipped++;
+			continue;
+		} 
 		// if (!(s1q >= qRange[0] && s1q < qRange[1])) {
 		// 	nskipped++;
 		// 	continue;

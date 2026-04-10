@@ -8,51 +8,45 @@
 #include <fstream>
 #include <iomanip>
 
+#include "utils/parameters.C"
+#include "utils/loadData.C"
 #include "utils/printProgress.C"
 
-const char* layers[3] = {"X", "Y", "U"};
-const Int_t layerChannels[3] = {320, 224, 320};
+void getBeamProfile(const TString& inPath) {
+	DataFBT1 inData({inPath}, "data");
 
-void getBeamProfile(const TString& inputPath) {
-	TFile* inputFile = TFile::Open(inputPath, "READ");
-	TTree* inputTree = (TTree*)inputFile->Get("data");
-	TString runNumber = TString(gSystem->BaseName(inputPath))(0,4);
-	cout << "Getting beam profile from " << inputPath << endl;
+	TString runNumber = TString(gSystem->BaseName(inPath))(0,4);
+	cout << "Getting beam profile from " << inPath << endl;
 
-	Int_t xi, yi;
-	inputTree->SetBranchStatus("*", 0);
-	inputTree->SetBranchStatus("xi", 1);
-	inputTree->SetBranchStatus("yi", 1);
-	inputTree->SetBranchAddress("xi", &xi);
-	inputTree->SetBranchAddress("yi", &yi);
+	inData.tree->SetBranchStatus("*", 0);
+	inData.tree->SetBranchStatus("xi", 1);
+	inData.tree->SetBranchStatus("yi", 1);
 
 	vector <vector <Long64_t>> fiberEntries(3);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		fiberEntries[layer].assign(layerChannels[layer] + 1, 0);
+		fiberEntries[layer].assign(LAYER_CHANNELS[layer] + 1, 0);
 	}
 
 	// count entries
 	cout << "Counting entries..." << endl;
-	Long64_t entries = inputTree->GetEntries();
-	for (Long64_t entry = 0; entry < entries; entry++) {
-		printProgress(entry, entries);
+	for (Long64_t entry = 0; entry < inData.entries; entry++) {
+		printProgress(entry, inData.entries);
 
-		inputTree->GetEntry(entry);
-		if (xi == 0) continue;
-		fiberEntries[yi][xi]++;
+		inData.tree->GetEntry(entry);
+		if (inData.xi == 0) continue;
+		fiberEntries[inData.yi][inData.xi]++;
 	}
 
 	// print to tsv
 	cout << "Printing to tsv..." << endl;
-	Long64_t totalFiberEntries = inputTree->GetEntries("xi != 0");
+	Long64_t totalFiberEntries = inData.tree->GetEntries("xi != 0");
 	for (Int_t layer = 0; layer < 3; layer++) {
-		ofstream out(Form("beamProfile%s_%s.tsv", layers[layer], runNumber.Data()));
+		ofstream out(Form("beamProfile%s_%s.tsv", LAYERS[layer], runNumber.Data()));
 		out << "xi\tcontribution" << endl;
 		out << fixed << setprecision(8);
-		for (Int_t channel = 1; channel <= layerChannels[layer]; channel++) {
+		for (Int_t channel = 1; channel <= LAYER_CHANNELS[layer]; channel++) {
 			Float_t contribution = (Float_t) fiberEntries[layer][channel] / (Float_t) totalFiberEntries;
 			out << channel << "\t" << contribution << endl;
 		}
 	}
-	inputFile->Close();
 }

@@ -15,7 +15,8 @@
 #include <vector>
 #include <string>
 
-#include "initChain.C"
+#include "utils/parameters.C"
+#include "utils/loadData.C"
 #include "utils/printProgress.C"
 
 // const char* beamProfileRunNum 		= "0029";
@@ -24,12 +25,10 @@ const char* beamProfileRunNum 		= "0035";
 const char* graphName		 		= "1MHz";
 
 const Float_t rateRange[2] 			= {0, 10e6};
-const Float_t rateBins 				= 200;
+const Float_t rateBins 				= 100;
 const Float_t totRange[2] 			= {50e3, 400e3};
-const Float_t totBins 				= 100;
-const Float_t totFitRange[2] 		= {50e3, 400e3};
-const char* layers[3] 				= {"X","Y","U"};
-const Int_t layerChannels[3] 		= {320, 224, 320};
+const Float_t totBins 				= 200;
+const Float_t totFitRange[2] 		= {50e3, 180e3};
 
 TH2F* hRateTot = nullptr;
 TH2F* hRateTotNorm = nullptr;
@@ -46,8 +45,8 @@ void plotRateTot(TChain* inputChain) {
 	inputChain->SetBranchStatus("rate", 1);
 	inputChain->SetBranchAddress("rate", &rate);
 	for (Int_t i = 0; i < 3; i++) {
-		inputChain->SetBranchStatus(Form("tot%s", layers[i]), 1);
-		inputChain->SetBranchAddress(Form("tot%s", layers[i]), &totVectors[i]);
+		inputChain->SetBranchStatus(Form("tot%s", LAYERS[i]), 1);
+		inputChain->SetBranchAddress(Form("tot%s", LAYERS[i]), &totVectors[i]);
 	}
 	
 	// initialize graphs
@@ -121,16 +120,16 @@ void plotRateTotChannel(TChain* inputChain) {
 	inputChain->SetBranchStatus("rate", 1);
 	inputChain->SetBranchAddress("rate", &rate);
 	for (Int_t i = 0; i < 3; i++) {
-		inputChain->SetBranchStatus(Form("tot%s", layers[i]), 1);
-		inputChain->SetBranchAddress(Form("tot%s", layers[i]), &totVectors[i]);
-		inputChain->SetBranchStatus(Form("xi%s", layers[i]), 1);
-		inputChain->SetBranchAddress(Form("xi%s", layers[i]), &xiVectors[i]);
+		inputChain->SetBranchStatus(Form("tot%s", LAYERS[i]), 1);
+		inputChain->SetBranchAddress(Form("tot%s", LAYERS[i]), &totVectors[i]);
+		inputChain->SetBranchStatus(Form("xi%s", LAYERS[i]), 1);
+		inputChain->SetBranchAddress(Form("xi%s", LAYERS[i]), &xiVectors[i]);
 	}
 
 	// load beam profile
 	vector <vector <Float_t>> beamProfile(3);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		ifstream tsv(Form("beamProfile%s_%s.tsv", layers[layer], beamProfileRunNum));
+		ifstream tsv(Form("beamProfile%s_%s.tsv", LAYERS[layer], beamProfileRunNum));
 		string line;
 
 		// skip header
@@ -150,19 +149,19 @@ void plotRateTotChannel(TChain* inputChain) {
 	// initialize graphs
 	cout << "Intializing graphs..." << endl;
 	for (Int_t layer = 0; layer < 3; layer++) {
-		hRateTotChannel[layer].resize(layerChannels[layer]);
-		hRateTotChannelNorm[layer].resize(layerChannels[layer]);
-		gMeanChannels[layer].resize(layerChannels[layer]);
-		for (Int_t channel = 0; channel < layerChannels[layer]; channel++) {
+		hRateTotChannel[layer].resize(LAYER_CHANNELS[layer]);
+		hRateTotChannelNorm[layer].resize(LAYER_CHANNELS[layer]);
+		gMeanChannels[layer].resize(LAYER_CHANNELS[layer]);
+		for (Int_t channel = 0; channel < LAYER_CHANNELS[layer]; channel++) {
 			hRateTotChannel[layer][channel] = new TH2F(
-				Form("hRateTotChannel%s_%d", layers[layer], channel), 
-				Form("hRateTotChannel%s_%d", layers[layer], channel), 
+				Form("hRateTotChannel%s_%d", LAYERS[layer], channel), 
+				Form("hRateTotChannel%s_%d", LAYERS[layer], channel), 
 				rateBins, rateRange[0] / 4e2, rateRange[1] / 4e2, 
 				totBins, totRange[0], totRange[1]
 			);
 			hRateTotChannelNorm[layer][channel] = new TH2F(
-				Form("hRateTotChannelNorm%s_%d", layers[layer], channel), 
-				Form("hRateTotChannelNorm%s_%d", layers[layer], channel), 
+				Form("hRateTotChannelNorm%s_%d", LAYERS[layer], channel), 
+				Form("hRateTotChannelNorm%s_%d", LAYERS[layer], channel), 
 				rateBins, rateRange[0] / 4e2, rateRange[1] / 4e2, 
 				totBins, totRange[0], totRange[1]
 			);
@@ -191,13 +190,13 @@ void plotRateTotChannel(TChain* inputChain) {
 	TF1* fGaus = new TF1("fGaus", "gaus", totFitRange[0], totFitRange[1]);
 	int point = 0;
 	for (Int_t layer = 0; layer < 3; layer++) {
-		const TString graph_fname = Form("hRateTotChannel%s_%s.pdf", layers[layer], graphName);
-		// const TString graph_fname = Form("hRateTot%s_1MHz.pdf", layers[layer]);
+		const TString graph_fname = Form("hRateTotChannel%s_%s.pdf", LAYERS[layer], graphName);
+		// const TString graph_fname = Form("hRateTot%s_1MHz.pdf", LAYERS[layer]);
 		TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 		c1->Print(Form("%s[", graph_fname.Data()));
-		for (Int_t channel = 0; channel < layerChannels[layer]; channel++) {
+		for (Int_t channel = 0; channel < LAYER_CHANNELS[layer]; channel++) {
 			hRateTotChannelNorm[layer][channel] = (TH2F*) hRateTotChannel[layer][channel]->Clone(
-				Form("hRateTotChannelNorm%s_%d", layers[layer], channel)
+				Form("hRateTotChannelNorm%s_%d", LAYERS[layer], channel)
 			);
 			gMeanChannels[layer][channel] = new TGraphErrors();
 			point = 0;

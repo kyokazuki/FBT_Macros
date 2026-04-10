@@ -5,15 +5,16 @@
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TAxis.h>
-
 #include <iostream>
 #include <iomanip>
 #include <stdlib.h>
 #include <math.h>
-
 #include <unistd.h>
 
+#include "utils/parameters.C"
 #include "utils/loadData.C"
+#include "utils/createOutFile.C"
+#include "utils/printProgress.C"
 
 int processFriendDelta(const TString& inPath1, const TString& inPath2) {
 	cout << "Friending " << inPath1 << " with " << inPath2 << endl;
@@ -26,10 +27,7 @@ int processFriendDelta(const TString& inPath1, const TString& inPath2) {
 	DataFBT2 inData1({inPath1}, "events");
 	DataVME2 inData2({inPath2}, "tree");
 
-	TString outPath = inPath1;
-	outPath.ReplaceAll(".root", "_friended.root");
-	TFile* outFile = new TFile(outPath, "RECREATE");
-	outFile->cd();
+	TFile* outFile = createOutFile(inPath1, "_friended.root");
 	TTree* outTree = inData1.tree->CloneTree(0);
 	outTree->Branch("l1t", &inData2.l1t);
 	outTree->Branch("l2t", &inData2.l2t);
@@ -149,6 +147,8 @@ int processFriendDelta(const TString& inPath1, const TString& inPath2) {
 	bool goNext1 = 1, goNext2 = 1;
 	Long64_t graphPoint = 0;
 	for (entry1 = startEntry1 + 1, entry2 = startEntry2 + 1; entry1 < inData1.entries && entry2 < inData2.entries; entry1 += goNext1, entry2 += goNext2) {
+		printProgress(entry2, inData2.entries);
+
 		inData1.tree->GetEntry(entry1);
 		inData2.tree->GetEntry(entry2);
 		endTime1 = (*inData1.timeGate)[0];
@@ -214,7 +214,6 @@ int processFriendDelta(const TString& inPath1, const TString& inPath2) {
 	// Save output file
 	outTree->Write();
 	outFile->Close();
-	cout << "Saved to " << outPath << endl;
 
 	// Save graph
 	if (SAVE_GRAPH) {

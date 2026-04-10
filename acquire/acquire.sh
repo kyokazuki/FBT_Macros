@@ -1,10 +1,10 @@
 ### CONFIG ###
 BUILD_DIR=/home/daq/sw_daq_tofpet2-2025.08.04/build
 
-DAQ_DIR=~/daq_setup10/riken1  # calibration, bias, mappin166312g etc. files directory
+DAQ_DIR=~/daq_setup10/test_cable  # calibration, bias, mappin166312g etc. files directory
 # DAQ_DIR=/mnt/daq_data/beamtime2  # calibration, bias, mappin166312g etc. files directory
-DATA_DIR=ext_test5	# data directory (appended to DAQ_DIR)
-DATA_NAME=100kHz # data file name appended to run number (usually source name)
+DATA_DIR=tot_adjust	# data directory (appended to DAQ_DIR)
+DATA_NAME=bg # data file name appended to run number (usually source name)
 
 ASIC_ENUM=($(seq 0 1 13))	# change every ASIC's OV
 # ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV
@@ -13,7 +13,7 @@ OV_ENUM=(2.8)
 # TH_ENUM=($(seq 10 1 50))
 TH_ENUM=(20)
 
-TIME=10	#aquisition time in secconds
+TIME=5	# aquisition time in seconds
 EXT=1	# external gate enabled if 1  (w/o ext gate if 0)
 
 VME=0	# VME starts if 1 (w/o if 0), need tmux session from init_tmux.sh
@@ -46,7 +46,6 @@ for ov in "${OV_ENUM[@]}"; do
 		run_number=$(python ${script_dir}/utils/getRunNumber.py ${DAQ_DIR}/${DATA_DIR})
 		file_name="${run_number}_${DATA_NAME}_ov${ov}_th${th}_${TIME}s"
 		acquire_script="acquire_sipm_data"
-		# acquire_script="acquire_sipm_data_debug"
 		if [ $EXT -eq 1 ]; then
 			file_name+="_ext"
 			acquire_script+="_ext"
@@ -55,6 +54,7 @@ for ov in "${OV_ENUM[@]}"; do
 			mkfifo $DAQ_DIR/$DATA_DIR/start_fifo
 			acquire_script+=" --wait-on $DAQ_DIR/$DATA_DIR/start_fifo"
 		fi
+
 		{
 			./${acquire_script} \
 				--config $DAQ_DIR/config.ini \
@@ -63,6 +63,7 @@ for ov in "${OV_ENUM[@]}"; do
 				echo "Acquired ${DAQ_DIR}/${DATA_DIR}/${file_name}"
 		} &
 		pid=$!
+
 		if [[ $VME -eq 1 ]]; then
 			sleep 10
 			tmux send-keys -t daq:0.2 'babicon | tee '${VME_LOG_DIR}'/'${run_number}'_babicon.log' C-m
@@ -82,6 +83,7 @@ for ov in "${OV_ENUM[@]}"; do
 			rm $DAQ_DIR/$DATA_DIR/start_fifo
 		fi
 		wait $pid
+
 		{
 			touch $DAQ_DIR/$DATA_DIR/converting.${file_name}.root
 			./convert_raw_to_singles \

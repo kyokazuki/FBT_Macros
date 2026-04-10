@@ -1,41 +1,38 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TString.h>
-
 #include <iostream>
 #include <algorithm>
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "utils/parameters.C"
 #include "utils/loadData.C"
+#include "utils/createOutFile.C"
 #include "utils/printProgress.C"
-
-const Double_t dtimeRange[2] = {0, 20e3};
-const Float_t totRatioRange[2] = {0, 0.2};
-const Int_t dxiRange[2] = {-3, 3};
-const char* layers[3] = {"X","Y","U"};
 
 void processCleanCrosstalk(const TString& inPath) {
 	cout << "Cleaning events for " << inPath << endl;
 
+	const Double_t dtimeRange[2] = {0, 20e3};
+	const Float_t totRatioRange[2] = {0, 0.2};
+	const Int_t dxiRange[2] = {-3, 3};
+
 	DataFBT2 inData({inPath}, "events");
 
-	TString outPath = inPath;
-	outPath.ReplaceAll(".root", "_cleanedC.root");
-	TFile* outFile = new TFile(outPath, "RECREATE");
+	TFiles* outFile = createOutFile(inPath, "_cleanedC.root");
 	TTree* outTree = inData.tree->CloneTree(0);
-	outFile->cd();
 	vector<vector <Long64_t>*> 	timeVCleaned(3, nullptr);
 	vector<vector <Float_t>*> 	energyVCleaned(3, nullptr);
 	vector<vector <Float_t>*> 	totVCleaned(3, nullptr);
 	vector<vector <UInt_t>*> 	channelIdVCleaned(3, nullptr);
 	vector<vector <Int_t>*> 	xiVCleaned(3, nullptr);
 	for (Int_t i = 0; i < 3; i++) {
-		outTree->SetBranchAddress(Form("time%s", layers[i]), &timeVCleaned[i]);
-		outTree->SetBranchAddress(Form("energy%s", layers[i]), &energyVCleaned[i]);
-		outTree->SetBranchAddress(Form("tot%s", layers[i]), &totVCleaned[i]);
-		outTree->SetBranchAddress(Form("channelID%s", layers[i]), &channelIdVCleaned[i]);
-		outTree->SetBranchAddress(Form("xi%s", layers[i]), &xiVCleaned[i]);
+		outTree->SetBranchAddress(Form("time%s", LAYERS[i]), &timeVCleaned[i]);
+		outTree->SetBranchAddress(Form("energy%s", LAYERS[i]), &energyVCleaned[i]);
+		outTree->SetBranchAddress(Form("tot%s", LAYERS[i]), &totVCleaned[i]);
+		outTree->SetBranchAddress(Form("channelID%s", LAYERS[i]), &channelIdVCleaned[i]);
+		outTree->SetBranchAddress(Form("xi%s", LAYERS[i]), &xiVCleaned[i]);
 	}
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
@@ -97,7 +94,5 @@ void processCleanCrosstalk(const TString& inPath) {
 	outFile->cd();
 	outTree->Write();
 	outFile->Close();
-
-	cout << "Saved to: " << outPath << endl;
 }
 

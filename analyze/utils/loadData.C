@@ -119,7 +119,7 @@ struct DataFBT5 : public DataFBT4 {
 	Float_t rate;
 
 	DataFBT5(const vector<TString>& paths, const TString& treeName)
-		: DataFBT4(paths, treeName)
+		: DataBase(paths, treeName), DataFBT4(paths, treeName)
 	{
 		tree->SetBranchAddress("rate", &rate);
 	}

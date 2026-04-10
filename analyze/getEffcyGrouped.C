@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "getMultCharge.C"
+#include "getMult.C"
 
 Float_t getEffcyGrouped(const char *fname, const UInt_t mult_arr_size, Int_t yi, vector <Float_t> tot_range) {
-	Long64_t *mult_arr = getMultGrouped(fname, mult_arr_size, yi, tot_range);
+	Long64_t *mult_arr = getMult(fname, mult_arr_size, yi, tot_range);
 	Long64_t total = 0;
 	cout << "Multiplicity(0~" << mult_arr_size << ")	: ";
 	for (UInt_t i = 0; i < mult_arr_size; i++) {
