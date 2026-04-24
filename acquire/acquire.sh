@@ -1,10 +1,10 @@
 ### CONFIG ###
-BUILD_DIR=/home/daq/sw_daq_tofpet2-2025.08.04/build
+BUILD_DIR=/home/daq/sw_daq_tofpet2-2026.03.20/build_disc
 
-DAQ_DIR=~/daq_setup10/test_cable  # calibration, bias, mappin166312g etc. files directory
+DAQ_DIR=~/daq_setup11/FDC1_test  # calibration, bias, mappin166312g etc. files directory
 # DAQ_DIR=/mnt/daq_data/beamtime2  # calibration, bias, mappin166312g etc. files directory
-DATA_DIR=tot_adjust	# data directory (appended to DAQ_DIR)
-DATA_NAME=bg # data file name appended to run number (usually source name)
+DATA_DIR=delay	# data directory (appended to DAQ_DIR)
+DATA_NAME=Sr90 # data file name appended to run number (usually source name)
 
 ASIC_ENUM=($(seq 0 1 13))	# change every ASIC's OV
 # ASIC_ENUM=(0 1 2 5 6 7 8 9 12 13)  # change selected ASIC's OV

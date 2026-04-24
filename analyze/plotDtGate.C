@@ -20,10 +20,11 @@ int plotDtGate(char *fname) {
 	TFile *inputFile = TFile::Open(fname);
 	TTree *tree1 = (TTree*)inputFile->Get("data");
 
-	// const Long64_t DT_RANGE[2]	= {-4500000, 4500000}; //ps
-	const Long64_t DT_RANGE[2]	= {-21000000, 21000000}; //ps
+	const Long64_t DT_RANGE[2]	= {-1000000, 1000000}; //ps
+	// const Long64_t DT_RANGE[2]	= {-10000000000, 10000000000}; //ps
 	const Int_t XI_RANGE[2]		= {1, 320};
-	const Float_t TOT_RANGE[2]	= {0, 500000};
+	const Float_t TOT_RANGE[2]	= {0, 100000};
+	// const Float_t TOT_RANGE[2]	= {0, 500000};
 
 	// TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	// c1->SetGrid();
@@ -103,10 +104,10 @@ int plotDtGate(char *fname) {
 				}
 
 				// get gate signal timing
-				if (xi == 0 && energy == 5) {
-					hdt_gate->Fill(dt);
-					break;
-				}
+				// if (xi == 0 && energy == 5) {
+				// 	hdt_gate->Fill(dt);
+				// 	break;
+				// }
 
 				if (!(xi >= XI_RANGE[0] && xi <= XI_RANGE[1])) {
 					continue;

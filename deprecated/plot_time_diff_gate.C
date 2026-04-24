@@ -23,7 +23,7 @@ int time_diff(const char *fname) {
 
 	// const Long64_t DT_RANGE[2]	= {-3000000, 3000000}; //ps
 	// const Long64_t DT_RANGE[2]	= {-20000, 20000}; //ps
-	const Long64_t DT_RANGE[2]	= {-6000000, 6000000}; //ps
+	const Long64_t DT_RANGE[2]	= {-10000000, 10000000}; //ps
 	const Int_t XI_RANGE[2]		= {1, 320};
 	const Float_t TOT_RANGE[2]	= {0, 300000};
 
@@ -103,10 +103,10 @@ int time_diff(const char *fname) {
 					continue;
 				}
 				// get digitized signal timing
-				if (xi == 0 && yi == 63) {
-					hdt_digi->Fill(dt);
-					continue;
-				}
+				// if (xi == 0 && yi == 63) {
+				// 	hdt_digi->Fill(dt);
+				// 	continue;
+				// }
 				// get falling edge timing
 				if (xi == 0 && energy == -5) {
 					hdt_fall->Fill(dt);

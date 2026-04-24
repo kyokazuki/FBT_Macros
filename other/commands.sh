@@ -1,5 +1,5 @@
 ### CALIBRATION ###
-export DAQ_DIR=/home/daq/daq_setup11/SAMURAI
+export DAQ_DIR=/home/daq/daq_setup11/FDC1_test
 ./daqd  --socket-name=/tmp/d.sock --daq-type=GBE
 cp config.ini $DAQ_DIR/
 ./make_bias_calibration_table -o $DAQ_DIR/bias_calibration.tsv
@@ -44,6 +44,7 @@ events->Scan("timeX:timeY:timeU:bbtime:dtime:dbbtime","","colsize=20")
 events->Draw("(dtime+1)/(dbbtime+1):bbtime", "", "colz")
 
 ### MISC ###
+# (delay[ns] = value * 5 – 2)
 # fit poisson
 TF1 *f1 = new TF1("f1","[0]*TMath::Power(([1]/[2]),(x/[2]))*(TMath::Exp(-([1]/[2])))/TMath::Gamma((x/[2])+1.)", 50000, 400000);
 f1->SetParameters(100, 14, 250./14)
@@ -54,4 +55,17 @@ plotRateTot({"0028_200k_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root",
 
 ### UPDATE FIRMWARE ###
 ./update_prom --port 0 --slave 0 --bin feb_d2_gbe_fem128n_2023.11.27_0000.bit --method alternate
+
+# add friend
+TFile *f1 = TFile::Open("file1.root");
+TTree *t1 = (TTree*)f1->Get("tree1");
+TFile *f2 = TFile::Open("file2.root");
+TTree *t2 = (TTree*)f2->Get("tree2");
+t1->AddFriend(t2);
+
+TFile *f1 = TFile::Open("0038_cosmic_ov2.8_th20_86400s_ext_grouped.root");
+TFile *f2 = TFile::Open("out.root");
+TTree *t1 = (TTree*)f1->Get("events");
+TTree *t2 = (TTree*)f2->Get("tree")
+t1->AddFriend(t2)
 

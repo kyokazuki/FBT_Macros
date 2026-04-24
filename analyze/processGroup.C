@@ -11,7 +11,7 @@
 #include "utils/createOutFile.C"
 #include "utils/printProgress.C"
 
-void processGroup(const TString& inPath) {
+void processGroup(const TString& inPath, const vector <Long64_t> dtRange) {
 	cout << "Grouping events for " << inPath << endl;
 
 	DataFBT1 inData({inPath}, "data");
@@ -76,9 +76,9 @@ void processGroup(const TString& inPath) {
 				inData.tree->GetEntry(entry2);
 				dt = inData.time - gateRise;
 
-				if ((dir == -1 && dt > DT_RANGE[1]) || (dir == 1 && dt < DT_RANGE[0])) {
+				if ((dir == -1 && dt > dtRange[1]) || (dir == 1 && dt < dtRange[0])) {
 					continue;
-				} else if ((dir == -1 && dt < DT_RANGE[0]) || (dir == 1 && dt > DT_RANGE[1])) {
+				} else if ((dir == -1 && dt < dtRange[0]) || (dir == 1 && dt > dtRange[1])) {
 					break;
 				}
 

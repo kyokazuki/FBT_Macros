@@ -16,8 +16,11 @@
 # RARiS 2512
 FBT_DIR=/mnt/daq_data/beamtime2/data1
 # FBT_RUN_ENUM=($(seq 3 1 57))
+# MACRO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MACRO_DIR=/home/daq/FBT_Macros/analyze
 FBT_RUN_ENUM=(28)
 SCALE_DATA="0006"
+DT_RANGE="{-3880000, -3840000}" # time range relative to gate for grouping [ps]
 LOG_DIR=/mnt/daq_data/daq_shared/logs
 VME_GATEWAY="jiang@lambda.phys.tohoku.ac.jp"	# leave empty for direct connection
 VME_LOGIN="daq@172.25.28.98"
@@ -33,7 +36,6 @@ CLEAN_GEOMETRY=0
 RATE=0
 
 ### MERGE ###
-scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 cd ${FBT_DIR}
 
@@ -57,7 +59,7 @@ for fbtRun in "${FBT_RUN_ENUM[@]}"; do
 
 	# scale
 	if [[ ${SCALE} -eq 1 ]]; then
-		root -l -b -q "${scriptDir}/processScale.C+(\"${rootData}\", \"${SCALE_DATA}\")"
+		root -l -b -q "${MACRO_DIR}/processScale.C+(\"${rootData}\", \"${SCALE_DATA}\")"
 	fi
 
 	# group if file exists
@@ -65,7 +67,7 @@ for fbtRun in "${FBT_RUN_ENUM[@]}"; do
 		if [[ ! -e ${scaledData} ]]; then
 			echo "Cannot find ${scaledData}!"
 		else
-			root -l -b -q "${scriptDir}/processGroup.C+(\"${scaledData}\")"
+			root -l -b -q "${MACRO_DIR}/processGroup.C+(\"${scaledData}\", ${DT_RANGE})"
 		fi
 	fi
 
@@ -101,7 +103,7 @@ for fbtRun in "${FBT_RUN_ENUM[@]}"; do
 		elif [[ ! -e run${vmeRunNumber}.m.root ]]; then
 			echo "Cannot find run${vmeRunNumber}.m.root!"
 		else
-			root -l -b -q "${scriptDir}/processFriendOffset.C+(\"${groupedData}\", \"run${vmeRunNumber}.m.root\", ${OFFSET})"
+			root -l -b -q "${MACRO_DIR}/processFriendOffset.C+(\"${groupedData}\", \"run${vmeRunNumber}.m.root\", ${OFFSET})"
 		fi
 	fi
 	# friend if both files exist
@@ -111,7 +113,7 @@ for fbtRun in "${FBT_RUN_ENUM[@]}"; do
 		elif [[ ! -e run${vmeRunNumber}.root ]]; then
 			echo "Cannot find run${vmeRunNumber}.root!"
 		else
-			root -l -b -q "${scriptDir}/processFriendDelta.C+(\"${groupedData}\", \"run${vmeRunNumber}.root\")" | tee ${fbtRunNumber}_friend.log
+			root -l -b -q "${MACRO_DIR}/processFriendDelta.C+(\"${groupedData}\", \"run${vmeRunNumber}.root\")" | tee ${fbtRunNumber}_friend.log
 		fi
 	fi
 
@@ -120,7 +122,7 @@ for fbtRun in "${FBT_RUN_ENUM[@]}"; do
 		if [[ ! -e ${friendedData} ]]; then
 			echo "Cannot find ${friendedData}!"
 		else
-			root -l -b -q "${scriptDir}/processCleanCrosstalk.C+(\"${friendedData}\")"
+			root -l -b -q "${MACRO_DIR}/processCleanCrosstalk.C+(\"${friendedData}\")"
 		fi
 	fi
 
@@ -129,7 +131,7 @@ for fbtRun in "${FBT_RUN_ENUM[@]}"; do
 		if [[ ! -e ${cleanedCData} ]]; then
 			echo "Cannot find ${cleanedCData}!"
 		else
-			root -l -b -q "${scriptDir}/processCleanGeometry.C+(\"${cleanedCData}\")"
+			root -l -b -q "${MACRO_DIR}/processCleanGeometry.C+(\"${cleanedCData}\")"
 		fi
 	fi
 
@@ -138,14 +140,14 @@ for fbtRun in "${FBT_RUN_ENUM[@]}"; do
 	# 	if [[ ! -e ${cleanedGData} ]]; then
 	# 		echo "Cannot find ${cleanedGData}!"
 	# 	else
-	# 		root -l -b -q "${scriptDir}/processRate.C+(\"${cleanedGData}\")"
+	# 		root -l -b -q "${MACRO_DIR}/processRate.C+(\"${cleanedGData}\")"
 	# 	fi
 	# fi
 	if [[ ${RATE} -eq 1 ]]; then
 		if [[ ! -e ${friendedData} ]]; then
 			echo "Cannot find ${friendedData}!"
 		else
-			root -l -b -q "${scriptDir}/processRate.C+(\"${friendedData}\")"
+			root -l -b -q "${MACRO_DIR}/processRate.C+(\"${friendedData}\")"
 		fi
 	fi
 

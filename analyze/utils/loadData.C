@@ -125,3 +125,23 @@ struct DataFBT5 : public DataFBT4 {
 	}
 };
 
+struct DataFDC1 : virtual public DataBase {
+	ULong64_t ts;
+	// Int_t fdc1;
+	Double_t wirez[999];
+	// Int_t id_fdc1x1, id_fdc1x2, id_fdc1x3, id_fdc1u1, id_fdc1u2, id_fdc1v1, id_fdc1v2;
+
+	DataFDC1(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
+		tree->SetBranchAddress("ts", &ts);
+		// tree->SetBranchAddress("fdc1", &fdc1);
+		tree->SetBranchAddress("fdc1.wirez", wirez);
+		// tree->SetBranchAddress("id_fdc1x1", &id_fdc1x1);
+		// tree->SetBranchAddress("id_fdc1x2", &id_fdc1x2);
+		// tree->SetBranchAddress("id_fdc1x3", &id_fdc1x3);
+		// tree->SetBranchAddress("id_fdc1u1", &id_fdc1u1);
+		// tree->SetBranchAddress("id_fdc1u2", &id_fdc1u2);
+		// tree->SetBranchAddress("id_fdc1v1", &id_fdc1v1);
+		// tree->SetBranchAddress("id_fdc1v2", &id_fdc1v2);
+    }
+};
+
