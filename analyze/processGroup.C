@@ -38,11 +38,11 @@ void processGroup(const TString& inPath, const vector <Long64_t> dtRange) {
 	vector<vector <Int_t>> xiVSorted(3);
 	vector<Long64_t> timeGate;
 	for (Int_t i = 0; i < 3; i++) {
-		outTree->Branch(Form("time%s", LAYERS[i]), &timeVSorted[i]);
-		outTree->Branch(Form("energy%s", LAYERS[i]), &energyVSorted[i]);
-		outTree->Branch(Form("tot%s", LAYERS[i]), &totVSorted[i]);
-		outTree->Branch(Form("channelID%s", LAYERS[i]), &channelIdVSorted[i]);
-		outTree->Branch(Form("xi%s", LAYERS[i]), &xiVSorted[i]);
+		outTree->Branch(Form("time%c", LAYERS[i]), &timeVSorted[i]);
+		outTree->Branch(Form("energy%c", LAYERS[i]), &energyVSorted[i]);
+		outTree->Branch(Form("tot%c", LAYERS[i]), &totVSorted[i]);
+		outTree->Branch(Form("channelID%c", LAYERS[i]), &channelIdVSorted[i]);
+		outTree->Branch(Form("xi%c", LAYERS[i]), &xiVSorted[i]);
 	}
 	outTree->Branch("timeGate", &timeGate);
 
