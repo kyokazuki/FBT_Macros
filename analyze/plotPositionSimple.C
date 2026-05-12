@@ -92,7 +92,8 @@ void plotPosition(const vector<TString>& inPath) {
 		}
 
 		pos = (*inData.xiV[0])[0] + (*inData.xiV[1])[0];
-		posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + 39.14285)/0.73142;
+		// posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + 39.14285)/0.73142;
+		posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + 70)/0.83; // FDC1 test cosmic ray
 		dt = abs((*inData.timeV[0])[0] - (*inData.timeV[1])[0]) + abs((*inData.timeV[1])[0] - (*inData.timeV[2])[0]) + abs((*inData.timeV[2])[0] - (*inData.timeV[0])[0]);
 
 		hPos->Fill(pos, (*inData.xiV[2])[0]);

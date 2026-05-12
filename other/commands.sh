@@ -68,4 +68,4 @@ TFile *f2 = TFile::Open("out.root");
 TTree *t1 = (TTree*)f1->Get("events");
 TTree *t2 = (TTree*)f2->Get("tree")
 t1->AddFriend(t2)
-
+t1->Scan("ts:xiX:xiY:xiU:fdc1.wirepos:fdc1.wirez")

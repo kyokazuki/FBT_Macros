@@ -51,15 +51,26 @@ struct DataFBT2 : virtual public DataBase {
 
 	DataFBT2(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
 		tree->SetBranchAddress("timeGate", &timeGate);
-		const char* layers[3] = {"X","Y","U"};
+		const char layers[3] = {'X', 'Y', 'U'};
 		for (size_t i = 0; i < 3; i++) {
-			tree->SetBranchAddress(Form("time%s", layers[i]), &timeV[i]);
-			tree->SetBranchAddress(Form("energy%s", layers[i]), &energyV[i]);
-			tree->SetBranchAddress(Form("tot%s", layers[i]), &totV[i]);
-			tree->SetBranchAddress(Form("channelID%s", layers[i]), &channelIdV[i]);
-			tree->SetBranchAddress(Form("xi%s", layers[i]), &xiV[i]);
+			tree->SetBranchAddress(Form("time%c", layers[i]), &timeV[i]);
+			tree->SetBranchAddress(Form("energy%c", layers[i]), &energyV[i]);
+			tree->SetBranchAddress(Form("tot%c", layers[i]), &totV[i]);
+			tree->SetBranchAddress(Form("channelID%c", layers[i]), &channelIdV[i]);
+			tree->SetBranchAddress(Form("xi%c", layers[i]), &xiV[i]);
 		}
     }
+
+	void clear() {
+		for (size_t i = 0; i < 3; i++) {
+			timeV[i]->clear();
+			energyV[i]->clear();
+			totV[i]->clear();
+			channelIdV[i]->clear();
+			xiV[i]->clear();
+		}
+		timeGate->clear();
+	}
 };
 
 struct DataVME1 : virtual public DataBase {
@@ -127,21 +138,21 @@ struct DataFBT5 : public DataFBT4 {
 
 struct DataFDC1 : virtual public DataBase {
 	ULong64_t ts;
-	// Int_t fdc1;
-	Double_t wirez[999];
-	// Int_t id_fdc1x1, id_fdc1x2, id_fdc1x3, id_fdc1u1, id_fdc1u2, id_fdc1v1, id_fdc1v2;
+	Double_t wirez[1000];
+	Double_t wirepos[1000];
 
 	DataFDC1(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
 		tree->SetBranchAddress("ts", &ts);
-		// tree->SetBranchAddress("fdc1", &fdc1);
 		tree->SetBranchAddress("fdc1.wirez", wirez);
-		// tree->SetBranchAddress("id_fdc1x1", &id_fdc1x1);
-		// tree->SetBranchAddress("id_fdc1x2", &id_fdc1x2);
-		// tree->SetBranchAddress("id_fdc1x3", &id_fdc1x3);
-		// tree->SetBranchAddress("id_fdc1u1", &id_fdc1u1);
-		// tree->SetBranchAddress("id_fdc1u2", &id_fdc1u2);
-		// tree->SetBranchAddress("id_fdc1v1", &id_fdc1v1);
-		// tree->SetBranchAddress("id_fdc1v2", &id_fdc1v2);
+		tree->SetBranchAddress("fdc1.wirepos", wirepos);
+    }
+};
+
+struct DataTS : virtual public DataBase {
+	ULong64_t smts;
+
+	DataTS(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
+		tree->SetBranchAddress("SMTS", &smts);
     }
 };
 

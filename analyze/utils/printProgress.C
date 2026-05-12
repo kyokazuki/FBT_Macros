@@ -6,7 +6,7 @@ void printProgress(Long64_t entry, Long64_t entries) {
 
 	if (entry % 10000 == 0 || entry == entries) {
 		Int_t progress = (Float_t) entry / (Float_t) entries * 100;
-		cout << "\rProgress: " << entry << "/" << entries << " (" << progress << "%)";
+		cout << "Progress: " << entry << "/" << entries << " (" << progress << "%)\r" << flush;
 	}
 
 	if (entry == entries) {

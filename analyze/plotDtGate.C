@@ -20,7 +20,7 @@ int plotDtGate(char *fname) {
 	TFile *inputFile = TFile::Open(fname);
 	TTree *tree1 = (TTree*)inputFile->Get("data");
 
-	const Long64_t DT_RANGE[2]	= {-1000000, 1000000}; //ps
+	const Long64_t DT_RANGE[2]	= {-10000000, 10000000}; //ps
 	// const Long64_t DT_RANGE[2]	= {-10000000000, 10000000000}; //ps
 	const Int_t XI_RANGE[2]		= {1, 320};
 	const Float_t TOT_RANGE[2]	= {0, 100000};

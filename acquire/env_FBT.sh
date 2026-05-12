@@ -13,7 +13,7 @@ TIME=86400 # acquisition time in seconds (86400: 1 day, 604800: 1 week)
 EXT=1 # external gate enabled if 1
 RENAME=0 # rename time to live time if 1
 CONVERT=1 # convert to root if 1
-COPY=0 # copy data if 1
+COPY=1 # copy data if 1
 COPY_KEY="/home/daq/.ssh/id_ed25519_sana01" # ssh key to use
 COPY_DEST="s074@sana01.ribfdaq:/home/s074/fbt/FDC1_test/fdc1" # data copy destination
 
