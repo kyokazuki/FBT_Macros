@@ -4,7 +4,7 @@
 source /home/daq/FBT_Macros/acquire/env_FBT.sh
 
 # get data file and acquisition script names
-RUN_NUM=$1 # in 4 digits
+RUN_NUM=${1:-0000} # in 4 digits
 file_name="${RUN_NUM}_${DATA_NAME}_ov${OV}_th${TH}_${TIME}s"
 echo "Acquiring for ${file_name}"
 acquire_script="acquire_sipm_data"
@@ -28,8 +28,12 @@ ${BUILD_DIR}/make_simple_disc_settings_table \
 	-o ${DAQ_DIR}/disc_settings.tsv
 
 # acquisition standby
-mkfifo ${DAQ_DIR}/${DATA_DIR}/start_fifo
-mkfifo ${DAQ_DIR}/${DATA_DIR}/stop_fifo
+if [ ! -e ${DAQ_DIR}/${DATA_DIR}/start_fifo ]; then
+    mkfifo ${DAQ_DIR}/${DATA_DIR}/start_fifo
+fi
+if [ ! -e ${DAQ_DIR}/${DATA_DIR}/stop_fifo ]; then
+    mkfifo ${DAQ_DIR}/${DATA_DIR}/stop_fifo
+fi
 ${BUILD_DIR}/${acquire_script} \
 	--config ${DAQ_DIR}/config.ini \
 	--mode tot \
@@ -38,18 +42,20 @@ ${BUILD_DIR}/${acquire_script} \
 	--wait-on ${DAQ_DIR}/${DATA_DIR}/start_fifo \
 	--stop-on ${DAQ_DIR}/${DATA_DIR}/stop_fifo \
 	| tee ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
-# ${BUILD_DIR}/${acquire_script} \
-# --config ${DAQ_DIR}/config.ini \
-# --mode tot \
-# --time ${TIME} \
-# -o ${DAQ_DIR}/${DATA_DIR}/${file_name} \
-# | tee ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
+
+# log run time
+date -r "${DAQ_DIR}/${DATA_DIR}/start_fifo" "Run start: +%Y/%m/%d %H:%M:%S" \
+	2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
+date -r "${DAQ_DIR}/${DATA_DIR}/stop_fifo" "Run stop: +%Y/%m/%d %H:%M:%S" \
+	2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
+start_time=$(stat -c %Y ${DAQ_DIR}/${DATA_DIR}/start_fifo)
+stop_time=$(stat -c %Y ${DAQ_DIR}/${DATA_DIR}/stop_fifo)
+live_time=$(( stop_time - start_time ))
+echo "Run duration: ${live_time}s" \
+	2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
 
 # rename time to live time
 if [ ${RENAME} -eq 1 ]; then
-	start_time=$(stat -c %Y ${DAQ_DIR}/${DATA_DIR}/start_fifo)
-	stop_time=$(stat -c %Y ${DAQ_DIR}/${DATA_DIR}/stop_fifo)
-	live_time=$(( stop_time - start_time ))
 	new_file_name="${RUN_NUM}_${DATA_NAME}_ov${OV}_th${TH}_${live_time}s"
 	if [ ${EXT} -eq 1 ]; then
 		new_file_name+="_ext"
@@ -58,11 +64,16 @@ if [ ${RENAME} -eq 1 ]; then
 	file_name=${new_file_name}
 fi
 
-# cleanup
+# cleanup fifos
 rm ${DAQ_DIR}/${DATA_DIR}/start_fifo
 rm ${DAQ_DIR}/${DATA_DIR}/stop_fifo
 
-# convert and copy in background
+# no further process if is nsst
+if [ "$RUN_NUM" = "nssta" ]; then
+    exit
+fi
+
+# process, analyze and copy in background
 {
 	if [ ${CONVERT} -eq 1 ]; then
 		# create converting. file while converting because runs in background
@@ -72,12 +83,53 @@ rm ${DAQ_DIR}/${DATA_DIR}/stop_fifo
 			-i ${DAQ_DIR}/${DATA_DIR}/${file_name} \
 			-o ${DAQ_DIR}/${DATA_DIR}/${file_name}.root \
 			--writeRoot \
-			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log &&
+			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
 		rm ${DAQ_DIR}/${DATA_DIR}/converting.${file_name}.root
 	fi
 
+	if [ ${GROUP} -eq 1 ] && [ ${EXT} -eq 1 ]; then
+		# create grouping. file while grouping because runs in background
+		touch ${DAQ_DIR}/${DATA_DIR}/grouping.${file_name}.root
+		root -l -b -q \
+			"/home/daq/FBT_Macros/analyze/processGroup.C+(\"${DAQ_DIR}/${DATA_DIR}/${file_name}.root\", ${GROUP_DT})" \
+			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
+		rm ${DAQ_DIR}/${DATA_DIR}/grouping.${file_name}.root
+	fi
+
+	if [ ${GROUP} -eq 1 ] && [ ${ANALYZE_GROUPED} -eq 1 ]; then
+		# create analyzing. file while grouping because runs in background
+		touch ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}_grouped.root
+		root -l -b -q \
+			"/home/daq/FBT_Macros/analyze/analyzeGrouped.C+(\"${DAQ_DIR}/${DATA_DIR}/${file_name}_grouped.root\")" \
+			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log &&
+		rm ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}_grouped.root
+	fi
+
+	if [ ${CONVERT} -eq 1 ] && [ ${ANALYZE_SINGLES} -eq 1 ]; then
+		# create analyzing. file while grouping because runs in background
+		touch ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}.root
+		root -l -b -q \
+			"/home/daq/FBT_Macros/analyze/analyzeSingles.C+(\"${DAQ_DIR}/${DATA_DIR}/${file_name}.root\", ${EXT})" \
+			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
+		rm ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}.root
+	fi
+
 	if [ ${COPY} -eq 1 ]; then
-		rsync -a -e "ssh -i ${COPY_KEY}" ${DAQ_DIR}/${DATA_DIR}/${file_name}.* ${COPY_DEST}
+		rsync -a -e "ssh -i ${COPY_KEY}" \
+			${DAQ_DIR}/${DATA_DIR}/${file_name}.idxf \
+			${DAQ_DIR}/${DATA_DIR}/${file_name}.modf \
+			${DAQ_DIR}/${DATA_DIR}/${file_name}.rawf \
+			${DAQ_DIR}/${DATA_DIR}/${file_name}.log \
+			${COPY_RAW_DEST}
+		rsync -a -e "ssh -i ${COPY_KEY}" \
+			${DAQ_DIR}/${DATA_DIR}/${file_name}*.root \
+			${DAQ_DIR}/${DATA_DIR}/${RUN_NUM}*.pdf \
+			${COPY_ROOT_DEST}
+		if [ ${GROUP} -eq 1 ]; then
+			rsync -a -e "ssh -i ${COPY_KEY}" \
+				${DAQ_DIR}/${DATA_DIR}/${file_name}_grouped.root \
+				${COPY_FRIEND_DEST}
+		fi
 	fi
 } &
 disown

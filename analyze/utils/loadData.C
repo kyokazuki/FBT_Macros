@@ -1,3 +1,6 @@
+#ifndef LOADDATA_C
+#define LOADDATA_C 
+
 #include <TTree.h>
 #include <TString.h>
 #include <TChain.h>
@@ -143,8 +146,8 @@ struct DataFDC1 : virtual public DataBase {
 
 	DataFDC1(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
 		tree->SetBranchAddress("ts", &ts);
-		tree->SetBranchAddress("fdc1.wirez", wirez);
-		tree->SetBranchAddress("fdc1.wirepos", wirepos);
+		tree->SetBranchAddress("fdc1ht.wirez", wirez);
+		tree->SetBranchAddress("fdc1ht.wirepos", wirepos);
     }
 };
 
@@ -156,3 +159,4 @@ struct DataTS : virtual public DataBase {
     }
 };
 
+#endif

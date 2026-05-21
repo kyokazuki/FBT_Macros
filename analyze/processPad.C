@@ -31,14 +31,22 @@ void processPad(const TString& inPath1, const TString& inPath2) {
 
 	// load input trees
 	DataFBT2 inData1({inPath1}, "events");
-	DataTS inData2({inPath2}, "t_TS");
+	// DataFDC1 inData2({inPath2}, "tree"); // ts
+	DataTS inData2({inPath2}, "t_TS"); // smts
 
 	// check input trees' entry counts
 	cout << "Tree1: " << inData1.entries << " entries" << endl;
 	cout << "Tree2: " << inData2.entries << " entries" << endl;
-	if (inData1.entries > inData2.entries) {
-		cout << "Tree1 has more entries than tree2!" << endl;
-		return;
+	Long64_t entriesDiff = inData2.entries - inData1.entries;
+	cout << "Entries diff: " << entriesDiff << endl;
+	if (entriesDiff < 0) {
+		if (entriesDiff == -1) {
+			cout << "Tree1 has 1 more entry than tree2, ignoring last entry in Tree1" << endl;
+			inData1.entries = inData1.entries - 1;
+		} else {
+			cout << "Tree1 has more entries than tree2!" << endl;
+			return;
+		}
 	}
 
 	// create output file
@@ -59,15 +67,15 @@ void processPad(const TString& inPath1, const TString& inPath2) {
 	time2.getDiff();
 	Double_t timeRatio = (Double_t)time1.diff / (Double_t)time2.diff;
 	cout << setprecision(10) << "Time ratio: (" << time1.end << "-" << time1.start << ")/(" << time2.end << "-" << time2.start << ") = " << timeRatio << endl;
-	Long64_t timeRes = 500000;
+	Long64_t timeRes = 50000000;
 	cout << "Time resolution: " << timeRes << endl;
 
 	// look for the first matching event
 	Long64_t entry1 = 0, entry2 = 0;
 	Long64_t firstMatch = -1;
-	inData1.tree->GetEntry(0);
+	inData1.tree->GetEntry(entry1);
 	time1.start = (*inData1.timeGate)[0];
-	inData1.tree->GetEntry(1);
+	inData1.tree->GetEntry(entry1 + 1);
 	time1.end = (*inData1.timeGate)[0];
 	time1.getDiff();
 	for (entry2 = 0; entry2 <= inData2.entries - inData1.entries; entry2++) {
@@ -77,7 +85,7 @@ void processPad(const TString& inPath1, const TString& inPath2) {
 		time2.end = inData2.smts;
 		time2.getDiff();
 		if (time1.diff >= time2.diff * timeRatio - timeRes && time1.diff <= time2.diff * timeRatio + timeRes) {
-			cout << "Matched first event: tree1[0/" << inData1.entries - 1 << "] <-> tree2[" << entry2 << "/" << inData2.entries - 1 << "]" << endl;
+			cout << "Matched first event: tree1[" << entry1 << "/" << inData1.entries - 1 << "] <-> tree2[" << entry2 << "/" << inData2.entries - 1 << "]" << endl;
 			firstMatch = entry2;
 			break;
 		}
@@ -95,9 +103,9 @@ void processPad(const TString& inPath1, const TString& inPath2) {
 			cout << "Padded event: tree1[empty] <-> tree2[" << i << "/" << inData2.entries << "]" << endl;
 		}
 	}
-	inData1.tree->GetEntry(0);
+	inData1.tree->GetEntry(entry1);
 	outTree->Fill();
-	inData1.tree->GetEntry(1);
+	inData1.tree->GetEntry(entry1 + 1);
 	outTree->Fill();
 
 	// go through all entries and match events
@@ -106,7 +114,7 @@ void processPad(const TString& inPath1, const TString& inPath2) {
 	time2.start = inData2.smts;
 	bool goNext1 = 1, goNext2 = 1;
 	Long64_t pad = 0, padTotal = 0;
-	for (entry1 = 2, entry2 = firstMatch + 2; entry1 < inData1.entries && entry2 < inData2.entries; entry1 += goNext1, entry2 += goNext2) {
+	for (entry1 = entry1 + 2, entry2 = firstMatch + 2; entry1 < inData1.entries && entry2 < inData2.entries; entry1 += goNext1, entry2 += goNext2) {
 		printProgress(entry2, inData2.entries);
 
 		inData1.tree->GetEntry(entry1);
@@ -147,7 +155,6 @@ void processPad(const TString& inPath1, const TString& inPath2) {
 	}
 
 	// summery
-	cout << "Entries diff: " << inData2.entries - inData1.entries << endl;
 	cout << "Padded " << padTotal << " events in tree1" << endl;
 
 	// save output file

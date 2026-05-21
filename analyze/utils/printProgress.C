@@ -1,3 +1,6 @@
+#ifndef PRINTPROGRESS_C
+#define PRINTPROGRESS_C
+
 #include <iostream>
 
 void printProgress(Long64_t entry, Long64_t entries) {
@@ -15,3 +18,5 @@ void printProgress(Long64_t entry, Long64_t entries) {
 		cout << flush;
 	}
 }
+
+#endif

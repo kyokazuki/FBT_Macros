@@ -1,3 +1,6 @@
+#ifndef CREATEOUTFILE_C
+#define CREATEOUTFILE_C
+
 #include <TFile.h>
 #include <TString.h>
 
@@ -13,3 +16,4 @@ TFile* createOutFile(const TString& inPath, const TString& suffix) {
     return outFile;
 }
 
+#endif

@@ -30,15 +30,15 @@ void analyzeSingles(const char *fileName) {
 
 	c2->cd(4);
 	gPad->SetLogz();
-	tree->Draw("tot:xi>>htotX(320, 0.5, 320.5, 100, 0, 300000)", "yi==0", "colz");
+	tree->Draw("tot:xi>>htotX(320, 0.5, 320.5, 100, 0, 300000)", "yi==0 && channelID!=4128", "colz");
 
 	c2->cd(5);
 	gPad->SetLogz();
-	tree->Draw("tot:xi>>htotY(320, 0.5, 320.5, 100, 0, 300000)", "yi==1", "colz");
+	tree->Draw("tot:xi>>htotY(320, 0.5, 320.5, 100, 0, 300000)", "yi==1 && channelID!=4128", "colz");
 
 	c2->cd(6);
 	gPad->SetLogz();
-	tree->Draw("tot:xi>>htotU(320, 0.5, 320.5, 100, 0, 300000)", "yi==2", "colz");
+	tree->Draw("tot:xi>>htotU(320, 0.5, 320.5, 100, 0, 300000)", "yi==2 && channelID!=4128", "colz");
 
 	cout << "Total fiber entries: " << fiberEntries << endl;
 	cout << "Total gate entries: " << gateEntries << endl;

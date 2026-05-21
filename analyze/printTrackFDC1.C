@@ -15,9 +15,7 @@
 #include <map>
 #include <vector>
 
-// #include "utils/parameters.C"
 #include "utils/loadData.C"
-// #include "utils/createOutFile.C"
 #include "utils/printProgress.C"
 
 TH1F* hdPosX = nullptr;
@@ -29,17 +27,23 @@ void printTrackFDC1(const TString& inPath1, const TString& inPath2) {
 	const vector<Float_t> xRangeFBT = {(0 - 2.5 - 160) * 0.75, (320 - 2.5 - 160) * 0.75};
 	const vector<Int_t> layersFDC1 = {65, 55, 5, -5, -55, -65}; // X layers
 	const vector<Int_t> zRangeFDC1 = {-65, 65};
+	const bool selective = 0;
 
 	// graph settings
 	hdPosX = new TH1F("hdPosX", "hdPosX", 50, -1 * (xRangeFBT[1] - xRangeFBT[0]), xRangeFBT[1] - xRangeFBT[0]);
 	TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
 	TString runNumber = TString(gSystem->BaseName(inPath1))(0,4);
-	TString graphPath = Form("%s_track.pdf", runNumber.Data());
-	// TString graphPath = Form("%s_track_selected.pdf", runNumber.Data());
-	TString graphPath2 = Form("%s_hdPosX.pdf", runNumber.Data());
-	// TString graphPath2 = Form("%s_hdPosX_selected.pdf", runNumber.Data());
+	TString graphPath;
+	TString graphPath2;
+	if (selective) {
+		graphPath = Form("%s_track_selective.pdf", runNumber.Data());
+		graphPath2 = Form("%s_hdPosX_selective.pdf", runNumber.Data());
+	} else {
+		graphPath = Form("%s_track.pdf", runNumber.Data());
+		graphPath2 = Form("%s_hdPosX.pdf", runNumber.Data());
+	}
 	c1->SetGrid();
-	c1->Print(Form("%s[", graphPath.Data()));
+	// c1->Print(Form("%s[", graphPath.Data()));
 
 	// draw FBT range overlay
 	TLine *lFBT = new TLine(zPosFBT, xRangeFBT[0], zPosFBT, xRangeFBT[1]);
@@ -58,10 +62,11 @@ void printTrackFDC1(const TString& inPath1, const TString& inPath2) {
 	DataFDC1 inData2({inPath2}, "tree");
 	inData2.tree->SetBranchStatus("*", 0);
 	inData2.tree->SetBranchStatus("ts", 1);
-	inData2.tree->SetBranchStatus("fdc1.wirez", 1);
-	inData2.tree->SetBranchStatus("fdc1.wirepos", 1);
+	inData2.tree->SetBranchStatus("fdc1ht.wirez", 1);
+	inData2.tree->SetBranchStatus("fdc1ht.wirepos", 1);
 
 	for (Long64_t entry = 0; entry < inData1.entries; entry++) {
+	// for (Long64_t entry = 0; entry < 5000; entry++) {
 		printProgress(entry, inData1.entries);
 
 		inData1.tree->GetEntry(entry);
@@ -72,15 +77,15 @@ void printTrackFDC1(const TString& inPath1, const TString& inPath2) {
 			continue;
 		}
 		// selective
-		// if (!(inData1.xiV[0]->size() > 0 && inData1.xiV[1]->size() > 0 && inData1.xiV[2]->size() > 0)) {
-		// 	continue;
-		// }
-		// if (!((*inData1.totV[0])[0] > 20e3 && (*inData1.totV[1])[0] > 20e3 && (*inData1.totV[2])[0] > 20e3)) {
-		// 	continue;
-		// }
+		if (selective && !(inData1.xiV[0]->size() > 0 && inData1.xiV[1]->size() > 0 && inData1.xiV[2]->size() > 0)) {
+			continue;
+		}
+		if (selective && !((*inData1.totV[0])[0] > 20e3 && (*inData1.totV[1])[0] > 20e3 && (*inData1.totV[2])[0] > 20e3)) {
+			continue;
+		}
 
 		// continue is no FDC1 X layers hits
-		Int_t mult = inData2.tree->GetLeaf("fdc1.wirez")->GetLen();
+		Int_t mult = inData2.tree->GetLeaf("fdc1ht.wirez")->GetLen();
 		if (mult == 0) {
 			continue;
 		}
@@ -162,12 +167,13 @@ void printTrackFDC1(const TString& inPath1, const TString& inPath2) {
 		}
 
 		// print and clear graph
-		c1->Print(graphPath);
+		// cout << "printing for entry " << entry << endl;
+		// c1->Print(graphPath);
 		gHits->Set(0);
 		delete gHits;
 		gHits = nullptr;
 	}
-	c1->Print(Form("%s]", graphPath.Data()));
+	// c1->Print(Form("%s]", graphPath.Data()));
 	c1->Clear();
 	hdPosX->Draw();
 	c1->Print(graphPath2);

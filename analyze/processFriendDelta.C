@@ -25,23 +25,24 @@ int processFriendDelta(const TString& inPath1, const TString& inPath2) {
 	TString runNumber = TString(gSystem->BaseName(inPath1))(0,4);
 
 	DataFBT2 inData1({inPath1}, "events");
-	DataVME2 inData2({inPath2}, "tree");
+	DataVME2 inData2({inPath2}, "tree"); // inData2.bbtime
+	// DataFDC1 inData2({inPath2}, "tree"); // inData2.ts
 
 	TFile* outFile = createOutFile(inPath1, "_friended.root");
 	TTree* outTree = inData1.tree->CloneTree(0);
-	outTree->Branch("l1t", &inData2.l1t);
-	outTree->Branch("l2t", &inData2.l2t);
-	outTree->Branch("m1t", &inData2.m1t);
-	outTree->Branch("m2t", &inData2.m2t);
-	outTree->Branch("s1t", &inData2.s1t);
-	outTree->Branch("l1q", &inData2.l1q);
-	outTree->Branch("l2q", &inData2.l2q);
-	outTree->Branch("m1q", &inData2.m1q);
-	outTree->Branch("m2q", &inData2.m2q);
-	outTree->Branch("s1q", &inData2.s1q);
-	outTree->Branch("rft", &inData2.rft);
-	outTree->Branch("bbtime", &inData2.bbtime);
-	outTree->Branch("scaler", &inData2.scaler, "scaler[32]/I");
+	// outTree->Branch("l1t", &inData2.l1t);
+	// outTree->Branch("l2t", &inData2.l2t);
+	// outTree->Branch("m1t", &inData2.m1t);
+	// outTree->Branch("m2t", &inData2.m2t);
+	// outTree->Branch("s1t", &inData2.s1t);
+	// outTree->Branch("l1q", &inData2.l1q);
+	// outTree->Branch("l2q", &inData2.l2q);
+	// outTree->Branch("m1q", &inData2.m1q);
+	// outTree->Branch("m2q", &inData2.m2q);
+	// outTree->Branch("s1q", &inData2.s1q);
+	// outTree->Branch("rft", &inData2.rft);
+	// outTree->Branch("bbtime", &inData2.bbtime);
+	// outTree->Branch("scaler", &inData2.scaler, "scaler[32]/I");
 	Long64_t dtime, dbbtime;
 	outTree->Branch("dtime", &dtime);
 	outTree->Branch("dbbtime", &dbbtime);
