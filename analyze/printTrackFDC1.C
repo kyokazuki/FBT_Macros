@@ -43,7 +43,7 @@ void printTrackFDC1(const TString& inPath1, const TString& inPath2) {
 		graphPath2 = Form("%s_hdPosX.pdf", runNumber.Data());
 	}
 	c1->SetGrid();
-	// c1->Print(Form("%s[", graphPath.Data()));
+	c1->Print(Form("%s[", graphPath.Data()));
 
 	// draw FBT range overlay
 	TLine *lFBT = new TLine(zPosFBT, xRangeFBT[0], zPosFBT, xRangeFBT[1]);
@@ -167,13 +167,15 @@ void printTrackFDC1(const TString& inPath1, const TString& inPath2) {
 		}
 
 		// print and clear graph
-		// cout << "printing for entry " << entry << endl;
-		// c1->Print(graphPath);
+		if (entry % 1000 == 0) {
+			cout << "printing for entry " << entry << endl;
+			c1->Print(graphPath);
+		}
 		gHits->Set(0);
 		delete gHits;
 		gHits = nullptr;
 	}
-	// c1->Print(Form("%s]", graphPath.Data()));
+	c1->Print(Form("%s]", graphPath.Data()));
 	c1->Clear();
 	hdPosX->Draw();
 	c1->Print(graphPath2);

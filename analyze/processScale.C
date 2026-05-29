@@ -1,4 +1,5 @@
 #include <TFile.h>
+#include <TSystem.h>
 #include <TTree.h>
 #include <TString.h>
 #include <iostream>
@@ -8,13 +9,13 @@
 #include <sstream>
 #include <string>
 
-#include "utils/parameters.C"
+#include "utils/constants.C"
 #include "utils/loadData.C"
 #include "utils/createOutFile.C"
 #include "utils/printProgress.C"
 
 void processScale(const TString& inPath, const char* runNumber) {
-	cout << "Scaling events for " << inPath << " with totMeans_" << runNumber << ".tsv" << endl;
+	cout << "Scaling events for " << inPath << " with " << runNumber << "_totMeans.tsv" << endl;
 
 	// load trees
 	DataFBT1 inData({inPath}, "data");
@@ -33,10 +34,14 @@ void processScale(const TString& inPath, const char* runNumber) {
 	Float_t totShifted;
 	outTree->SetBranchAddress("tot", &totShifted);
 
+
 	// load tot means from tsv
 	vector <vector <Float_t>> totMeans(3);
+	TString dirPath = gSystem->DirName(inPath);
 	for (size_t i = 0; i < 3; i++) {
-		ifstream tsv(Form("totMeans%s_%s.tsv", LAYERS[i], runNumber));
+		ifstream tsv(Form(
+			"%s/%s_totMeans%c.tsv", 
+			dirPath.Data(), runNumber, LAYERS[i]));
 		string line;
 
 		// skip header
@@ -56,14 +61,13 @@ void processScale(const TString& inPath, const char* runNumber) {
 	// scale tot in events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
-
 		inData.tree->GetEntry(entry);
+
 		if (inData.channelId == 4128 || totMeans[inData.yi][inData.xi] == 0) {
 			totShifted = inData.tot;
 		} else {
 			totShifted = inData.tot * TOT_SCALE_TARGET / totMeans[inData.yi][inData.xi];
 		}
-
 		outTree->Fill();
 	}
 

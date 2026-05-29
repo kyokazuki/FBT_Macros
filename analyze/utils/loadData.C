@@ -6,6 +6,12 @@
 #include <TChain.h>
 #include <vector>
 
+#include <iostream>
+
+#include "constants.C"
+
+#include <cmath>
+
 using namespace std;
 
 struct DataBase {
@@ -54,25 +60,41 @@ struct DataFBT2 : virtual public DataBase {
 
 	DataFBT2(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
 		tree->SetBranchAddress("timeGate", &timeGate);
-		const char layers[3] = {'X', 'Y', 'U'};
-		for (size_t i = 0; i < 3; i++) {
-			tree->SetBranchAddress(Form("time%c", layers[i]), &timeV[i]);
-			tree->SetBranchAddress(Form("energy%c", layers[i]), &energyV[i]);
-			tree->SetBranchAddress(Form("tot%c", layers[i]), &totV[i]);
-			tree->SetBranchAddress(Form("channelID%c", layers[i]), &channelIdV[i]);
-			tree->SetBranchAddress(Form("xi%c", layers[i]), &xiV[i]);
+		for (Int_t layer = 0; layer < 3; layer++) {
+			tree->SetBranchAddress(Form("time%c", LAYERS[layer]), &timeV[layer]);
+			tree->SetBranchAddress(Form("energy%c", LAYERS[layer]), &energyV[layer]);
+			tree->SetBranchAddress(Form("tot%c", LAYERS[layer]), &totV[layer]);
+			tree->SetBranchAddress(Form("channelID%c", LAYERS[layer]), &channelIdV[layer]);
+			tree->SetBranchAddress(Form("xi%c", LAYERS[layer]), &xiV[layer]);
 		}
     }
 
 	void clear() {
-		for (size_t i = 0; i < 3; i++) {
-			timeV[i]->clear();
-			energyV[i]->clear();
-			totV[i]->clear();
-			channelIdV[i]->clear();
-			xiV[i]->clear();
-		}
 		timeGate->clear();
+		for (Int_t layer = 0; layer < 3; layer++) {
+			timeV[layer]->clear();
+			energyV[layer]->clear();
+			totV[layer]->clear();
+			channelIdV[layer]->clear();
+			xiV[layer]->clear();
+		}
+	}
+
+	Int_t getMaxTotLayer() const {
+		Float_t maxTot = -1;
+		Int_t maxTotLayer = -1;
+
+		for (Int_t layer = 0; layer < 3; layer++) {
+			if (totV[layer]->empty()) {
+				continue;
+			}
+
+			if ((*totV[layer])[0] > maxTot) {
+				maxTotLayer = layer;
+				maxTot = (*totV[layer])[0];
+			}
+		}
+		return maxTotLayer;
 	}
 };
 
@@ -139,6 +161,14 @@ struct DataFBT5 : public DataFBT4 {
 	}
 };
 
+struct DataTS : virtual public DataBase {
+	ULong64_t smts;
+
+	DataTS(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
+		tree->SetBranchAddress("SMTS", &smts);
+    }
+};
+
 struct DataFDC1 : virtual public DataBase {
 	ULong64_t ts;
 	Double_t wirez[1000];
@@ -151,12 +181,37 @@ struct DataFDC1 : virtual public DataBase {
     }
 };
 
-struct DataTS : virtual public DataBase {
-	ULong64_t smts;
+struct DataHodo : virtual public DataBase {
+	Bool_t coin[16];
+	Double_t fQCal[40];
+	Double_t fTDiff[40];
 
-	DataTS(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
-		tree->SetBranchAddress("SMTS", &smts);
+	DataHodo(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
+		tree->SetBranchAddress("coin", coin);
+		tree->SetBranchAddress("fQCal", fQCal);
+		tree->SetBranchAddress("fTDiff", fTDiff);
     }
+
+	Int_t getMaxQId() const {
+		Float_t maxQ = -1;
+		Int_t maxId = -1;
+		for (Int_t id = 0; id < 40; id++) {
+			if (isnan(fQCal[id])) {
+				continue;
+			}
+
+			if (fQCal[id] > maxQ) {
+				maxQ = fQCal[id];
+				maxId = id + 1;
+			}
+		}
+		return maxId;
+	}
+};
+
+struct DataFBTHodo : public DataFBT2, public DataHodo {
+	DataFBTHodo(const vector<TString>& paths, const TString& treeName)
+		: DataBase(paths, treeName), DataFBT2(paths, treeName), DataHodo(paths, treeName) {}
 };
 
 #endif

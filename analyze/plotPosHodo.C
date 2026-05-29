@@ -10,9 +10,11 @@ TH2F* hPos = nullptr;
 TH2F* hPosAligned = nullptr;
 TH1D* hPosAlignedX = nullptr;
 
-void plotPosStart(const DataFBT2& inData, const vector<Float_t> totRange) {
+void plotPosHodoStart(const DataFBTHodo& inData, const vector<Float_t> totRange) {
+	inData.tree->SetBranchStatus("fID", 1);
+	inData.tree->SetBranchStatus("fQCal", 1);
 	inData.tree->SetBranchStatus("timeGate", 1);
-	for (Int_t layer = 0; layer < 3; layer++) {
+	for (UInt_t layer = 0; layer < 3; layer++) {
 		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
 		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
 	}
@@ -33,7 +35,7 @@ void plotPosStart(const DataFBT2& inData, const vector<Float_t> totRange) {
 	);
 }
 
-void plotPosLoop(const DataFBT2& inData, const vector<Float_t> totRange) {
+void plotPosHodoLoop(const DataFBTHodo& inData, const vector<Float_t> totRange) {
 	if (!(inData.xiV[0]->size() > 0 && inData.xiV[1]->size() > 0 && inData.xiV[2]->size() > 0)) {
 		return;
 	}
@@ -52,7 +54,7 @@ void plotPosLoop(const DataFBT2& inData, const vector<Float_t> totRange) {
 	hPosAligned->Fill(posAligned, (*inData.xiV[2])[0]);
 }
 
-void plotPosEnd(const vector<Float_t> totRange) {
+void plotPosHodoEnd(const vector<Float_t> totRange) {
 	delete hPosAlignedX;
 	hPosAlignedX = hPosAligned->ProjectionX("hPosAlignedX");
 
@@ -68,21 +70,25 @@ void plotPosEnd(const vector<Float_t> totRange) {
 	));
 }
 
-void plotPos(const TString& inPath, const vector<Float_t> totRange) {
-	DataFBT2 inData({inPath}, "events");
+void plotPosHodo(
+	const TString& inPath, 
+	const vector<Float_t> totRange = MAX_TOT_RANGE
+	const vector<Int_t>& idRange	= HODO_MAX_ID_RANGE, 
+	const vector<Double_t>& qRange	= HODO_MAX_Q_RANGE, 
+) {
+	DataFBTHodo inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
 
-	plotPosStart(inData, totRange);
+	plotPosHodoStart(inData, totRange);
 
 	// loop through all events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
-
 		inData.tree->GetEntry(entry);
 
-		plotPosLoop(inData, totRange);
+		plotPosHodoLoop(inData, totRange, idRange, qRange);
 	}
 
-	plotPosEnd(totRange);
+	plotPosHodoEnd(totRange);
 }
 

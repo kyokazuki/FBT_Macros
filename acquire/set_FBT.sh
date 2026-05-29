@@ -28,12 +28,10 @@ ${BUILD_DIR}/make_simple_disc_settings_table \
 	-o ${DAQ_DIR}/disc_settings.tsv
 
 # acquisition standby
-if [ ! -e ${DAQ_DIR}/${DATA_DIR}/start_fifo ]; then
-    mkfifo ${DAQ_DIR}/${DATA_DIR}/start_fifo
-fi
-if [ ! -e ${DAQ_DIR}/${DATA_DIR}/stop_fifo ]; then
-    mkfifo ${DAQ_DIR}/${DATA_DIR}/stop_fifo
-fi
+rm -f ${DAQ_DIR}/${DATA_DIR}/start_fifo
+rm -f ${DAQ_DIR}/${DATA_DIR}/stop_fifo
+mkfifo ${DAQ_DIR}/${DATA_DIR}/start_fifo
+mkfifo ${DAQ_DIR}/${DATA_DIR}/stop_fifo
 ${BUILD_DIR}/${acquire_script} \
 	--config ${DAQ_DIR}/config.ini \
 	--mode tot \
@@ -44,9 +42,9 @@ ${BUILD_DIR}/${acquire_script} \
 	| tee ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
 
 # log run time
-date -r "${DAQ_DIR}/${DATA_DIR}/start_fifo" "Run start: +%Y/%m/%d %H:%M:%S" \
+date -r "${DAQ_DIR}/${DATA_DIR}/start_fifo" "+Run start: %Y/%m/%d %H:%M:%S" \
 	2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
-date -r "${DAQ_DIR}/${DATA_DIR}/stop_fifo" "Run stop: +%Y/%m/%d %H:%M:%S" \
+date -r "${DAQ_DIR}/${DATA_DIR}/stop_fifo" "+Run stop: %Y/%m/%d %H:%M:%S" \
 	2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
 start_time=$(stat -c %Y ${DAQ_DIR}/${DATA_DIR}/start_fifo)
 stop_time=$(stat -c %Y ${DAQ_DIR}/${DATA_DIR}/stop_fifo)
@@ -68,13 +66,13 @@ fi
 rm ${DAQ_DIR}/${DATA_DIR}/start_fifo
 rm ${DAQ_DIR}/${DATA_DIR}/stop_fifo
 
-# no further process if is nsst
+# no further process if is nssta
 if [ "$RUN_NUM" = "nssta" ]; then
     exit
 fi
 
-# process, analyze and copy in background
 {
+	# conversion
 	if [ ${CONVERT} -eq 1 ]; then
 		# create converting. file while converting because runs in background
 		touch ${DAQ_DIR}/${DATA_DIR}/converting.${file_name}.root
@@ -86,7 +84,14 @@ fi
 			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
 		rm ${DAQ_DIR}/${DATA_DIR}/converting.${file_name}.root
 	fi
-
+	if [ ${CONVERT} -eq 1 ] && [ ${SCALE} -eq 1 ]; then
+		# create scaling. file while grouping because runs in background
+		touch ${DAQ_DIR}/${DATA_DIR}/scaling.${file_name}.root
+		root -l -b -q \
+			"/home/daq/FBT_Macros/analyze/processScale.C+(\"${DAQ_DIR}/${DATA_DIR}/${file_name}.root\", \"${SCALE_RUN}\")" \
+			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
+		rm ${DAQ_DIR}/${DATA_DIR}/scaling.${file_name}.root
+	fi
 	if [ ${GROUP} -eq 1 ] && [ ${EXT} -eq 1 ]; then
 		# create grouping. file while grouping because runs in background
 		touch ${DAQ_DIR}/${DATA_DIR}/grouping.${file_name}.root
@@ -96,15 +101,23 @@ fi
 		rm ${DAQ_DIR}/${DATA_DIR}/grouping.${file_name}.root
 	fi
 
+	# analysis
 	if [ ${GROUP} -eq 1 ] && [ ${ANALYZE_GROUPED} -eq 1 ]; then
 		# create analyzing. file while grouping because runs in background
 		touch ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}_grouped.root
 		root -l -b -q \
 			"/home/daq/FBT_Macros/analyze/analyzeGrouped.C+(\"${DAQ_DIR}/${DATA_DIR}/${file_name}_grouped.root\")" \
-			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log &&
+			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
 		rm ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}_grouped.root
 	fi
-
+	if [ ${SCALE} -eq 1 ] && [ ${ANALYZE_SINGLES_SCALED} -eq 1 ]; then
+		# create analyzing. file while grouping because runs in background
+		touch ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}_scaled.root
+		root -l -b -q \
+			"/home/daq/FBT_Macros/analyze/analyzeSinglesScaled.C+(\"${DAQ_DIR}/${DATA_DIR}/${file_name}_scaled.root\", ${EXT})" \
+			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
+		rm ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}_scaled.root
+	fi
 	if [ ${CONVERT} -eq 1 ] && [ ${ANALYZE_SINGLES} -eq 1 ]; then
 		# create analyzing. file while grouping because runs in background
 		touch ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}.root
@@ -114,6 +127,7 @@ fi
 		rm ${DAQ_DIR}/${DATA_DIR}/analyzing.${file_name}.root
 	fi
 
+	# copy
 	if [ ${COPY} -eq 1 ]; then
 		rsync -a -e "ssh -i ${COPY_KEY}" \
 			${DAQ_DIR}/${DATA_DIR}/${file_name}.idxf \

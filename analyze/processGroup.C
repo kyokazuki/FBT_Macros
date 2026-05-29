@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "utils/constants.C"
 #include "utils/loadData.C"
 #include "utils/createOutFile.C"
 #include "utils/printProgress.C"

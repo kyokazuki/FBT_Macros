@@ -11,7 +11,6 @@
 #include <math.h>
 #include <unistd.h>
 
-#include "utils/parameters.C"
 #include "utils/loadData.C"
 #include "utils/createOutFile.C"
 #include "utils/printProgress.C"

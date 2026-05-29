@@ -17,4 +17,9 @@ void zoomAxisY(TH1* inGraph, Int_t padMinus = 0, Int_t padPlus = 0) {
     );
 }
 
+void zoomAxisAll(TH1* inGraph, Int_t padMinus = 0, Int_t padPlus = 0) {
+	zoomAxisX(inGraph, padMinus, padPlus);
+	zoomAxisY(inGraph, padMinus, padPlus);
+}
+
 #endif
