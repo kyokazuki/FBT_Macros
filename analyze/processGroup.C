@@ -1,16 +1,17 @@
-#include <TFile.h>
-#include <TTree.h>
-#include <TString.h>
 #include <iostream>
 #include <algorithm>
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <TFile.h>
+#include <TTree.h>
+#include <TString.h>
+
 #include "utils/loadData.C"
 #include "utils/createOutFile.C"
 #include "utils/printProgress.C"
 
-void processGroup(const TString& inPath, const vector <Long64_t> dtRange) {
+void processGroup(const TString& inPath, const Long64_t (&dtRange)[2] = MAX_DT_RANGE) {
 	cout << "Grouping events for " << inPath << endl;
 
 	DataFBT1 inData({inPath}, "data");
@@ -50,8 +51,8 @@ void processGroup(const TString& inPath, const vector <Long64_t> dtRange) {
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
-
 		inData.tree->GetEntry(entry);
+
 		if (!(inData.channelId == 4128 && inData.energy == 5)) {
 			continue;
 		}

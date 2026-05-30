@@ -5,8 +5,13 @@
 void analyzeGroupedScaled(const TString& inPath, const vector<Float_t> totRange = {0.5, 10}) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
+	inData.tree->SetBranchStatus("timeGate", 1);
+	for (Int_t layer = 0; layer < 3; layer++) {
+		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
+	}
 
-	analyzeGroupedStart(inData, totRange);
+	analyzeGroupedStart();
 
 	// event loop
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {

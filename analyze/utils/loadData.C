@@ -1,16 +1,16 @@
 #ifndef LOADDATA_C
 #define LOADDATA_C 
 
+#include <iostream>
+#include <vector>
+#include <cmath>
+
 #include <TTree.h>
 #include <TString.h>
 #include <TChain.h>
-#include <vector>
-
-#include <iostream>
 
 #include "constants.C"
-
-#include <cmath>
+#include "inRange.C"
 
 using namespace std;
 
@@ -80,7 +80,7 @@ struct DataFBT2 : virtual public DataBase {
 		}
 	}
 
-	Int_t getMaxTotLayer() const {
+	Int_t getMaxTotLayer(const Float_t (&totRange)[2]) const {
 		Float_t maxTot = -1;
 		Int_t maxTotLayer = -1;
 
@@ -89,7 +89,7 @@ struct DataFBT2 : virtual public DataBase {
 				continue;
 			}
 
-			if ((*totV[layer])[0] > maxTot) {
+			if ((*totV[layer])[0] > maxTot && inRange((*totV[layer])[0], totRange)) {
 				maxTotLayer = layer;
 				maxTot = (*totV[layer])[0];
 			}
@@ -192,17 +192,17 @@ struct DataHodo : virtual public DataBase {
 		tree->SetBranchAddress("fTDiff", fTDiff);
     }
 
-	Int_t getMaxQId() const {
+	Int_t getMaxQId(const Int_t (&idRange)[2], const Double_t (&qRange)[2]) const {
 		Float_t maxQ = -1;
 		Int_t maxId = -1;
-		for (Int_t id = 0; id < 40; id++) {
-			if (isnan(fQCal[id])) {
+		for (Int_t id = idRange[0]; id <= idRange[1]; id++) {
+			if (isnan(fQCal[id - 1])) {
 				continue;
 			}
 
-			if (fQCal[id] > maxQ) {
-				maxQ = fQCal[id];
-				maxId = id + 1;
+			if (fQCal[id - 1] > maxQ && inRange(fQCal[id - 1], qRange)) {
+				maxQ = fQCal[id - 1];
+				maxId = id;
 			}
 		}
 		return maxId;

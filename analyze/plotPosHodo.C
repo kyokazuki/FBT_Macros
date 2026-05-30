@@ -1,7 +1,7 @@
-#include <TH2F.h>
-
 #include <iostream>
 #include <stdlib.h>
+
+#include <TH2F.h>
 
 #include "utils/loadData.C"
 #include "utils/printProgress.C"

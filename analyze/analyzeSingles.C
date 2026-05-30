@@ -1,37 +1,36 @@
+#include <iostream>
+#include <stdlib.h>
+
 #include <TSystem.h>
 #include <TTree.h>
 #include <TCanvas.h>
 #include <TStyle.h>
 #include <TString.h>
 
-#include <iostream>
-#include <stdlib.h>
-
-#include "plotDtHits.C"
+#include "plotTiming.C"
 #include "plotTot.C"
 
 TCanvas *c1 = nullptr;
 
-void analyzeSinglesStart(const DataFBT1& inData, const vector<Float_t>& totRange) {
-	plotTotStart(inData, totRange);
-	plotDtHitsStart(inData, totRange);
+void analyzeSinglesStart(const Float_t (&totRange)[2]) {
+	plotTotStart(totRange);
+	plotTimingStart(totRange);
 }
 
-void analyzeSinglesLoop(const DataFBT1& inData, Long64_t entry, const vector<Float_t>& totRange) {
+void analyzeSinglesLoop(const DataFBT1& inData, Long64_t entry, const Float_t (&totRange)[2]) {
 	plotTotLoop(inData);
-	plotDtHitsLoop(inData, entry, totRange);
+	plotTimingLoop(inData, entry, totRange);
 }
 
-void analyzeSinglesEnd(const DataFBT1& inData, const TString& graphPath, Bool_t ext) {
-	plotTotEnd();
-	plotDtHitsEnd();
+void analyzeSinglesEnd(const DataFBT1& inData, const Float_t (&totRange)[2], const TString& graphPath, Bool_t ext) {
+	plotTotEnd(totRange);
+	plotTimingEnd(totRange);
 
 	// draw graphs
 	delete c1;
-	c1 = nullptr;
     c1 = new TCanvas("c1", "c1", 1500, ext ? 800 : 400);
 
-	gStyle->SetOptStat("nem");
+	gStyle->SetOptStat(0);
     if (!ext) {
         c1->Divide(3, 1);
     } else {
@@ -40,7 +39,7 @@ void analyzeSinglesEnd(const DataFBT1& inData, const TString& graphPath, Bool_t 
         c1->cd(4);
         gPad->SetGrid();
         gPad->SetLogz();
-        hDtTot->Draw();
+        hTimingTot->Draw();
 
         c1->cd(5);
         gPad->SetGrid();
@@ -52,25 +51,31 @@ void analyzeSinglesEnd(const DataFBT1& inData, const TString& graphPath, Bool_t 
         gPad->SetGrid();
         gPad->SetLogz();
         hTot[i]->Draw();
-    }
+	}
 
     c1->Print(graphPath);	
 
 	cout << "Trigger events: " << inData.tree->GetEntries("channelID==4128 && energy==5") << endl;
 }
 
-void analyzeSingles(const TString& inPath, Bool_t ext = 1) {
+void analyzeSingles(const TString& inPath, Bool_t ext = 1, const Float_t (&totRange)[2] = MAX_TOT_RANGE) {
 	DataFBT1 inData({inPath}, "data");
 	inData.tree->SetBranchStatus("*", 0);
+	inData.tree->SetBranchStatus("time", 1);
+	inData.tree->SetBranchStatus("channelID", 1);
+	inData.tree->SetBranchStatus("tot", 1);
+	inData.tree->SetBranchStatus("energy", 1);
+	inData.tree->SetBranchStatus("xi", 1);
+	inData.tree->SetBranchStatus("yi", 1);
 
-	analyzeSinglesStart(inData, MAX_TOT_RANGE);
+	analyzeSinglesStart(totRange);
 
 	// event loop
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		analyzeSinglesLoop(inData, entry, MAX_TOT_RANGE);
+		analyzeSinglesLoop(inData, entry, totRange);
 	}
 
 	TString runNumber = TString(gSystem->BaseName(inPath))(0,4);
@@ -79,6 +84,6 @@ void analyzeSingles(const TString& inPath, Bool_t ext = 1) {
         gSystem->DirName(inPath),
         runNumber.Data()
     );
-	analyzeSinglesEnd(inData, graphPath, ext);
+	analyzeSinglesEnd(inData, totRange, graphPath, ext);
 }
 

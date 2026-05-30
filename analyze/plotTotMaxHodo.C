@@ -1,9 +1,9 @@
-#include <TH2F.h>
-#include <TMath.h>
-
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
+
+#include <TH2F.h>
+#include <TMath.h>
 
 #include "utils/loadData.C"
 #include "utils/printProgress.C"
@@ -97,11 +97,8 @@ void plotTotMaxHodoLoop(
 	}
 
 	// check if max Q exists and is in range
-	Int_t maxQId = inData.getMaxQId();
+	Int_t maxQId = inData.getMaxQId(idRange);
 	if (maxQId == -1) {
-		return;
-	}
-	if (!(maxQId >= idRange[0] && maxQId <= idRange[1])) {
 		return;
 	}
 	if (!(inData.fQCal[maxQId - 1] >= qRange[0] && inData.fQCal[maxQId - 1] <= qRange[1])) {

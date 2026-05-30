@@ -10,28 +10,12 @@
 #include "utils/loadData.C"
 #include "utils/printProgress.C"
 #include "utils/zoomAxis.C"
+#include "plotMult.C"
 
 // initialize graphs
 vector<TH1F*> hMult(3);
 
-void plotMultHodoStart(const DataFBTHodo& inData) {
-	inData.tree->SetBranchStatus("totX", 1);
-	inData.tree->SetBranchStatus("totY", 1);
-	inData.tree->SetBranchStatus("totU", 1);
-	inData.tree->SetBranchStatus("coin", 1);
-	inData.tree->SetBranchStatus("fQCal", 1);
-	inData.tree->SetBranchStatus("fID", 1);
-
-	for (Int_t layer = 0; layer < 3; layer++) {
-		hMult[layer] = new TH1F(
-			Form("hMult%c", LAYERS[layer]),
-			"",
-			100, -0.5, 99.5
-		);
-	}
-}
-
-void plotMultHodoLoop(const DataFBTHodo& inData, const vector<Float_t>& totRange, Int_t id, const vector<Double_t>& qRange) {
+void plotMultHodoLoop(const DataFBTHodo& inData, const Float_t (&totRange)[2], Int_t id, const Double_t (&qRange)[2]) {
 	if (!(inData.coin[0] == 1 && inData.fQCal[id] >= qRange[0] && inData.fQCal[id] <= qRange[1])) {
 		return;
 	}
@@ -47,7 +31,7 @@ void plotMultHodoLoop(const DataFBTHodo& inData, const vector<Float_t>& totRange
 	}
 }
 
-void plotMultHodoEnd(const vector<Float_t>& totRange, Int_t id, const vector<Double_t>& qRange) {
+void plotMultHodoEnd(const Float_t (&totRange)[2], Int_t id, const Double_t (&qRange)[2]) {
 	for (Int_t layer = 0; layer < 3; layer++) {
 		Long64_t total = hMult[layer]->GetEntries();
 		Float_t effcy = (total - hMult[layer]->GetBinContent(1)) / total;
@@ -59,19 +43,23 @@ void plotMultHodoEnd(const vector<Float_t>& totRange, Int_t id, const vector<Dou
 	}
 }
 
-void plotMultHodo(const TString& inPath, const vector<Float_t>& totRange, Int_t id, const vector<Double_t>& qRange) {
-	TString runNumber = TString(gSystem->BaseName(inPath))(0,4);
-	TString graphPath = Form(
-        "%s/%s_analyzeMultHodo.pdf",
-        gSystem->DirName(inPath),
-        runNumber.Data()
-	);
-
-	// Set up variables to read from inData.tree
+void plotMultHodo(
+	const TString& inPath, 
+	const Float_t (&totRange)[2] = MAX_TOT_RANGE,
+	const Int_t (&idRange)[2] = HODO_MAX_ID_RANGE, 
+	const Double_t (&qRange)[2] = HODO_MAX_Q_RANGE
+) {
 	DataFBTHodo inData({inPath}, "tree");
 	inData.tree->SetBranchStatus("*", 0);
+	for (Int_t layer = 0; layer < 3; layer++) {
+		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+	}
+	inData.tree->SetBranchStatus("coin", 1);
+	inData.tree->SetBranchStatus("fQCal", 1);
+	inData.tree->SetBranchStatus("fID", 1);
 
-	plotMultHodoStart(inData);
+
+	plotMultStart();
 
 	// loop through all events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
