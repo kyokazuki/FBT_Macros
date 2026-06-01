@@ -115,9 +115,7 @@ void plotTotMaxHodoLoop(
 
 void plotTotMaxHodoEnd() {
 	zoomAxisX(hTotMaxAll, 0, 5);
-	for (Int_t layer = 0; layer < 3; layer++) {
-		zoomAxisY(hTotMax[layer], 0, 5);
-	}
+	zoomAxisY(hTotMax, 0, 5);
 	zoomAxisY(hQMax, 0, 5);
 	zoomAxisAll(hTotQ, 0, 5);
 }

@@ -70,8 +70,8 @@ void plotTotMaxEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1])
 	});
 
+	zoomAxisY(hTotMax, 0, 5);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		zoomAxisY(hTotMax[layer], 0, 5);
 		addStats(hTotMax[layer], {
 			Form("run%s", getVecString(inData.runNum).Data()),
 			Form("entries = %.0f", hTotMax[layer]->GetEntries()), 

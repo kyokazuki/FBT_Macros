@@ -46,9 +46,8 @@ void plotTotLoop(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 }
 
 void plotTotEnd(const DataFBT1& inData, const Float_t (&totRange)[2]) {
+	zoomAxisY(hTot, 0, 5);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		zoomAxisY(hTot[layer], 0, 5);
-
 		addStats(hTot[layer], {
 			Form("run%s", getVecString(inData.runNum).Data()),
 			Form("entries = %.0f", hTot[layer]->GetEntries()), 

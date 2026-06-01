@@ -42,9 +42,8 @@ void plotMultHodoEnd(
 	const Double_t (&qRange)[2], 
 	const vector<Int_t>& coins
 ) {
+	zoomAxisX(hMult, 0, 2);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		zoomAxisX(hMult[layer], 0, 2);
-
 		Float_t total = hMult[layer]->GetEntries();
 		Float_t effcy = (total - hMult[layer]->GetBinContent(1)) / total;
 		addStats(hMult[layer], {
