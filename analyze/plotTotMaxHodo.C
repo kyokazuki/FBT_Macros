@@ -5,61 +5,18 @@
 #include <TH2F.h>
 #include <TMath.h>
 
-#include "utils/loadData.C"
-#include "utils/printProgress.C"
-#include "utils/zoomAxis.C"
+#include "plotTotMax.C"
 
-vector<TH2F*> hTotMax(3);
-TH1F* hTotMaxAll = nullptr;
 TH2F* hQMax = nullptr;
 TH2F* hTotQ = nullptr;
 
-void plotTotMaxHodoStart(const DataFBTHodo& inData, const vector<Float_t>& totRange) {
-	delete hTotMaxAll;
-	delete hTotQ;
-	if (totRange[1] > 10e3) {
-		hTotMaxAll = new TH1F(
-			"hTotMaxAll",
-			"max tot (all layers);tot [ps]",
-			MAX_TOT_BINS, totRange[0], totRange[1]
-		);
-		hTotQ = new TH2F(
-			"hTotQ",
-			"max tot (all layers) vs max q;q;tot [ps]",
-			500, 0, 10,
-			MAX_TOT_BINS, totRange[0], totRange[1]
-		);
-	} else {
-		hTotMaxAll = new TH1F(
-			"hTotMaxAll",
-			"max tot (all layers);tot (scaled)",
-			MAX_TOT_BINS, totRange[0], totRange[1]
-		);
-		hTotQ = new TH2F(
-			"hTotQ",
-			"max tot (all layers) vs max q;q;tot (scaled)",
-			500, 0, 10,
-			MAX_TOT_BINS, totRange[0], totRange[1]
-		);
-	}
-	for (Int_t layer = 0; layer < 3; layer++) {
-		delete hTotMax[layer];
-		if (totRange[1] > 10e3) {
-			hTotMax[layer] = new TH2F(
-				Form("hTotMax%c", LAYERS[layer]),
-				Form("max tot vs xi (%c);xi;tot [ps]", LAYERS[layer]),
-				MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
-				MAX_TOT_BINS, totRange[0], totRange[1]
-			);
-		} else {
-			hTotMax[layer] = new TH2F(
-				Form("hTotMax%c", LAYERS[layer]),
-				Form("max tot vs xi (%c);xi;tot (scaled)", LAYERS[layer]),
-				MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
-				MAX_TOT_BINS, totRange[0], totRange[1]
-			);
-		}
-	}
+void plotTotMaxHodoStart(const DataFBTHodo& inData, const Float_t (&totRange)[2]) {
+	inData.tree->SetBranchStatus("fQCal", 1);
+	inData.tree->SetBranchStatus("fID", 1);
+	inData.tree->SetBranchStatus("coin", 1);
+
+	plotTotMaxStart(inData, totRange);
+
 	delete hQMax;
 	hQMax = new TH2F(
 		"hQMax", 
@@ -67,6 +24,22 @@ void plotTotMaxHodoStart(const DataFBTHodo& inData, const vector<Float_t>& totRa
 		40, 0.5, 40.5,
 		500, 0, 10
 	);
+	delete hTotQ;
+	if (totRange[1] > 10e3) {
+		hTotQ = new TH2F(
+			"hTotQ",
+			"max tot (all layers) vs max q;q;tot [ps]",
+			500, 0, 10,
+			MAX_TOT_BINS, totRange[0], totRange[1]
+		);
+	} else {
+		hTotQ = new TH2F(
+			"hTotQ",
+			"max tot (all layers) vs max q;q;tot (scaled)",
+			500, 0, 10,
+			MAX_TOT_BINS, totRange[0], totRange[1]
+		);
+	}
 }
 
 void plotTotMaxHodoLoop(
@@ -89,7 +62,7 @@ void plotTotMaxHodoLoop(
 	}
 
 	// check if max Q exists and is in range
-	Int_t maxQId = inData.getMaxQId(idRange);
+	Int_t maxQId = inData.getMaxQId(idRange, qRange);
 	if (maxQId == -1) {
 		return;
 	}
@@ -98,7 +71,7 @@ void plotTotMaxHodoLoop(
 	}
 
 	// check if max Tot exists and is in range
-	Int_t maxTotLayer = inData.getMaxTotLayer();
+	Int_t maxTotLayer = inData.getMaxTotLayer(totRange);
 	if (maxTotLayer == -1) {
 		return;
 	}
@@ -106,18 +79,60 @@ void plotTotMaxHodoLoop(
 		return;
 	}
 
-	// fill
-	hQMax->Fill(maxQId, inData.fQCal[maxQId - 1]);
-	hTotMax[maxTotLayer]->Fill((*inData.xiV[maxTotLayer])[0], (*inData.totV[maxTotLayer])[0]);
 	hTotMaxAll->Fill((*inData.totV[maxTotLayer])[0]);
+	hTotMax[maxTotLayer]->Fill((*inData.xiV[maxTotLayer])[0], (*inData.totV[maxTotLayer])[0]);
+	hQMax->Fill(maxQId, inData.fQCal[maxQId - 1]);
 	hTotQ->Fill(inData.fQCal[maxQId - 1], (*inData.totV[maxTotLayer])[0]);
 }
 
-void plotTotMaxHodoEnd() {
+void plotTotMaxHodoEnd(
+	const DataFBTHodo& inData, 
+	const Float_t (&totRange)[2], 
+	const Int_t (&idRange)[2], 
+	const Double_t (&qRange)[2], 
+	const vector<Int_t>& coins
+) {
 	zoomAxisX(hTotMaxAll, 0, 5);
+	addStats(hTotMaxAll, {
+		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("entries = %.0f", hTotMaxAll->GetEntries()), 
+		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]), 
+		Form("id = {%d, %d}", idRange[0], idRange[1]), 
+		Form("q = {%.1f, %.1f}", qRange[0], qRange[1]), 
+		Form("coin = {%s}", getVecString(coins).Data())
+	});
+
 	zoomAxisY(hTotMax, 0, 5);
+	for (Int_t layer = 0; layer < 3; layer++) {
+		addStats(hTotMax[layer], {
+			Form("run%s", getVecString(inData.runNum).Data()), 
+			Form("entries = %.0f", hTotMax[layer]->GetEntries()), 
+			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+			Form("id = {%d, %d}", idRange[0], idRange[1]),
+			Form("q = {%.1f, %.1f}", qRange[0], qRange[1]),
+			Form("coin = {%s}", getVecString(coins).Data())
+		});
+	}
+
 	zoomAxisY(hQMax, 0, 5);
+	addStats(hQMax, {
+		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("entries = %.0f", hQMax->GetEntries()), 
+		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]), 
+		Form("id = {%d, %d}", idRange[0], idRange[1]),
+		Form("q = {%.1f, %.1f}", qRange[0], qRange[1]),
+		Form("coin = {%s}", getVecString(coins).Data())
+	});
+
 	zoomAxisAll(hTotQ, 0, 5);
+	addStats(hTotQ, {
+		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("entries = %.0f", hTotQ->GetEntries()), 
+		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]), 
+		Form("id = {%d, %d}", idRange[0], idRange[1]),
+		Form("q = {%.1f, %.1f}", qRange[0], qRange[1]),
+		Form("coin = {%s}", getVecString(coins).Data())
+	});
 }
 
 void plotTotMaxHodo(
@@ -129,14 +144,6 @@ void plotTotMaxHodo(
 ) {
 	DataFBTHodo inData({inPath}, "tree");
 	inData.tree->SetBranchStatus("*", 0);
-	for (UInt_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-	}
-	inData.tree->SetBranchStatus("coin", 1);
-	inData.tree->SetBranchStatus("fQCal", 1);
-	inData.tree->SetBranchStatus("fID", 1);
-
 
 	plotTotMaxHodoStart(inData, totRange);
 
@@ -147,6 +154,6 @@ void plotTotMaxHodo(
 		plotTotMaxHodoLoop(inData, totRange, idRange, qRange, coins);
 	}
 
-	plotTotMaxHodoEnd();
+	plotTotMaxHodoEnd(inData, totRange, idRange, qRange, coins);
 }
 

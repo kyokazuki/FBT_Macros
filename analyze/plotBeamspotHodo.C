@@ -5,6 +5,14 @@
 
 #include "plotBeamspot.C"
 
+void plotBeamspotHodoStart(const DataFBT2& inData) {
+	inData.tree->SetBranchStatus("coin", 1);
+	inData.tree->SetBranchStatus("fQCal", 1);
+	inData.tree->SetBranchStatus("fID", 1);
+
+	plotBeamspotStart(inData);
+}
+
 void plotBeamspotHodoLoop(
 	const DataFBTHodo& inData, 
 	const Float_t (&totRange)[2], 
@@ -20,19 +28,12 @@ void plotBeamspotHodoLoop(
 	if (inData.getMaxQId(idRange, qRange) == -1) {
 		return;
 	}
-	// check if totX and totY exist and is in range
-	if (!(inData.totV[0]->size() > 0 && inData.totV[1]->size() > 0)) {
-		return;
-	}
-	if (!(inRange((*inData.totV[0])[0], totRange) && inRange((*inData.totV[1])[0], totRange))) {
-		return;
-	}
 
-	hBeamspot->Fill((*inData.xiV[0])[0], (*inData.xiV[1])[0]);
+	plotBeamspotLoop(inData, totRange);
 }
 
 void plotBeamspotHodoEnd(
-	const DataFBTHodo& inData,
+	const DataBase& inData,
 	const Float_t (&totRange)[2], 
 	const Int_t (&idRange)[2], 
 	const Double_t (&qRange)[2], 
@@ -57,15 +58,8 @@ void plotBeamspotHodo(
 ) {
 	DataFBTHodo inData({inPath}, "tree");
 	inData.tree->SetBranchStatus("*", 0);
-	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-	}
-	inData.tree->SetBranchStatus("coin", 1);
-	inData.tree->SetBranchStatus("fQCal", 1);
-	inData.tree->SetBranchStatus("fID", 1);
 
-	plotBeamspotStart();
+	plotBeamspotHodoStart(inData);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);

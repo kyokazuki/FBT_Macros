@@ -12,9 +12,9 @@
 
 TCanvas *cSingles = nullptr;
 
-void analyzeSinglesStart(const Float_t (&totRange)[2]) {
-	plotTotStart(totRange);
-	plotTimingStart(totRange);
+void analyzeSinglesStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
+	plotTotStart(inData, totRange);
+	plotTimingStart(inData, totRange);
 }
 
 void analyzeSinglesLoop(const DataFBT1& inData, Long64_t entry, const Float_t (&totRange)[2]) {
@@ -65,14 +65,8 @@ void analyzeSingles(
 ) {
 	DataFBT1 inData({inPath}, "data");
 	inData.tree->SetBranchStatus("*", 0);
-	inData.tree->SetBranchStatus("time", 1);
-	inData.tree->SetBranchStatus("channelID", 1);
-	inData.tree->SetBranchStatus("tot", 1);
-	inData.tree->SetBranchStatus("energy", 1);
-	inData.tree->SetBranchStatus("xi", 1);
-	inData.tree->SetBranchStatus("yi", 1);
 
-	analyzeSinglesStart(totRange);
+	analyzeSinglesStart(inData, totRange);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);

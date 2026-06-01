@@ -8,6 +8,14 @@
 
 #include "plotMult.C"
 
+void plotMultHodoStart(const DataFBTHodo& inData) {
+	inData.tree->SetBranchStatus("fQCal", 1);
+	inData.tree->SetBranchStatus("fID", 1);
+	inData.tree->SetBranchStatus("coin", 1);
+
+	plotMultStart(inData);
+}
+
 void plotMultHodoLoop(
 	const DataFBTHodo& inData, 
 	const Float_t (&totRange)[2], 
@@ -24,15 +32,7 @@ void plotMultHodoLoop(
 		return;
 	}
 
-	for (Int_t layer = 0; layer < 3; layer++) {
-		Int_t mult = 0;
-		for (UInt_t hit = 0; hit < inData.totV[layer]->size(); hit++) {
-			if (inRange((*inData.totV[layer])[hit], totRange)) {
-				mult += 1;
-			}
-		}
-		hMult[layer]->Fill(mult);
-	}
+	plotMultLoop(inData, totRange);
 }
 
 void plotMultHodoEnd(
@@ -67,15 +67,8 @@ void plotMultHodo(
 ) {
 	DataFBTHodo inData({inPath}, "tree");
 	inData.tree->SetBranchStatus("*", 0);
-	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-	}
-	inData.tree->SetBranchStatus("coin", 1);
-	inData.tree->SetBranchStatus("fQCal", 1);
-	inData.tree->SetBranchStatus("fID", 1);
 
-
-	plotMultStart();
+	plotMultHodoStart(inData);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);

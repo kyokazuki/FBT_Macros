@@ -9,14 +9,8 @@ void analyzeSinglesScaled(
 ) {
 	DataFBT1 inData({inPath}, "data");
 	inData.tree->SetBranchStatus("*", 0);
-	inData.tree->SetBranchStatus("time", 1);
-	inData.tree->SetBranchStatus("channelID", 1);
-	inData.tree->SetBranchStatus("tot", 1);
-	inData.tree->SetBranchStatus("energy", 1);
-	inData.tree->SetBranchStatus("xi", 1);
-	inData.tree->SetBranchStatus("yi", 1);
 
-	analyzeSinglesStart(totRange);
+	analyzeSinglesStart(inData, totRange);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
@@ -28,7 +22,7 @@ void analyzeSinglesScaled(
 	TString graphPath = Form(
         "%s/%s_analyzeSinglesScaled.pdf",
         gSystem->DirName(inPath),
-        inData.runNum.Data()
+        inData.runNum[0].Data()
     );
 	analyzeSinglesEnd(inData, ext, totRange, graphPath);
 }

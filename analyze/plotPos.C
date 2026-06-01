@@ -11,13 +11,22 @@ TH2F* hPos = nullptr;
 TH2F* hPosAligned = nullptr;
 TH1D* hPosAlignedX = nullptr;
 
-void plotPosStart() {
+void plotPosStart(const DataFBT2& inData) {
+	for (Int_t layer = 0; layer < 3; layer++) {
+		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
+	}
+
 	delete hPos;
 	hPos = new TH2F(
 		"hPos",
 		"(X + Y) vs U;xiX + xiY;xiU",
-		LAYER_CHANNELS[1] + LAYER_CHANNELS[0] - 1, MAX_XI_RANGE[0] * 2 - 0.5, LAYER_CHANNELS[0] + LAYER_CHANNELS[1] + 0.5, 
-		MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5
+		LAYER_CHANNELS[1] + LAYER_CHANNELS[0] - 1, 
+		MAX_XI_RANGE[0] * 2 - 0.5, 
+		LAYER_CHANNELS[0] + LAYER_CHANNELS[1] + 0.5, 
+		MAX_XI_BINS, 
+		MAX_XI_RANGE[0] - 0.5, 
+		MAX_XI_RANGE[1] + 0.5
 	);
 	delete hPosAligned;
 	hPosAligned = new TH2F(
@@ -29,6 +38,7 @@ void plotPosStart() {
 }
 
 void plotPosLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+	// check if all layers are hit and are in range
 	for (Int_t layer = 0; layer < 3; layer++) {
 		if (inData.xiV[layer]->size() == 0) {
 			return;
@@ -68,12 +78,8 @@ void plotPos(
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
-	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-	}
 
-	plotPosStart();
+	plotPosStart(inData);
 
 	// loop through all events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {

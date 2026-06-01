@@ -5,6 +5,14 @@
 
 #include "plotPos.C"
 
+void plotPosHodoStart(const DataFBTHodo& inData) {
+	inData.tree->SetBranchStatus("fID", 1);
+	inData.tree->SetBranchStatus("fQCal", 1);
+	inData.tree->SetBranchStatus("coin", 1);
+
+	plotPosStart(inData);
+}
+
 void plotPosHodoLoop(
 	const DataFBTHodo& inData, 
 	const Float_t (&totRange)[2], 
@@ -20,27 +28,8 @@ void plotPosHodoLoop(
 	if (inData.getMaxQId(idRange, qRange) == -1) {
 		return;
 	}
-	// check if all layers are hit and are in range
-	if (!(
-		inData.totV[0]->size() > 0 &&
-		inData.totV[1]->size() > 0 && 
-		inData.totV[2]->size() > 0
-	)) {
-		return;
-	}
-	if (!(
-		inRange((*inData.totV[0])[0], totRange) &&
-		inRange((*inData.totV[1])[0], totRange) &&
-		inRange((*inData.totV[2])[0], totRange)
-	)) {
-		return;
-	}
 
-	Long64_t pos = (*inData.xiV[0])[0] + (*inData.xiV[1])[0];
-	Long64_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_INTERCEPT) / POS_SLOPE;
-
-	hPos->Fill(pos, (*inData.xiV[2])[0]);
-	hPosAligned->Fill(posAligned, (*inData.xiV[2])[0]);
+	plotPosLoop(inData, totRange);
 }
 
 void plotPosHodoEnd(
@@ -78,14 +67,8 @@ void plotPosHodo(
 ) {
 	DataFBTHodo inData({inPath}, "tree");
 	inData.tree->SetBranchStatus("*", 0);
-	for (UInt_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-	}
-	inData.tree->SetBranchStatus("fID", 1);
-	inData.tree->SetBranchStatus("fQCal", 1);
 
-	plotPosStart();
+	plotPosStart(inData);
 
 	// loop through all events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {

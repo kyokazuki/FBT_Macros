@@ -15,7 +15,13 @@ TH2F* hTimingXi = nullptr;
 TH2F* hTimingDxi = nullptr;
 TH2F* hDxiTot = nullptr;
 
-void plotTimingStart(const Float_t (&totRange)[2]) {
+void plotTimingStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
+	inData.tree->SetBranchStatus("time", 1);
+	inData.tree->SetBranchStatus("channelID", 1);
+	inData.tree->SetBranchStatus("tot", 1);
+	inData.tree->SetBranchStatus("energy", 1);
+	inData.tree->SetBranchStatus("xi", 1);
+
 	delete hTiming;
 	hTiming = new TH1F("hTiming",
 		"hTiming", 
@@ -117,13 +123,8 @@ void plotTiming(
 ) {
 	DataFBT1 inData({inPath}, "data");
 	inData.tree->SetBranchStatus("*", 0);
-	inData.tree->SetBranchStatus("time", 1);
-	inData.tree->SetBranchStatus("channelID", 1);
-	inData.tree->SetBranchStatus("tot", 1);
-	inData.tree->SetBranchStatus("energy", 1);
-	inData.tree->SetBranchStatus("xi", 1);
 
-	plotTimingStart(totRange);
+	plotTimingStart(inData, totRange);
 
 	// loop through all events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {

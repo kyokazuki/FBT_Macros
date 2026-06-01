@@ -12,7 +12,13 @@
 
 vector<TH2F*> hTot(3);
 
-void plotTotStart(const Float_t (&totRange)[2]) {
+void plotTotStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
+	inData.tree->SetBranchStatus("channelID", 1);
+	inData.tree->SetBranchStatus("tot", 1);
+	inData.tree->SetBranchStatus("energy", 1);
+	inData.tree->SetBranchStatus("xi", 1);
+	inData.tree->SetBranchStatus("yi", 1);
+
 	for (Int_t layer = 0; layer < 3; layer++) {
 		delete hTot[layer];
 		hTot[layer] = nullptr;
@@ -59,13 +65,8 @@ void plotTotEnd(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 void plotTot(const TString& inPath, const Float_t (&totRange)[2] = MAX_TOT_RANGE) {
 	DataFBT1 inData({inPath}, "data");
 	inData.tree->SetBranchStatus("*", 0);
-	inData.tree->SetBranchStatus("channelID", 1);
-	inData.tree->SetBranchStatus("tot", 1);
-	inData.tree->SetBranchStatus("energy", 1);
-	inData.tree->SetBranchStatus("xi", 1);
-	inData.tree->SetBranchStatus("yi", 1);
 
-	plotTotStart(totRange);
+	plotTotStart(inData, totRange);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);

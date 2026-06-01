@@ -14,11 +14,11 @@
 
 TCanvas *cGrouped = nullptr;
 
-void analyzeGroupedStart(const Float_t (&totRange)[2]) {
-	plotBeamspotStart();
-	plotMultStart();
-	plotPosStart();
-	plotTotMaxStart({0, totRange[1] / 2});
+void analyzeGroupedStart(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+	plotBeamspotStart(inData);
+	plotMultStart(inData);
+	plotPosStart(inData);
+	plotTotMaxStart(inData, {0, totRange[1] / 2});
 }
 
 void analyzeGroupedLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
@@ -68,13 +68,8 @@ void analyzeGroupedEnd(const DataFBT2& inData, const Float_t (&totRange)[2], con
 void analyzeGrouped(const TString& inPath, const Float_t (&totRange)[2] = {50e3, 1e6}) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
-	inData.tree->SetBranchStatus("timeGate", 1);
-	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-	}
 
-	analyzeGroupedStart(totRange);
+	analyzeGroupedStart(inData, totRange);
 
 	// event loop
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {

@@ -9,7 +9,12 @@
 
 TH2F* hBeamspot = nullptr;
 
-void plotBeamspotStart() {
+void plotBeamspotStart(const DataFBT2& inData) {
+	for (Int_t layer = 0; layer < 3; layer++) {
+		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+	}
+
 	delete hBeamspot;
 	hBeamspot = new TH2F(
 		"hBeamspot",
@@ -24,14 +29,17 @@ void plotBeamspotLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	if (!(inData.totV[0]->size() > 0 && inData.totV[1]->size() > 0)) {
 		return;
 	}
-	if (!(inRange((*inData.totV[0])[0], totRange) && inRange((*inData.totV[1])[0], totRange))) {
+	if (!(
+		inRange((*inData.totV[0])[0], totRange) && 
+		inRange((*inData.totV[1])[0], totRange)
+	)) {
 		return;
 	}
 
 	hBeamspot->Fill((*inData.xiV[0])[0], (*inData.xiV[1])[0]);
 }
 
-void plotBeamspotEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+void plotBeamspotEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
 	addStats(hBeamspot, {
 		Form("run%s", getVecString(inData.runNum).Data()),
 		Form("entries = %.0f", hBeamspot->GetEntries()), 
@@ -45,12 +53,8 @@ void plotBeamspot(
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
-	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-	}
 
-	plotBeamspotStart();
+	plotBeamspotStart(inData);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);

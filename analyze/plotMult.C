@@ -10,7 +10,11 @@
 
 vector<TH1F*> hMult(3);
 
-void plotMultStart() {
+void plotMultStart(const DataFBT2& inData) {
+	for (Int_t layer = 0; layer < 3; layer++) {
+		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+	}
+
 	for (Int_t layer = 0; layer < 3; layer++) {
 		delete hMult[layer];
 		hMult[layer] = nullptr;
@@ -30,12 +34,11 @@ void plotMultLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 				mult += 1;
 			}
 		}
-
 		hMult[layer]->Fill(mult);
 	}
 }
 
-void plotMultEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+void plotMultEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
 	zoomAxisX(hMult, 0, 2);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		Float_t total = hMult[layer]->GetEntries();
@@ -55,11 +58,8 @@ void plotMult(
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
-	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-	}
 
-	plotMultStart();
+	plotMultStart(inData);
 
 	// loop through all events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
