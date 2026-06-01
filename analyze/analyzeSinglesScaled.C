@@ -2,7 +2,11 @@
 
 #include "analyzeSingles.C"
 
-void analyzeSinglesScaled(const TString& inPath, Bool_t ext = 1) {
+void analyzeSinglesScaled(
+	const TString& inPath, 
+	Bool_t ext = 1, 
+	const Float_t (&totRange)[2] = MAX_TOT_RANGE_SCALED
+) {
 	DataFBT1 inData({inPath}, "data");
 	inData.tree->SetBranchStatus("*", 0);
 	inData.tree->SetBranchStatus("time", 1);
@@ -12,22 +16,20 @@ void analyzeSinglesScaled(const TString& inPath, Bool_t ext = 1) {
 	inData.tree->SetBranchStatus("xi", 1);
 	inData.tree->SetBranchStatus("yi", 1);
 
-	analyzeSinglesStart(MAX_TOT_RANGE_SCALED);
+	analyzeSinglesStart(totRange);
 
-	// event loop
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		analyzeSinglesLoop(inData, entry, MAX_TOT_RANGE_SCALED);
+		analyzeSinglesLoop(inData, entry, totRange);
 	}
 
-	TString runNumber = TString(gSystem->BaseName(inPath))(0,4);
 	TString graphPath = Form(
         "%s/%s_analyzeSinglesScaled.pdf",
         gSystem->DirName(inPath),
-        runNumber.Data()
+        inData.runNum.Data()
     );
-	analyzeSinglesEnd(inData, graphPath, ext);
+	analyzeSinglesEnd(inData, ext, totRange, graphPath);
 }
 

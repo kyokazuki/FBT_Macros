@@ -11,7 +11,7 @@
 #include "plotMult.C"
 #include "plotPos.C"
 
-TCanvas *c1 = nullptr;
+TCanvas *cGrouped = nullptr;
 
 void analyzeGroupedStart() {
 	plotBeamspotStart();
@@ -26,39 +26,39 @@ void analyzeGroupedLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 }
 
 void analyzeGroupedEnd(const DataFBT2& inData, const Float_t (&totRange)[2], const TString& graphPath) {
-	plotMultEnd(totRange);
-	plotBeamspotEnd(totRange);
-	plotPosEnd(totRange);
+	plotMultEnd(inData, totRange);
+	plotBeamspotEnd(inData, totRange);
+	plotPosEnd(inData, totRange);
 
 	// draw graphs
-	delete c1;
-    c1 = new TCanvas("c1", "c1", 1500, 800);
-	c1->Divide(3, 2);
+	delete cGrouped;
+    cGrouped = new TCanvas("cGrouped", "cGrouped", 1500, 800);
+	cGrouped->Divide(3, 2);
 
 	gStyle->SetOptStat(0);
 	for (Int_t i = 0; i < 3; i++) {
-		c1->cd(i + 1);
+		cGrouped->cd(i + 1);
 		gPad->SetGrid();
 		gPad->SetLogy();
 		hMult[i]->Draw();
 	}
 
-	c1->cd(4);
+	cGrouped->cd(4);
 	gPad->SetGrid();
 	gPad->SetLogz();
 	hBeamspot->Draw();
 
-	c1->cd(5);
+	cGrouped->cd(5);
 	gPad->SetGrid();
 	gPad->SetLogz();
 	hPos->Draw();
 
-	c1->cd(6);
+	cGrouped->cd(6);
 	gPad->SetGrid();
 	gPad->SetLogz();
 	hPosAligned->Draw();
 
-	c1->Print(graphPath);
+	cGrouped->Print(graphPath);
 }
 
 void analyzeGrouped(const TString& inPath, const Float_t (&totRange)[2] = {50e3, 1e6}) {
@@ -80,11 +80,10 @@ void analyzeGrouped(const TString& inPath, const Float_t (&totRange)[2] = {50e3,
 		analyzeGroupedLoop(inData, totRange);
 	}
 
-	TString runNumber = TString(gSystem->BaseName(inPath))(0,4);
 	TString graphPath = Form(
         "%s/%s_analyzeGrouped.pdf",
         gSystem->DirName(inPath),
-        runNumber.Data()
+        inData.runNum[0].Data()
 	);
 	analyzeGroupedEnd(inData, totRange, graphPath);
 }

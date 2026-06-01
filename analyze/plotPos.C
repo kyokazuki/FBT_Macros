@@ -45,7 +45,7 @@ void plotPosLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	hPosAligned->Fill(posAligned, (*inData.xiV[2])[0]);
 }
 
-void plotPosEnd(const Float_t (&totRange)[2]) {
+void plotPosEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	delete hPosAlignedX;
 	hPosAlignedX = hPosAligned->ProjectionX("hPosAlignedX");
 
@@ -55,6 +55,7 @@ void plotPosEnd(const Float_t (&totRange)[2]) {
 	);
 	Float_t totalEntries = hPosAligned->GetEntries();
 	addStats(hPosAligned, {
+		Form("run%s", getVecString(inData.runNum).Data()),
 		Form("entries = %.0f", totalEntries), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
 		Form("integral[%d, %d] = %.3f", -5, 5, trackedEntries / totalEntries)
@@ -67,7 +68,6 @@ void plotPos(
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
-	inData.tree->SetBranchStatus("timeGate", 1);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
 		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
@@ -78,12 +78,11 @@ void plotPos(
 	// loop through all events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
-
 		inData.tree->GetEntry(entry);
 
 		plotPosLoop(inData, totRange);
 	}
 
-	plotPosEnd(totRange);
+	plotPosEnd(inData, totRange);
 }
 

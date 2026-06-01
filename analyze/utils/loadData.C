@@ -8,6 +8,7 @@
 #include <TTree.h>
 #include <TString.h>
 #include <TChain.h>
+#include <TSystem.h>
 
 #include "constants.C"
 #include "inRange.C"
@@ -17,6 +18,7 @@ using namespace std;
 struct DataBase {
 	TChain* tree = nullptr;
 	Long64_t entries;
+	vector<TString> runNum;
 
 	DataBase() {};
 
@@ -24,6 +26,7 @@ struct DataBase {
 		tree = new TChain(treeName);
 		for (const TString& path : paths) {
 			tree->Add(path);
+			runNum.push_back(TString(gSystem->BaseName(path))(0,4));
 		}
 		entries = tree->GetEntries();
 	}
@@ -192,9 +195,19 @@ struct DataHodo : virtual public DataBase {
 		tree->SetBranchAddress("fTDiff", fTDiff);
     }
 
+	Int_t getCoinOnes(const vector<Int_t>& coins) const {
+		Int_t coinOnes = 0;
+		for (UInt_t i = 0; i < coins.size(); i++) {
+			if (coin[coins[i]] == 1) {
+				coinOnes++;
+			}
+		}
+		return coinOnes;
+	}
+
 	Int_t getMaxQId(const Int_t (&idRange)[2], const Double_t (&qRange)[2]) const {
 		Float_t maxQ = -1;
-		Int_t maxId = -1;
+		Int_t maxQId = -1;
 		for (Int_t id = idRange[0]; id <= idRange[1]; id++) {
 			if (isnan(fQCal[id - 1])) {
 				continue;
@@ -202,10 +215,10 @@ struct DataHodo : virtual public DataBase {
 
 			if (fQCal[id - 1] > maxQ && inRange(fQCal[id - 1], qRange)) {
 				maxQ = fQCal[id - 1];
-				maxId = id;
+				maxQId = id;
 			}
 		}
-		return maxId;
+		return maxQId;
 	}
 };
 

@@ -20,7 +20,8 @@ void plotBeamspotStart() {
 }
 
 void plotBeamspotLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
-	if (!(inData.xiV[0]->size() > 0 && inData.xiV[1]->size() > 0)) {
+	// check if totX and totY exist and is in range
+	if (!(inData.totV[0]->size() > 0 && inData.totV[1]->size() > 0)) {
 		return;
 	}
 	if (!(inRange((*inData.totV[0])[0], totRange) && inRange((*inData.totV[1])[0], totRange))) {
@@ -30,8 +31,9 @@ void plotBeamspotLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	hBeamspot->Fill((*inData.xiV[0])[0], (*inData.xiV[1])[0]);
 }
 
-void plotBeamspotEnd(const Float_t (&totRange)[2]) {
+void plotBeamspotEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	addStats(hBeamspot, {
+		Form("run%s", getVecString(inData.runNum).Data()),
 		Form("entries = %.0f", hBeamspot->GetEntries()), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1])
 	});
@@ -57,6 +59,6 @@ void plotBeamspot(
 		plotBeamspotLoop(inData, totRange);
 	}
 
-	plotBeamspotEnd(totRange);
+	plotBeamspotEnd(inData, totRange);
 }
 

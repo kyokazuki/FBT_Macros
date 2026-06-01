@@ -39,6 +39,10 @@ events->Scan("timeX:totX:xiX:timeY:totY:xiY:timeU:totU:xiU:timeGate", "", "colsi
 tree->Draw("totX:xiX>>(320, 0.5, 320.5, 100, 0, 10)", "", "colz")
 tree->Draw("fQCal:fID>>(40, -0.5, 39.5, 200, 0, 40)", "", "colz")
 
+## bdc
+tree->Draw("TargetX:TargetY>>(300, -150, 150, 300, -150, 150)", "", "colz")
+tree->Draw("TargetA:TargetB>>(500, -0.08, 0.08, 500, -0.08, 0.08)", "", "colz")
+
 events->Draw("totX:urq>>(200, 0, 4500, 200, 0, 300000)", "", "colz")
 events->Draw("totX:pow(urq*ulq*drq*dlq, 0.25)>>(200, 0, 4500, 200, 0, 300000)", "urq<4000 && ulq<4000 && drq<4000 && dlq<4000", "colz")
 events->Draw("pow(urq*ulq*drq*dlq, 0.25)", "", "colz")

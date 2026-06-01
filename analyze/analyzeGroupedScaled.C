@@ -2,7 +2,7 @@
 
 #include "analyzeGrouped.C"
 
-void analyzeGroupedScaled(const TString& inPath, const vector<Float_t> totRange = {0.5, 10}) {
+void analyzeGroupedScaled(const TString& inPath, const Float_t (&totRange)[2] = {0.5, 10}) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
 	inData.tree->SetBranchStatus("timeGate", 1);

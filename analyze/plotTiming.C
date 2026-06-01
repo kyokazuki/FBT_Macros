@@ -96,12 +96,13 @@ void plotTimingLoop(const DataFBT1& inData, Long64_t entry, const Float_t (&totR
 	}
 }
 
-void plotTimingEnd(const Float_t (&totRange)[2]) {
+void plotTimingEnd(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 	zoomAxisX(hTiming, 2, 2);
 
 	zoomAxisX(hTimingTot, 2, 2);
 	zoomAxisY(hTimingTot, 0, 5);
 	addStats(hTimingTot, {
+		Form("run%s", getVecString(inData.runNum).Data()),
 		Form("entries = %.0f", hTimingTot->GetEntries()), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1])	
 	});
@@ -132,5 +133,5 @@ void plotTiming(
 		plotTimingLoop(inData, entry, totRange);
 	}
 	
-	plotTimingEnd(totRange);
+	plotTimingEnd(inData, totRange);
 }

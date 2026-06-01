@@ -34,19 +34,23 @@ void plotTotStart(const Float_t (&totRange)[2]) {
 	}
 }
 
-void plotTotLoop(const DataFBT1& inData) {
+void plotTotLoop(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 	if (inData.channelId == 4128) {
+		return;
+	}
+	if (!inRange(inData.tot, totRange)) {
 		return;
 	}
 
 	hTot[inData.yi]->Fill(inData.xi, inData.tot);
 }
 
-void plotTotEnd(const Float_t (&totRange)[2]) {
+void plotTotEnd(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 	for (Int_t layer = 0; layer < 3; layer++) {
 		zoomAxisY(hTot[layer], 0, 5);
 
 		addStats(hTot[layer], {
+			Form("run%s", getVecString(inData.runNum).Data()),
 			Form("entries = %.0f", hTot[layer]->GetEntries()), 
 			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1])	
 		});
@@ -68,9 +72,9 @@ void plotTot(const TString& inPath, const Float_t (&totRange)[2] = MAX_TOT_RANGE
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		plotTotLoop(inData);
+		plotTotLoop(inData, totRange);
 	}
 
-	plotTotEnd(totRange);
+	plotTotEnd(inData, totRange);
 }
 

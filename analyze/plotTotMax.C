@@ -12,12 +12,7 @@
 TH2F* hTotMaxAll = nullptr;
 vector<TH2F*> hTotMax(3);
 
-void plotTotMaxStart(const DataFBT2& inData, const vector<Float_t>& totRange) {
-	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-	}
-
+void plotTotMaxStart(const vector<Float_t>& totRange) {
 	delete hTotMaxAll;
 	if (totRange[1] > 10e3) {
 		hTotMaxAll = new TH2F(
@@ -74,15 +69,18 @@ void plotTotMaxEnd() {
 	}
 }
 
-void plotTotMax(const TString& inPath, const vector<Float_t>& totRange) {
+void plotTotMax(const TString& inPath, const vector<Float_t>& totRange = MAX_TOT_RANGE) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
+	for (Int_t layer = 0; layer < 3; layer++) {
+		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
+	}
 
-	plotTotMaxStart(inData, totRange);
+	plotTotMaxStart(totRange);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
-
 		inData.tree->GetEntry(entry);
 
 		plotTotMaxLoop(inData, totRange);

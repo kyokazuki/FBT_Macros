@@ -35,13 +35,14 @@ void plotMultLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	}
 }
 
-void plotMultEnd(const Float_t (&totRange)[2]) {
+void plotMultEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	for (Int_t layer = 0; layer < 3; layer++) {
 		zoomAxisX(hMult[layer], 0, 2);
 
 		Float_t total = hMult[layer]->GetEntries();
 		Float_t effcy = (total - hMult[layer]->GetBinContent(1)) / total;
 		addStats(hMult[layer], {
+			Form("run%s", getVecString(inData.runNum).Data()),
 			Form("entries = %.0f", total), 
 			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
 			Form("efficiency = %.4f", effcy)
@@ -69,6 +70,6 @@ void plotMult(
 		plotMultLoop(inData, totRange);
 	}
 
-	plotMultEnd(totRange);
+	plotMultEnd(inData, totRange);
 }
 

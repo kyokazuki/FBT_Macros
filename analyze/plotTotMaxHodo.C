@@ -15,14 +15,6 @@ TH2F* hQMax = nullptr;
 TH2F* hTotQ = nullptr;
 
 void plotTotMaxHodoStart(const DataFBTHodo& inData, const vector<Float_t>& totRange) {
-	inData.tree->SetBranchStatus("coin", 1);
-	inData.tree->SetBranchStatus("fQCal", 1);
-	inData.tree->SetBranchStatus("fID", 1);
-	for (UInt_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-	}
-
 	delete hTotMaxAll;
 	delete hTotQ;
 	if (totRange[1] > 10e3) {
@@ -79,12 +71,12 @@ void plotTotMaxHodoStart(const DataFBTHodo& inData, const vector<Float_t>& totRa
 
 void plotTotMaxHodoLoop(
 	const DataFBTHodo& inData, 
-	const vector<Float_t>& totRange, 
-	const vector<Int_t>& idRange, 
-	const vector<Double_t>& qRange,
+	const Float_t (&totRange)[2], 
+	const Int_t (&idRange)[2], 
+	const Double_t (&qRange)[2], 
 	const vector<Int_t>& coins
 ) {
-	// check if one of the coins is 1
+	// check if at least one of the coins is 1
 	Int_t coinOnes = 0;
 	for (UInt_t i = 0; i < coins.size(); i++) {
 		if (inData.coin[coins[i]] == 1) {
@@ -132,13 +124,21 @@ void plotTotMaxHodoEnd() {
 
 void plotTotMaxHodo(
 	const TString& inPath, 
-	const vector<Float_t>& totRange	= MAX_TOT_RANGE, 
-	const vector<Int_t>& idRange	= HODO_MAX_ID_RANGE, 
-	const vector<Double_t>& qRange	= HODO_MAX_Q_RANGE, 
+	const Float_t (&totRange)[2]	= MAX_TOT_RANGE,
+	const Int_t (&idRange)[2]		= HODO_MAX_ID_RANGE, 
+	const Double_t (&qRange)[2]		= HODO_MAX_Q_RANGE, 
 	const vector<Int_t>& coins		= ALL_COINS
 ) {
 	DataFBTHodo inData({inPath}, "tree");
 	inData.tree->SetBranchStatus("*", 0);
+	for (UInt_t layer = 0; layer < 3; layer++) {
+		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
+	}
+	inData.tree->SetBranchStatus("coin", 1);
+	inData.tree->SetBranchStatus("fQCal", 1);
+	inData.tree->SetBranchStatus("fID", 1);
+
 
 	plotTotMaxHodoStart(inData, totRange);
 
