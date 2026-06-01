@@ -5,27 +5,26 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "utils/addStats.C"
 #include "utils/loadData.C"
 #include "utils/printProgress.C"
 #include "utils/zoomAxis.C"
 
-TH2F* hTotMaxAll = nullptr;
+TH1F* hTotMaxAll = nullptr;
 vector<TH2F*> hTotMax(3);
 
-void plotTotMaxStart(const vector<Float_t>& totRange) {
+void plotTotMaxStart(const Float_t (&totRange)[2]) {
 	delete hTotMaxAll;
 	if (totRange[1] > 10e3) {
-		hTotMaxAll = new TH2F(
+		hTotMaxAll = new TH1F(
 			"hTotMaxAll",
-			"max tot vs xi (all layers);xi;tot [ps]",
-			MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
+			"max tot (all layers);tot [ps]",
 			MAX_TOT_BINS, totRange[0], totRange[1]
 		);
 	} else {
-		hTotMaxAll = new TH2F(
+		hTotMaxAll = new TH1F(
 			"hTotMaxAll",
-			"max tot vs xi (all layers);xi;tot (scaled)",
-			MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
+			"max tot (all layers);tot (scaled)",
 			MAX_TOT_BINS, totRange[0], totRange[1]
 		);
 	}
@@ -49,8 +48,9 @@ void plotTotMaxStart(const vector<Float_t>& totRange) {
 	}
 }
 
-void plotTotMaxLoop(const DataFBT2& inData, const vector<Float_t>& totRange) {
-	Int_t maxTotLayer = inData.getMaxTotLayer();
+void plotTotMaxLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+	// check if max Tot exists and is in range
+	Int_t maxTotLayer = inData.getMaxTotLayer(totRange);
 	if (maxTotLayer == -1) {
 		return;
 	}
@@ -59,17 +59,31 @@ void plotTotMaxLoop(const DataFBT2& inData, const vector<Float_t>& totRange) {
 	}
 
 	hTotMax[maxTotLayer]->Fill((*inData.xiV[maxTotLayer])[0], (*inData.totV[maxTotLayer])[0]);
-	hTotMaxAll->Fill((*inData.xiV[maxTotLayer])[0], (*inData.totV[maxTotLayer])[0]);
+	hTotMaxAll->Fill((*inData.totV[maxTotLayer])[0]);
 }
 
-void plotTotMaxEnd() {
-	zoomAxisY(hTotMaxAll, 0, 5);
+void plotTotMaxEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+	zoomAxisX(hTotMaxAll, 0, 5);
+	addStats(hTotMaxAll, {
+		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("entries = %.0f", hTotMaxAll->GetEntries()), 
+		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1])
+	});
+
 	for (Int_t layer = 0; layer < 3; layer++) {
 		zoomAxisY(hTotMax[layer], 0, 5);
+		addStats(hTotMax[layer], {
+			Form("run%s", getVecString(inData.runNum).Data()),
+			Form("entries = %.0f", hTotMax[layer]->GetEntries()), 
+			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1])
+		});
 	}
 }
 
-void plotTotMax(const TString& inPath, const vector<Float_t>& totRange = MAX_TOT_RANGE) {
+void plotTotMax(
+	const TString& inPath, 
+	const Float_t (&totRange)[2] = MAX_TOT_RANGE
+) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
 	for (Int_t layer = 0; layer < 3; layer++) {
@@ -86,6 +100,6 @@ void plotTotMax(const TString& inPath, const vector<Float_t>& totRange = MAX_TOT
 		plotTotMaxLoop(inData, totRange);
 	}
 
-	plotTotMaxEnd();
+	plotTotMaxEnd(inData, totRange);
 }
 

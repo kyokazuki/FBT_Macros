@@ -10,25 +10,29 @@
 #include "plotBeamspot.C"
 #include "plotMult.C"
 #include "plotPos.C"
+#include "plotTotMax.C"
 
 TCanvas *cGrouped = nullptr;
 
-void analyzeGroupedStart() {
+void analyzeGroupedStart(const Float_t (&totRange)[2]) {
 	plotBeamspotStart();
 	plotMultStart();
 	plotPosStart();
+	plotTotMaxStart({0, totRange[1] / 2});
 }
 
 void analyzeGroupedLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	plotMultLoop(inData, totRange);
 	plotBeamspotLoop(inData, totRange);
 	plotPosLoop(inData, totRange);
+	plotTotMaxLoop(inData, {0, totRange[1] / 2});
 }
 
 void analyzeGroupedEnd(const DataFBT2& inData, const Float_t (&totRange)[2], const TString& graphPath) {
 	plotMultEnd(inData, totRange);
 	plotBeamspotEnd(inData, totRange);
 	plotPosEnd(inData, totRange);
+	plotTotMaxEnd(inData, {0, totRange[1] / 2});
 
 	// draw graphs
 	delete cGrouped;
@@ -51,7 +55,7 @@ void analyzeGroupedEnd(const DataFBT2& inData, const Float_t (&totRange)[2], con
 	cGrouped->cd(5);
 	gPad->SetGrid();
 	gPad->SetLogz();
-	hPos->Draw();
+	hTotMaxAll->Draw();
 
 	cGrouped->cd(6);
 	gPad->SetGrid();
@@ -70,7 +74,7 @@ void analyzeGrouped(const TString& inPath, const Float_t (&totRange)[2] = {50e3,
 		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
 	}
 
-	analyzeGroupedStart();
+	analyzeGroupedStart(totRange);
 
 	// event loop
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {

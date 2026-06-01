@@ -11,7 +11,7 @@ void analyzeGroupedScaled(const TString& inPath, const Float_t (&totRange)[2] = 
 		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
 	}
 
-	analyzeGroupedStart();
+	analyzeGroupedStart(totRange);
 
 	// event loop
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
