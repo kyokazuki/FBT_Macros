@@ -83,15 +83,25 @@ struct DataFBT2 : virtual public DataBase {
 		}
 	}
 
-	Int_t getMaxTotLayer(const Float_t (&totRange)[2]) const {
+	Int_t getMaxTotLayer(
+		const Float_t (&totRange)[2]		= MAX_TOT_RANGE, 
+		const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE
+	) const {
 		Float_t maxTot = -1;
 		Int_t maxTotLayer = -1;
 
 		for (Int_t layer = 0; layer < 3; layer++) {
+			// check if all layers are hit
 			if (totV[layer]->empty()) {
-				continue;
+				return -1;
 			}
 
+			// check if is in right timing
+			if (!inRange((*timeV[layer])[0] - (*timeGate)[0], timingRange)) {
+				return -1;
+			}
+
+			// update max tot value
 			if ((*totV[layer])[0] > maxTot && inRange((*totV[layer])[0], totRange)) {
 				maxTotLayer = layer;
 				maxTot = (*totV[layer])[0];
@@ -186,14 +196,30 @@ struct DataFDC1 : virtual public DataBase {
 
 struct DataHodo : virtual public DataBase {
 	Bool_t coin[16];
+	Int_t fID[40];
 	Double_t fQCal[40];
-	Double_t fTDiff[40];
+	Double_t fTUCal[40];
+	Double_t fTDCal[40];
 
 	DataHodo(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
 		tree->SetBranchAddress("coin", coin);
+		tree->SetBranchAddress("fID", fID);
 		tree->SetBranchAddress("fQCal", fQCal);
-		tree->SetBranchAddress("fTDiff", fTDiff);
+		tree->SetBranchAddress("fTUCal", fTUCal);
+		tree->SetBranchAddress("fTDCal", fTDCal);
     }
+
+	Int_t getIndex(Int_t id) const {
+		// hodo id madness
+		Int_t index;
+		if (id >= 0 && id <= 23) {
+			return id;
+		} else if (id >= 25 && id <= 40) {
+			return id - 1;
+		} else {
+			return -1;
+		}
+	}
 
 	Int_t getCoinOnes(const vector<Int_t>& coins) const {
 		Int_t coinOnes = 0;
@@ -205,16 +231,26 @@ struct DataHodo : virtual public DataBase {
 		return coinOnes;
 	}
 
-	Int_t getMaxQId(const Int_t (&idRange)[2], const Double_t (&qRange)[2]) const {
+	Int_t getMaxQId(const Int_t (&idRange)[2], const Double_t (&tRange)[2], const Double_t (&qRange)[2]) const {
 		Float_t maxQ = -1;
 		Int_t maxQId = -1;
 		for (Int_t id = idRange[0]; id <= idRange[1]; id++) {
-			if (isnan(fQCal[id - 1])) {
+			Int_t index = getIndex(id);
+			if (index == -1) {
 				continue;
 			}
 
-			if (fQCal[id - 1] > maxQ && inRange(fQCal[id - 1], qRange)) {
-				maxQ = fQCal[id - 1];
+			if (isnan(fQCal[index])) {
+				continue;
+			}
+
+			// check for the first beam bunch
+			if (!inRange((fTUCal[index] + fTDCal[index]) / 2, tRange)) {
+				continue;
+			}
+
+			if (fQCal[index] > maxQ && inRange(fQCal[index], qRange)) {
+				maxQ = fQCal[index];
 				maxQId = id;
 			}
 		}

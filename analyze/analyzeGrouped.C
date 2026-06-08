@@ -14,25 +14,39 @@
 
 TCanvas *cGrouped = nullptr;
 
-void analyzeGroupedStart(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+void analyzeGroupedStart(
+	const DataFBT2& inData, 
+	const Float_t (&totRange)[2]
+) {
 	plotBeamspotStart(inData);
 	plotMultStart(inData);
-	plotPosStart(inData);
 	plotTotMaxStart(inData, {0, totRange[1] / 2});
+	plotPosStart(inData);
 }
 
-void analyzeGroupedLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
-	plotMultLoop(inData, totRange);
-	plotBeamspotLoop(inData, totRange);
-	plotPosLoop(inData, totRange);
-	plotTotMaxLoop(inData, {0, totRange[1] / 2});
+void analyzeGroupedLoop(
+	const DataFBT2& inData, 
+	const Float_t (&totRange)[2],
+	const Long64_t (&timingRange)[2],
+	const Float_t (&posRange)[2]
+) {
+	plotMultLoop(inData, totRange, timingRange);
+	plotBeamspotLoop(inData, totRange, timingRange, posRange);
+	plotTotMaxLoop(inData, {0, totRange[1] / 2}, timingRange, posRange);
+	plotPosLoop(inData, totRange, timingRange);
 }
 
-void analyzeGroupedEnd(const DataFBT2& inData, const Float_t (&totRange)[2], const TString& graphPath) {
-	plotMultEnd(inData, totRange);
-	plotBeamspotEnd(inData, totRange);
-	plotPosEnd(inData, totRange);
-	plotTotMaxEnd(inData, {0, totRange[1] / 2});
+void analyzeGroupedEnd(
+	const DataFBT2& inData, 
+	const Float_t (&totRange)[2], 
+	const Long64_t (&timingRange)[2],
+	const Float_t (&posRange)[2],
+	const TString& graphPath
+) {
+	plotMultEnd(inData, totRange, timingRange);
+	plotBeamspotEnd(inData, totRange, timingRange, posRange);
+	plotTotMaxEnd(inData, {0, totRange[1] / 2}, timingRange, posRange);
+	plotPosEnd(inData, totRange, timingRange);
 
 	// draw graphs
 	delete cGrouped;
@@ -65,7 +79,12 @@ void analyzeGroupedEnd(const DataFBT2& inData, const Float_t (&totRange)[2], con
 	cGrouped->Print(graphPath);
 }
 
-void analyzeGrouped(const TString& inPath, const Float_t (&totRange)[2] = {50e3, 1e6}) {
+void analyzeGrouped(
+	const TString& inPath, 
+	const Float_t (&totRange)[2]		= {50e3, 1e6},
+	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE,
+	const Float_t (&posRange)[2]		= MAX_POS_RANGE
+) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
 
@@ -76,7 +95,7 @@ void analyzeGrouped(const TString& inPath, const Float_t (&totRange)[2] = {50e3,
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		analyzeGroupedLoop(inData, totRange);
+		analyzeGroupedLoop(inData, totRange, timingRange, posRange);
 	}
 
 	TString graphPath = Form(
@@ -84,6 +103,6 @@ void analyzeGrouped(const TString& inPath, const Float_t (&totRange)[2] = {50e3,
         gSystem->DirName(inPath),
         inData.runNum[0].Data()
 	);
-	analyzeGroupedEnd(inData, totRange, graphPath);
+	analyzeGroupedEnd(inData, totRange, timingRange, posRange, graphPath);
 }
 

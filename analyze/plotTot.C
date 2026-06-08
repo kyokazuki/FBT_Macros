@@ -51,7 +51,7 @@ void plotTotLoop(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 	hTot[inData.yi]->Fill(inData.xi, inData.tot);
 }
 
-void plotTotEnd(const DataFBT1& inData, const Float_t (&totRange)[2]) {
+void plotTotEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
 	zoomAxisY(hTot, 0, 5);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		addStats(hTot[layer], {

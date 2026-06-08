@@ -16,6 +16,7 @@ void plotPosHodoStart(const DataFBTHodo& inData) {
 void plotPosHodoLoop(
 	const DataFBTHodo& inData, 
 	const Float_t (&totRange)[2], 
+	const Long64_t (&timingRange)[2],
 	const Int_t (&idRange)[2], 
 	const Double_t (&qRange)[2], 
 	const vector<Int_t>& coins
@@ -29,12 +30,13 @@ void plotPosHodoLoop(
 		return;
 	}
 
-	plotPosLoop(inData, totRange);
+	plotPosLoop(inData, totRange, timingRange);
 }
 
 void plotPosHodoEnd(
-	const DataFBTHodo& inData, 
+	const DataBase& inData, 
 	const Float_t (&totRange)[2], 
+	const Long64_t (&timingRange)[2],
 	const Int_t (&idRange)[2], 
 	const Double_t (&qRange)[2], 
 	const vector<Int_t>& coins
@@ -51,6 +53,7 @@ void plotPosHodoEnd(
 		Form("run%s", getVecString(inData.runNum).Data()),
 		Form("entries = %.0f", totalEntries), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 
 		Form("id = {%d, %d}", idRange[0], idRange[1]),
 		Form("q = {%.1f, %.1f}", qRange[0], qRange[1]),
 		Form("coin = {%s}", getVecString(coins).Data()),
@@ -75,9 +78,9 @@ void plotPosHodo(
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		plotPosHodoLoop(inData, totRange, idRange, qRange, coins);
+		plotPosHodoLoop(inData, totRange, timingRange, idRange, qRange, coins);
 	}
 
-	plotPosHodoEnd(inData, totRange, idRange, qRange, coins);
+	plotPosHodoEnd(inData, totRange, timingRange, idRange, qRange, coins);
 }
 

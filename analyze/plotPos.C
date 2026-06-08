@@ -12,9 +12,11 @@ TH2F* hPosAligned = nullptr;
 TH1D* hPosAlignedX = nullptr;
 
 void plotPosStart(const DataFBT2& inData) {
+	inData.tree->SetBranchStatus("timeGate", 1);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
 		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("time%c", LAYERS[layer]), 1);
 	}
 
 	delete hPos;
@@ -28,34 +30,49 @@ void plotPosStart(const DataFBT2& inData) {
 		MAX_XI_RANGE[0] - 0.5, 
 		MAX_XI_RANGE[1] + 0.5
 	);
+
 	delete hPosAligned;
 	hPosAligned = new TH2F(
 		"hPosAligned",
-		Form("(X + Y) vs U (aligned);(xiX + xiY) - (xiU - %.1f) / %.1f;xiU", POS_INTERCEPT, POS_SLOPE),
+		Form("(X + Y) vs U (aligned);(xiX + xiY) - (xiU + %.1f) / %.1f;xiU", POS_OFFSET, POS_SLOPE),
 		601, -300, 300, 
 		MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5
 	);
 }
 
-void plotPosLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
-	// check if all layers are hit and are in range
+void plotPosLoop(
+	const DataFBT2& inData, 
+	const Float_t (&totRange)[2],
+	const Long64_t (&timingRange)[2]
+) {
+	// check all layers
 	for (Int_t layer = 0; layer < 3; layer++) {
+		// check if is hit
 		if (inData.xiV[layer]->size() == 0) {
 			return;
 		}
+		// check tot
 		if (!inRange((*inData.totV[layer])[0], totRange)) {
+			return;
+		}
+		// check timing
+		if (!inRange((*inData.timeV[layer])[0] - (*inData.timeGate)[0], timingRange)) {
 			return;
 		}
 	}
 
 	Long64_t pos = (*inData.xiV[0])[0] + (*inData.xiV[1])[0];
-	Long64_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_INTERCEPT) / POS_SLOPE;
+	Long64_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + POS_OFFSET) / POS_SLOPE;
 
 	hPos->Fill(pos, (*inData.xiV[2])[0]);
 	hPosAligned->Fill(posAligned, (*inData.xiV[2])[0]);
 }
 
-void plotPosEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+void plotPosEnd(
+	const DataBase& inData, 
+	const Float_t (&totRange)[2],
+	const Long64_t (&timingRange)[2]
+) {
 	delete hPosAlignedX;
 	hPosAlignedX = hPosAligned->ProjectionX("hPosAlignedX");
 
@@ -68,13 +85,15 @@ void plotPosEnd(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 		Form("run%s", getVecString(inData.runNum).Data()),
 		Form("entries = %.0f", totalEntries), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 
 		Form("integral[%d, %d] = %.3f", -5, 5, trackedEntries / totalEntries)
 	});
 }
 
 void plotPos(
 	const TString& inPath, 
-	const Float_t (&totRange)[2] = MAX_TOT_RANGE
+	const Float_t (&totRange)[2] 		= MAX_TOT_RANGE,
+	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
@@ -86,9 +105,9 @@ void plotPos(
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		plotPosLoop(inData, totRange);
+		plotPosLoop(inData, totRange, timingRange);
 	}
 
-	plotPosEnd(inData, totRange);
+	plotPosEnd(inData, totRange, timingRange);
 }
 

@@ -11,8 +11,10 @@
 vector<TH1F*> hMult(3);
 
 void plotMultStart(const DataFBT2& inData) {
+	inData.tree->SetBranchStatus("timeGate", 1);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("time%c", LAYERS[layer]), 1);
 	}
 
 	for (Int_t layer = 0; layer < 3; layer++) {
@@ -26,19 +28,34 @@ void plotMultStart(const DataFBT2& inData) {
 	}
 }
 
-void plotMultLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
+void plotMultLoop(
+	const DataFBT2& inData, 
+	const Float_t (&totRange)[2],
+	const Long64_t (&timingRange)[2]
+) {
 	for (Int_t layer = 0; layer < 3; layer++) {
 		Int_t mult = 0;
 		for (UInt_t hit = 0; hit < inData.totV[layer]->size(); hit++) {
-			if (inRange((*inData.totV[layer])[hit], totRange)) {
-				mult += 1;
+			// check timing
+			if (!inRange((*inData.timeV[layer])[hit] - (*inData.timeGate)[0], timingRange)) {
+				continue;
 			}
+			// check tot
+			if (!inRange((*inData.totV[layer])[hit], totRange)) {
+				continue;
+			}
+
+			mult += 1;
 		}
 		hMult[layer]->Fill(mult);
 	}
 }
 
-void plotMultEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
+void plotMultEnd(
+	const DataBase& inData, 
+	const Float_t (&totRange)[2],
+	const Long64_t (&timingRange)[2]
+) {
 	zoomAxisX(hMult, 0, 2);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		Float_t total = hMult[layer]->GetEntries();
@@ -47,6 +64,7 @@ void plotMultEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
 			Form("run%s", getVecString(inData.runNum).Data()),
 			Form("entries = %.0f", total), 
 			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 
 			Form("efficiency = %.4f", effcy)
 		});
 	}
@@ -54,7 +72,8 @@ void plotMultEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
 
 void plotMult(
 	const TString& inPath, 
-	const Float_t (&totRange)[2] = MAX_TOT_RANGE
+	const Float_t (&totRange)[2]		= MAX_TOT_RANGE,
+	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
@@ -66,9 +85,9 @@ void plotMult(
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		plotMultLoop(inData, totRange);
+		plotMultLoop(inData, totRange, timingRange);
 	}
 
-	plotMultEnd(inData, totRange);
+	plotMultEnd(inData, totRange, timingRange);
 }
 

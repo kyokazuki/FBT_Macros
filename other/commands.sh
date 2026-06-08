@@ -37,11 +37,20 @@ events->Scan("timeX:totX:xiX:timeY:totY:xiY:timeU:totU:xiU:timeGate", "", "colsi
 
 ## hodo
 tree->Draw("totX:xiX>>(320, 0.5, 320.5, 100, 0, 10)", "", "colz")
-tree->Draw("fQCal:fID>>(40, -0.5, 39.5, 200, 0, 40)", "", "colz")
+tree->Draw("fQCal:fID>>(40, -0.5, 40.5, 200, 0, 40)", "", "colz")
 
 ## bdc
 tree->Draw("TargetX:TargetY>>(300, -150, 150, 300, -150, 150)", "", "colz")
 tree->Draw("TargetA:TargetB>>(500, -0.08, 0.08, 500, -0.08, 0.08)", "", "colz")
+
+tree->Draw("(-0.75*(xiX-160))-TargetX/TargetA>>(500, -1e4, 1e4)", "TargetX>-9999 && totX>0.5 && TargetA!=0")
+tree->Draw("(-0.75*(xiY-112))-TargetY/TargetB>>(500, -1e4, 1e4)", "TargetY>-9999 && totY>0.5 && TargetB!=0")
+
+tree->Draw("(-0.75*(xiX-160))-TargetX:TargetA>>(100, -0.08, 0.08, 500, -300, 300)", "TargetX>-9999 && totX>0.5", "colz")
+tree->Draw("(-0.75*(xiY-112))-TargetY:TargetB>>(100, -0.08, 0.08, 500, -300, 300)", "TargetY>-9999 && totY>0.5", "colz")
+
+tree->Draw("TargetX+785*TargetA-(-0.75*(xiX-160))>>(500, -50, 50)", "TargetX>-9999 && totX>0.5")
+tree->Draw("TargetY+785*TargetB-(-0.75*(xiY-112))>>(500, -50, 50)", "TargetY>-9999 && totY>0.5")
 
 events->Draw("totX:urq>>(200, 0, 4500, 200, 0, 300000)", "", "colz")
 events->Draw("totX:pow(urq*ulq*drq*dlq, 0.25)>>(200, 0, 4500, 200, 0, 300000)", "urq<4000 && ulq<4000 && drq<4000 && dlq<4000", "colz")

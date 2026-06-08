@@ -16,6 +16,7 @@ void plotBeamspotHodoStart(const DataFBT2& inData) {
 void plotBeamspotHodoLoop(
 	const DataFBTHodo& inData, 
 	const Float_t (&totRange)[2], 
+	const Long64_t (&timingRange)[2],
 	const Int_t (&idRange)[2], 
 	const Double_t (&qRange)[2], 
 	const vector<Int_t>& coins
@@ -35,6 +36,7 @@ void plotBeamspotHodoLoop(
 void plotBeamspotHodoEnd(
 	const DataBase& inData,
 	const Float_t (&totRange)[2], 
+	const Long64_t (&timingRange)[2],
 	const Int_t (&idRange)[2], 
 	const Double_t (&qRange)[2], 
 	const vector<Int_t>& coins
@@ -43,6 +45,7 @@ void plotBeamspotHodoEnd(
 		Form("run%s", getVecString(inData.runNum).Data()),
 		Form("entries = %.0f", hBeamspot->GetEntries()), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
 		Form("id = {%d, %d}", idRange[0], idRange[1]),
 		Form("q = {%.1f, %.1f}", qRange[0], qRange[1]),
 		Form("coin = {%s}", getVecString(coins).Data())
@@ -51,10 +54,11 @@ void plotBeamspotHodoEnd(
 
 void plotBeamspotHodo(
 	const TString& inPath, 
-	const Float_t (&totRange)[2]	= MAX_TOT_RANGE, 
-	const Int_t (&idRange)[2]		= HODO_MAX_ID_RANGE, 
-	const Double_t (&qRange)[2]		= HODO_MAX_Q_RANGE,
-	const vector<Int_t>& coins		= ALL_COINS
+	const Float_t (&totRange)[2]		= MAX_TOT_RANGE, 
+	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE
+	const Int_t (&idRange)[2]			= HODO_MAX_ID_RANGE, 
+	const Double_t (&qRange)[2]			= HODO_MAX_Q_RANGE,
+	const vector<Int_t>& coins			= ALL_COINS
 ) {
 	DataFBTHodo inData({inPath}, "tree");
 	inData.tree->SetBranchStatus("*", 0);
@@ -65,9 +69,13 @@ void plotBeamspotHodo(
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		plotBeamspotHodoLoop(inData, totRange, idRange, qRange, coins);
+		plotBeamspotHodoLoop(
+			inData, totRange, timingRange, idRange, qRange, coins
+		);
 	}
 
-	plotBeamspotHodoEnd(inData, totRange, idRange, qRange, coins);
+	plotBeamspotHodoEnd(
+		inData, totRange, timingRange, idRange, qRange, coins
+	);
 }
 

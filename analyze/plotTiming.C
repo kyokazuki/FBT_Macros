@@ -25,14 +25,14 @@ void plotTimingStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 	delete hTiming;
 	hTiming = new TH1F("hTiming",
 		"hTiming", 
-		MAX_DT_BINS, MAX_DT_RANGE[0], MAX_DT_RANGE[1]
+		MAX_TIMING_BINS, MAX_TIMING_RANGE[0], MAX_TIMING_RANGE[1]
 	);
 
 	delete hTimingTot;
 	hTimingTot = new TH2F(
 		"hTimingTot",
 		"tot vs dt;dt [ps];tot [ps]", 
-		MAX_DT_BINS, MAX_DT_RANGE[0], MAX_DT_RANGE[1], 
+		MAX_TIMING_BINS, MAX_TIMING_RANGE[0], MAX_TIMING_RANGE[1], 
 		MAX_TOT_BINS, totRange[0], totRange[1]
 	);
 
@@ -40,7 +40,7 @@ void plotTimingStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 	hTimingXi = new TH2F(
 		"hTimingXi",
 		"xi vs dt;dt [ps];xi", 
-		MAX_DT_BINS, MAX_DT_RANGE[0], MAX_DT_RANGE[1], 
+		MAX_TIMING_BINS, MAX_TIMING_RANGE[0], MAX_TIMING_RANGE[1], 
 		MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5
 	);
 
@@ -48,7 +48,7 @@ void plotTimingStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 	hTimingDxi = new TH2F(
 		"hTimingDxi",
 		"dxi vs dt;dt [ps];xi", 
-		MAX_DT_BINS, MAX_DT_RANGE[0], MAX_DT_RANGE[1], 
+		MAX_TIMING_BINS, MAX_TIMING_RANGE[0], MAX_TIMING_RANGE[1], 
 		MAX_XI_BINS, MAX_XI_RANGE[0] - 1 - 0.5, MAX_XI_RANGE[1] - 1 + 0.5
 	);
 
@@ -81,9 +81,9 @@ void plotTimingLoop(const DataFBT1& inData, Long64_t entry, const Float_t (&totR
 
 			Long64_t dt = inData.time - time_ref;
 
-			if ((dir == -1 && dt > MAX_DT_RANGE[1]) || (dir == 1 && dt < MAX_DT_RANGE[0])) {
+			if ((dir == -1 && dt > MAX_TIMING_RANGE[1]) || (dir == 1 && dt < MAX_TIMING_RANGE[0])) {
 				continue;
-			} else if ((dir == -1 && dt < MAX_DT_RANGE[0]) || (dir == 1 && dt > MAX_DT_RANGE[1])) {
+			} else if ((dir == -1 && dt < MAX_TIMING_RANGE[0]) || (dir == 1 && dt > MAX_TIMING_RANGE[1])) {
 				break;
 			}
 
@@ -102,7 +102,7 @@ void plotTimingLoop(const DataFBT1& inData, Long64_t entry, const Float_t (&totR
 	}
 }
 
-void plotTimingEnd(const DataFBT1& inData, const Float_t (&totRange)[2]) {
+void plotTimingEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
 	zoomAxisX(hTiming, 2, 2);
 
 	zoomAxisX(hTimingTot, 2, 2);

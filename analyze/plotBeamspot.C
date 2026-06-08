@@ -10,9 +10,11 @@
 TH2F* hBeamspot = nullptr;
 
 void plotBeamspotStart(const DataFBT2& inData) {
+	inData.tree->SetBranchStatus("timeGate", 1);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
 		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("time%c", LAYERS[layer]), 1);
 	}
 
 	delete hBeamspot;
@@ -24,32 +26,57 @@ void plotBeamspotStart(const DataFBT2& inData) {
 	);
 }
 
-void plotBeamspotLoop(const DataFBT2& inData, const Float_t (&totRange)[2]) {
-	// check if totX and totY exist and is in range
-	if (!(inData.totV[0]->size() > 0 && inData.totV[1]->size() > 0)) {
-		return;
+void plotBeamspotLoop(
+	const DataFBT2& inData, 
+	const Float_t (&totRange)[2],
+	const Long64_t (&timingRange)[2],
+	const Float_t (&posRange)[2]
+) {
+	// check all layers
+	for (Int_t layer = 0; layer < 3; layer++) {
+		// check if is hit
+		if (inData.xiV[layer]->size() == 0) {
+			return;
+		}
+		// check tot
+		if (!inRange((*inData.totV[layer])[0], totRange)) {
+			return;
+		}
+		// check timing
+		if (!inRange((*inData.timeV[layer])[0] - (*inData.timeGate)[0], timingRange)) {
+			continue;
+		}
 	}
-	if (!(
-		inRange((*inData.totV[0])[0], totRange) && 
-		inRange((*inData.totV[1])[0], totRange)
-	)) {
+
+	// check pos
+	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + POS_OFFSET) / POS_SLOPE;
+	if (!inRange(posAligned, posRange)) {
 		return;
 	}
 
 	hBeamspot->Fill((*inData.xiV[0])[0], (*inData.xiV[1])[0]);
 }
 
-void plotBeamspotEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
+void plotBeamspotEnd(
+	const DataBase& inData, 
+	const Float_t (&totRange)[2],
+	const Long64_t (&timingRange)[2],
+	const Float_t (&posRange)[2]
+) {
 	addStats(hBeamspot, {
 		Form("run%s", getVecString(inData.runNum).Data()),
 		Form("entries = %.0f", hBeamspot->GetEntries()), 
-		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1])
+		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
+		Form("pos = {%.1f, %.1f}", posRange[0], posRange[1])
 	});
 }
 
 void plotBeamspot(
 	const TString& inPath, 
-	const Float_t (&totRange)[2] = MAX_TOT_RANGE
+	const Float_t (&totRange)[2]		= MAX_TOT_RANGE,
+	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE,
+	const Float_t (&posRange)[2]		= MAX_POS_RANGE
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
@@ -60,9 +87,9 @@ void plotBeamspot(
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		plotBeamspotLoop(inData, totRange);
+		plotBeamspotLoop(inData, totRange, timingRange, posRange);
 	}
 
-	plotBeamspotEnd(inData, totRange);
+	plotBeamspotEnd(inData, totRange, timingRange, posRange);
 }
 

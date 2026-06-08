@@ -25,7 +25,7 @@ struct Timer {
 	}
 };
 
-void processPad(const TString& inPath1, const TString& inPath2) {
+void processPad(const TString& inPath1, const TString& inPath2, Long64_t timeRes = 50000, Long64_t forceMatch = -1) {
 	cout << "Padding " << inPath1 << " with " << inPath2 << endl;
 
 	// load input trees
@@ -66,7 +66,6 @@ void processPad(const TString& inPath1, const TString& inPath2) {
 	time2.getDiff();
 	Double_t timeRatio = (Double_t)time1.diff / (Double_t)time2.diff;
 	cout << setprecision(10) << "Time ratio: (" << time1.end << "-" << time1.start << ")/(" << time2.end << "-" << time2.start << ") = " << timeRatio << endl;
-	Long64_t timeRes = 50000000;
 	cout << "Time resolution: " << timeRes << endl;
 
 	// look for the first matching event
@@ -92,6 +91,12 @@ void processPad(const TString& inPath1, const TString& inPath2) {
 	if (firstMatch == -1) {
 		cout << "Unable to match first event!" << endl;
 		return;
+	}
+
+	// force match
+	if (forceMatch != -1) {
+		firstMatch = forceMatch;
+		cout << "Forced matched first event" << endl;
 	}
 
 	// fill the first events
