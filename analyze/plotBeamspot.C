@@ -12,9 +12,9 @@ TH2F* hBeamspot = nullptr;
 void plotBeamspotStart(const DataFBT2& inData) {
 	inData.tree->SetBranchStatus("timeGate", 1);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("time%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("tot%c", LAYER_NAMES[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYER_NAMES[layer]), 1);
+		inData.tree->SetBranchStatus(Form("time%c", LAYER_NAMES[layer]), 1);
 	}
 
 	delete hBeamspot;
@@ -49,7 +49,7 @@ void plotBeamspotLoop(
 	}
 
 	// check pos
-	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + POS_OFFSET) / POS_SLOPE;
+	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_OFFSET) / POS_SLOPE;
 	if (!inRange(posAligned, posRange)) {
 		return;
 	}
@@ -64,9 +64,9 @@ void plotBeamspotEnd(
 	const Float_t (&posRange)[2]
 ) {
 	addStats(hBeamspot, {
-		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("run%s", inData.runNum.Data()),
 		Form("entries = %.0f", hBeamspot->GetEntries()), 
-		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+		Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
 		Form("pos = {%.1f, %.1f}", posRange[0], posRange[1])
 	});

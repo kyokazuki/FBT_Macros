@@ -50,7 +50,7 @@ void plotPosHodoEnd(
 	);
 	Float_t totalEntries = hPosAligned->GetEntries();
 	addStats(hPosAligned, {
-		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("run%s", inData.runNum.Data()),
 		Form("entries = %.0f", totalEntries), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
 		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 

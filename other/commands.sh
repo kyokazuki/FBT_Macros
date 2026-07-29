@@ -34,10 +34,12 @@ tree->Draw("tot:xi>>(320, 0.5, 320.5, 100, 0, 200000)", "yi==0 && channelID!=412
 tree->Draw("xi>>(320, 0.5, 320.5)", "yi==0 && channelID!=4128")
 events->Scan("timeX:energyX:totX:channelIDX:xiX:timeY:energyY:totY:channelIDY:xiY:timeU:energyU:totU:channelIDU:xiU:timeGate", "", "colsize=10")
 events->Scan("timeX:totX:xiX:timeY:totY:xiY:timeU:totU:xiU:timeGate", "", "colsize=10")
+events->Draw("totX:xiX>>(320, 0.5, 320.5, 200, 0, 10)", "", "colz")
+events->SetAlias("pos", "((xiX[0] + xiY[0]) - (xiU[0] + 39.14285) / 0.73142)")
 
 ## hodo
-tree->Draw("totX:xiX>>(320, 0.5, 320.5, 100, 0, 10)", "", "colz")
 tree->Draw("fQCal:fID>>(40, -0.5, 40.5, 200, 0, 40)", "", "colz")
+tree->Draw("(fTUCal+fTDCal)/2:fID>>(40, -0.5, 40.5, 200, 0, 1200)", "", "colz")
 
 ## bdc
 tree->Draw("TargetX:TargetY>>(300, -150, 150, 300, -150, 150)", "", "colz")
@@ -51,6 +53,17 @@ tree->Draw("(-0.75*(xiY-112))-TargetY:TargetB>>(100, -0.08, 0.08, 500, -300, 300
 
 tree->Draw("TargetX+785*TargetA-(-0.75*(xiX-160))>>(500, -50, 50)", "TargetX>-9999 && totX>0.5")
 tree->Draw("TargetY+785*TargetB-(-0.75*(xiY-112))>>(500, -50, 50)", "TargetY>-9999 && totY>0.5")
+
+tree->Draw("-0.75*(xiX[0]-160)-BDC1X+(fdc1_fX-BDC1X)/2938.83*2235.44", "BDC1X>-9999", "colz")
+tree->Draw("-0.75*(xiY[0]-112)-BDC1Y+(fdc1_fY-BDC1Y)/2938.83*2235.44", "BDC1Y>-9999", "colz")
+
+
+
+
+
+
+
+
 
 events->Draw("totX:urq>>(200, 0, 4500, 200, 0, 300000)", "", "colz")
 events->Draw("totX:pow(urq*ulq*drq*dlq, 0.25)>>(200, 0, 4500, 200, 0, 300000)", "urq<4000 && ulq<4000 && drq<4000 && dlq<4000", "colz")
@@ -76,9 +89,9 @@ plotRateTot({"0028_200k_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root",
 
 # add friend
 TFile *f1 = TFile::Open("file1.root");
-TTree *t1 = (TTree*)f1->Get("tree1");
+TTree *t1 = (TTree*)f1->Get("tree");
 TFile *f2 = TFile::Open("file2.root");
-TTree *t2 = (TTree*)f2->Get("tree2");
+TTree *t2 = (TTree*)f2->Get("tree");
 t1->AddFriend(t2);
 
 TFile *f1 = TFile::Open("0038_cosmic_ov2.8_th20_86400s_ext_grouped.root");
@@ -130,4 +143,19 @@ const vector<TString> DATASET3 	= {
 	"0048_1M_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root", 
 	"0049_1M_ov2.8_th20_300s_ext_scaled_grouped_friended_rated.root"
 };
+
+# s074 anchor runs
+# grouped
+{"1071_grouped.root", "1072_grouped.root", "1073_grouped.root", "1074_grouped.root", "1075_grouped.root", "1192_grouped.root", "1193_grouped.root", "1195_grouped.root", "1200_grouped.root", "1201_grouped.root", "1202_grouped.root", "1203_grouped.root"}
+# grouped + shifted
+{"1071_grouped_shifted.root", "1072_grouped_shifted.root", "1073_grouped_shifted.root", "1074_grouped_shifted.root", "1075_grouped_shifted.root", "1192_grouped_shifted.root", "1193_grouped_shifted.root", "1195_grouped_shifted.root", "1200_grouped_shifted.root", "1201_grouped_shifted.root", "1202_grouped_shifted.root", "1203_grouped_shifted.root"}
+# grouped + shifted + coined
+{"1071_grouped_shifted_coined.root", "1072_grouped_shifted_coined.root", "1073_grouped_shifted_coined.root", "1074_grouped_shifted_coined.root", "1075_grouped_shifted_coined.root", "1192_grouped_shifted_coined.root", "1193_grouped_shifted_coined.root", "1195_grouped_shifted_coined.root", "1200_grouped_shifted_coined.root", "1201_grouped_shifted_coined.root", "1202_grouped_shifted_coined.root", "1203_grouped_shifted_coined.root"}
+
+# scaled + grouped
+{"1071_scaled_grouped.root", "1072_scaled_grouped.root", "1073_scaled_grouped.root", "1074_scaled_grouped.root", "1075_scaled_grouped.root", "1192_scaled_grouped.root", "1193_scaled_grouped.root", "1195_scaled_grouped.root", "1200_scaled_grouped.root", "1201_scaled_grouped.root", "1202_scaled_grouped.root", "1203_scaled_grouped.root"}
+# scaled + grouped + coined
+{"1071_scaled_grouped_coined.root", "1072_scaled_grouped_coined.root", "1073_scaled_grouped_coined.root", "1074_scaled_grouped_coined.root", "1075_scaled_grouped_coined.root", "1192_scaled_grouped_coined.root", "1193_scaled_grouped_coined.root", "1195_scaled_grouped_coined.root", "1200_scaled_grouped_coined.root", "1201_scaled_grouped_coined.root", "1202_scaled_grouped_coined.root", "1203_scaled_grouped_coined.root"}
+# scaled + grouped + coined + shifted
+
 

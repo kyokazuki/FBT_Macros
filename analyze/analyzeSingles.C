@@ -12,19 +12,19 @@
 
 TCanvas *cSingles = nullptr;
 
-void analyzeSinglesStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
+void analyzeSinglesStart(const DataFBT1& inData, const Float_t (&totRange)[2], const Long64_t (&timingRange)[2]) {
 	plotTotStart(inData, totRange);
-	plotTimingStart(inData, totRange);
+	plotTimingStart(inData, totRange, timingRange);
 }
 
-void analyzeSinglesLoop(const DataFBT1& inData, Long64_t entry, const Float_t (&totRange)[2]) {
+void analyzeSinglesLoop(const DataFBT1& inData, Long64_t entry, const Float_t (&totRange)[2], const Long64_t (&timingRange)[2]) {
 	plotTotLoop(inData, totRange);
-	plotTimingLoop(inData, entry, totRange);
+	plotTimingLoop(inData, entry, totRange, timingRange);
 }
 
-void analyzeSinglesEnd(const DataFBT1& inData, Bool_t ext, const Float_t (&totRange)[2], const TString& graphPath) {
+void analyzeSinglesEnd(const DataFBT1& inData, Bool_t ext, const Float_t (&totRange)[2], const Long64_t (&timingRange)[2], const TString& graphPath) {
 	plotTotEnd(inData, totRange);
-	plotTimingEnd(inData, totRange);
+	plotTimingEnd(inData, totRange, timingRange);
 
 	// draw graphs
 	delete cSingles;
@@ -61,25 +61,26 @@ void analyzeSinglesEnd(const DataFBT1& inData, Bool_t ext, const Float_t (&totRa
 void analyzeSingles(
 	const TString& inPath, 
 	Bool_t ext = 1, 
-	const Float_t (&totRange)[2] = MAX_TOT_RANGE
+	const Float_t (&totRange)[2] = MAX_TOT_RANGE, 
+	const Long64_t (&timingRange)[2] = MAX_TIMING_RANGE
 ) {
 	DataFBT1 inData({inPath}, "data");
 	inData.tree->SetBranchStatus("*", 0);
 
-	analyzeSinglesStart(inData, totRange);
+	analyzeSinglesStart(inData, totRange, timingRange);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		analyzeSinglesLoop(inData, entry, totRange);
+		analyzeSinglesLoop(inData, entry, totRange, timingRange);
 	}
 
 	TString graphPath = Form(
         "%s/%s_analyzeSingles.pdf",
         gSystem->DirName(inPath),
-        inData.runNum[0].Data()
+        inData.runNum.Data()
     );
-	analyzeSinglesEnd(inData, ext, totRange, graphPath);
+	analyzeSinglesEnd(inData, ext, totRange, timingRange, graphPath);
 }
 

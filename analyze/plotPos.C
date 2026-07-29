@@ -14,9 +14,9 @@ TH1D* hPosAlignedX = nullptr;
 void plotPosStart(const DataFBT2& inData) {
 	inData.tree->SetBranchStatus("timeGate", 1);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("time%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("tot%c", LAYER_NAMES[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYER_NAMES[layer]), 1);
+		inData.tree->SetBranchStatus(Form("time%c", LAYER_NAMES[layer]), 1);
 	}
 
 	delete hPos;
@@ -34,7 +34,7 @@ void plotPosStart(const DataFBT2& inData) {
 	delete hPosAligned;
 	hPosAligned = new TH2F(
 		"hPosAligned",
-		Form("(X + Y) vs U (aligned);(xiX + xiY) - (xiU + %.1f) / %.1f;xiU", POS_OFFSET, POS_SLOPE),
+		Form("(X + Y) vs U (aligned);(xiX + xiY) - (xiU - (%.1f)) / %.1f;xiU", POS_OFFSET, POS_SLOPE),
 		601, -300, 300, 
 		MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5
 	);
@@ -62,7 +62,7 @@ void plotPosLoop(
 	}
 
 	Long64_t pos = (*inData.xiV[0])[0] + (*inData.xiV[1])[0];
-	Long64_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + POS_OFFSET) / POS_SLOPE;
+	Long64_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_OFFSET) / POS_SLOPE;
 
 	hPos->Fill(pos, (*inData.xiV[2])[0]);
 	hPosAligned->Fill(posAligned, (*inData.xiV[2])[0]);
@@ -82,9 +82,9 @@ void plotPosEnd(
 	);
 	Float_t totalEntries = hPosAligned->GetEntries();
 	addStats(hPosAligned, {
-		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("run%s", inData.runNum.Data()),
 		Form("entries = %.0f", totalEntries), 
-		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+		Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 
 		Form("integral[%d, %d] = %.3f", -5, 5, trackedEntries / totalEntries)
 	});

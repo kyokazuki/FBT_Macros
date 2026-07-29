@@ -100,7 +100,7 @@ void analyzeGroupedHodo(
 	TString graphPath = Form(
         "%s/%s_analyzeGroupedHodo.pdf",
         gSystem->DirName(inPath),
-        inData.runNum[0].Data()
+        inData.runNum.Data()
 	);
 	analyzeGroupedHodoEnd(inData, totRange, idRange, qRange, coins, graphPath);
 }

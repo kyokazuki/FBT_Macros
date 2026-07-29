@@ -8,17 +8,17 @@
 #include <TTree.h>
 #include <TString.h>
 #include <TChain.h>
-#include <TSystem.h>
 
 #include "constants.C"
 #include "inRange.C"
+#include "getRunNumber.C"
 
 using namespace std;
 
 struct DataBase {
 	TChain* tree = nullptr;
 	Long64_t entries;
-	vector<TString> runNum;
+	TString runNum;
 
 	DataBase() {};
 
@@ -26,8 +26,9 @@ struct DataBase {
 		tree = new TChain(treeName);
 		for (const TString& path : paths) {
 			tree->Add(path);
-			runNum.push_back(TString(gSystem->BaseName(path))(0,4));
 		}
+		runNum = getRunNumberMult(paths);
+
 		entries = tree->GetEntries();
 	}
 
@@ -64,11 +65,11 @@ struct DataFBT2 : virtual public DataBase {
 	DataFBT2(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
 		tree->SetBranchAddress("timeGate", &timeGate);
 		for (Int_t layer = 0; layer < 3; layer++) {
-			tree->SetBranchAddress(Form("time%c", LAYERS[layer]), &timeV[layer]);
-			tree->SetBranchAddress(Form("energy%c", LAYERS[layer]), &energyV[layer]);
-			tree->SetBranchAddress(Form("tot%c", LAYERS[layer]), &totV[layer]);
-			tree->SetBranchAddress(Form("channelID%c", LAYERS[layer]), &channelIdV[layer]);
-			tree->SetBranchAddress(Form("xi%c", LAYERS[layer]), &xiV[layer]);
+			tree->SetBranchAddress(Form("time%c", LAYER_NAMES[layer]), &timeV[layer]);
+			tree->SetBranchAddress(Form("energy%c", LAYER_NAMES[layer]), &energyV[layer]);
+			tree->SetBranchAddress(Form("tot%c", LAYER_NAMES[layer]), &totV[layer]);
+			tree->SetBranchAddress(Form("channelID%c", LAYER_NAMES[layer]), &channelIdV[layer]);
+			tree->SetBranchAddress(Form("xi%c", LAYER_NAMES[layer]), &xiV[layer]);
 		}
     }
 
@@ -194,6 +195,19 @@ struct DataFDC1 : virtual public DataBase {
     }
 };
 
+struct DataCoin : virtual public DataBase {
+	Bool_t coin[16];
+
+	DataCoin(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
+		tree->SetBranchAddress("coin", coin);
+    }
+};
+
+struct DataFBTCoin : public DataFBT2, public DataCoin {
+	DataFBTCoin(const vector<TString>& paths, const TString& treeName)
+		: DataBase(paths, treeName), DataFBT2(paths, treeName), DataCoin(paths, treeName) {}
+};
+
 struct DataHodo : virtual public DataBase {
 	Bool_t coin[16];
 	Int_t fID[40];
@@ -261,6 +275,29 @@ struct DataHodo : virtual public DataBase {
 struct DataFBTHodo : public DataFBT2, public DataHodo {
 	DataFBTHodo(const vector<TString>& paths, const TString& treeName)
 		: DataBase(paths, treeName), DataFBT2(paths, treeName), DataHodo(paths, treeName) {}
+};
+
+struct DataTOGAXSI : virtual public DataBase {
+	Double_t rc_vtx[4][2][3];
+	Double_t br_vtx[4][3];
+	Double_t bc_vtx[2][3];
+	Bool_t rc_is_in_tgt[4][2];
+	Bool_t br_is_in_tgt[4];
+	Bool_t bc_is_in_tgt[4];
+
+	DataTOGAXSI(const vector<TString>& paths, const TString& treeName) : DataBase(paths, treeName) {
+		tree->SetBranchAddress("rc_vtx", rc_vtx);
+		tree->SetBranchAddress("br_vtx", br_vtx);
+		tree->SetBranchAddress("bc_vtx", bc_vtx);
+		tree->SetBranchAddress("rc_is_in_tgt", rc_is_in_tgt);
+		tree->SetBranchAddress("br_is_in_tgt", br_is_in_tgt);
+		tree->SetBranchAddress("bc_is_in_tgt", bc_is_in_tgt);
+    }
+};
+
+struct DataFBTTOGAXSI : public DataFBT2, public DataTOGAXSI {
+	DataFBTTOGAXSI(const vector<TString>& paths, const TString& treeName)
+		: DataBase(paths, treeName), DataFBT2(paths, treeName), DataTOGAXSI(paths, treeName) {}
 };
 
 #endif

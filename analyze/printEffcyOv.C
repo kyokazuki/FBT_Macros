@@ -31,41 +31,70 @@ void printEffcyOv() {
 	vector<TGraph*> gEffcyHodo(3);
 	vector<TGraph*> gEffcyScaled(3);
 	vector<TGraph*> gEffcyScaledHodo(3);
-	const char LAYERS[3] = {'X', 'Y', 'U'};
+	const char LAYER_NAMES[3] = {'X', 'Y', 'U'};
+	// for (Int_t i = 0; i < 3; i++) {
+	// 	c1->cd(i + 1);
+	// 	gPad->SetGrid();
+	//
+	// 	gEffcy[i] = new TGraph(points, ov, effcy[i].data());
+	// 	gEffcyHodo[i] = new TGraph(points, ov, effcyHodo[i].data());
+	// 	gEffcyScaled[i] = new TGraph(points, ov, effcyScaled[i].data());
+	// 	gEffcyScaledHodo[i] = new TGraph(points, ov, effcyScaledHodo[i].data());
+	//
+	// 	gEffcy[i]->SetTitle(Form("Effcy%c vs OV (th=20, tot={50e3, 1e6} or {0.5, 10}, id=6, q={2, 5});Overvoltage [V];Efficiency", LAYER_NAMES[i]));
+	// 	gEffcy[i]->GetYaxis()->SetRangeUser(0, 1);
+	// 	gEffcy[i]->SetLineColor(kGreen);
+	// 	gEffcy[i]->SetMarkerStyle(20);
+	// 	gEffcy[i]->SetLineWidth(1);
+	// 	gEffcy[i]->Draw("ALP");
+	//
+	// 	gEffcyHodo[i]->SetLineColor(kRed);
+	// 	gEffcyHodo[i]->SetMarkerStyle(20);
+	// 	gEffcyHodo[i]->SetLineWidth(1);
+	// 	gEffcyHodo[i]->Draw("LP SAME");
+	//
+	// 	gEffcyScaled[i]->SetLineColor(kOrange);
+	// 	gEffcyScaled[i]->SetMarkerStyle(20);
+	// 	gEffcyScaled[i]->SetLineWidth(1);
+	// 	gEffcyScaled[i]->Draw("LP SAME");
+	//
+	// 	gEffcyScaledHodo[i]->SetLineColor(kBlue);
+	// 	gEffcyScaledHodo[i]->SetMarkerStyle(20);
+	// 	gEffcyScaledHodo[i]->SetLineWidth(1);
+	// 	gEffcyScaledHodo[i]->Draw("LP SAME");
+	//
+	// 	TLegend *leg = new TLegend(0.60, 0.15, 0.88, 0.30);
+	// 	leg->AddEntry(gEffcy[i],     "No Hodo", "lp");
+	// 	leg->AddEntry(gEffcyHodo[i], "With Hodo", "lp");
+	// 	leg->AddEntry(gEffcyScaled[i], "No Hodo (scaled)", "lp");
+	// 	leg->AddEntry(gEffcyScaledHodo[i], "With Hodo (scaled)", "lp");
+	//
+	// 	leg->Draw();
+	// }
+
+	// only draw for scaled data
 	for (Int_t i = 0; i < 3; i++) {
 		c1->cd(i + 1);
 		gPad->SetGrid();
 
-		gEffcy[i] = new TGraph(points, ov, effcy[i].data());
-		gEffcyHodo[i] = new TGraph(points, ov, effcyHodo[i].data());
 		gEffcyScaled[i] = new TGraph(points, ov, effcyScaled[i].data());
 		gEffcyScaledHodo[i] = new TGraph(points, ov, effcyScaledHodo[i].data());
 
-		gEffcy[i]->SetTitle(Form("Effcy%c vs OV (th=20, tot={50e3, 1e6} or {0.5, 10}, id=6, q={2, 5});Overvoltage [V];Efficiency", LAYERS[i]));
-		gEffcy[i]->GetYaxis()->SetRangeUser(0, 1);
-		gEffcy[i]->SetLineColor(kGreen);
-		gEffcy[i]->SetMarkerStyle(20);
-		gEffcy[i]->SetLineWidth(1);
-		gEffcy[i]->Draw("ALP");
-
-		gEffcyHodo[i]->SetLineColor(kRed);
-		gEffcyHodo[i]->SetMarkerStyle(20);
-		gEffcyHodo[i]->SetLineWidth(1);
-		gEffcyHodo[i]->Draw("LP SAME");
-
+		gEffcyScaled[i]->SetTitle(Form("Effcy%c vs OV (th=20, tot={0.5, 10}, id=6, q={2, 5});Overvoltage [V];Efficiency", LAYER_NAMES[i]));
+		gEffcyScaled[i]->GetYaxis()->SetRangeUser(0, 1);
 		gEffcyScaled[i]->SetLineColor(kOrange);
 		gEffcyScaled[i]->SetMarkerStyle(20);
+		gEffcyScaled[i]->SetMarkerSize(0.5);
 		gEffcyScaled[i]->SetLineWidth(1);
-		gEffcyScaled[i]->Draw("LP SAME");
+		gEffcyScaled[i]->Draw("ALP");
 
 		gEffcyScaledHodo[i]->SetLineColor(kBlue);
 		gEffcyScaledHodo[i]->SetMarkerStyle(20);
+		gEffcyScaledHodo[i]->SetMarkerSize(0.5);
 		gEffcyScaledHodo[i]->SetLineWidth(1);
 		gEffcyScaledHodo[i]->Draw("LP SAME");
 
 		TLegend *leg = new TLegend(0.60, 0.15, 0.88, 0.30);
-		leg->AddEntry(gEffcy[i],     "No Hodo", "lp");
-		leg->AddEntry(gEffcyHodo[i], "With Hodo", "lp");
 		leg->AddEntry(gEffcyScaled[i], "No Hodo (scaled)", "lp");
 		leg->AddEntry(gEffcyScaledHodo[i], "With Hodo (scaled)", "lp");
 

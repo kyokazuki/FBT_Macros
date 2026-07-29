@@ -7,11 +7,11 @@
 #include <TTree.h>
 #include <TString.h>
 
-#include "utils/loadData.C"
 #include "utils/createOutFile.C"
+#include "utils/loadData.C"
 #include "utils/printProgress.C"
 
-void processGroup(const TString& inPath, const Long64_t (&dtRange)[2] = MAX_DT_RANGE) {
+void processGroup(const TString& inPath, const Long64_t (&dtRange)[2] = MAX_TIMING_RANGE) {
 	cout << "Grouping events for " << inPath << endl;
 
 	DataFBT1 inData({inPath}, "data");
@@ -38,11 +38,11 @@ void processGroup(const TString& inPath, const Long64_t (&dtRange)[2] = MAX_DT_R
 	vector<vector <Int_t>> xiVSorted(3);
 	vector<Long64_t> timeGate;
 	for (Int_t i = 0; i < 3; i++) {
-		outTree->Branch(Form("time%c", LAYERS[i]), &timeVSorted[i]);
-		outTree->Branch(Form("energy%c", LAYERS[i]), &energyVSorted[i]);
-		outTree->Branch(Form("tot%c", LAYERS[i]), &totVSorted[i]);
-		outTree->Branch(Form("channelID%c", LAYERS[i]), &channelIdVSorted[i]);
-		outTree->Branch(Form("xi%c", LAYERS[i]), &xiVSorted[i]);
+		outTree->Branch(Form("time%c", LAYER_NAMES[i]), &timeVSorted[i]);
+		outTree->Branch(Form("energy%c", LAYER_NAMES[i]), &energyVSorted[i]);
+		outTree->Branch(Form("tot%c", LAYER_NAMES[i]), &totVSorted[i]);
+		outTree->Branch(Form("channelID%c", LAYER_NAMES[i]), &channelIdVSorted[i]);
+		outTree->Branch(Form("xi%c", LAYER_NAMES[i]), &xiVSorted[i]);
 	}
 	outTree->Branch("timeGate", &timeGate);
 

@@ -22,11 +22,10 @@ void analyzeGroupedScaledHodo(
 		analyzeGroupedHodoLoop(inData, totRange, idRange, qRange, coins);
 	}
 
-	TString runNumber = TString(gSystem->BaseName(inPath))(0,4);
 	TString graphPath = Form(
         "%s/%s_analyzeGroupedScaledHodo.pdf",
         gSystem->DirName(inPath),
-        runNumber.Data()
+		inData.runNum.Data()
 	);
 	analyzeGroupedHodoEnd(inData, totRange, idRange, qRange, coins, graphPath);
 }

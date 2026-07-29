@@ -101,7 +101,7 @@ void analyzeGrouped(
 	TString graphPath = Form(
         "%s/%s_analyzeGrouped.pdf",
         gSystem->DirName(inPath),
-        inData.runNum[0].Data()
+        inData.runNum.Data()
 	);
 	analyzeGroupedEnd(inData, totRange, timingRange, posRange, graphPath);
 }

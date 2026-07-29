@@ -10,7 +10,7 @@
 #include "utils/printProgress.C"
 #include "utils/zoomAxis.C"
 
-vector<TH2F*> hTot(3);
+vector<TH2F*> hTot(3, nullptr);
 
 void plotTotStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 	inData.tree->SetBranchStatus("channelID", 1);
@@ -21,18 +21,17 @@ void plotTotStart(const DataFBT1& inData, const Float_t (&totRange)[2]) {
 
 	for (Int_t layer = 0; layer < 3; layer++) {
 		delete hTot[layer];
-		hTot[layer] = nullptr;
 		if (totRange[1] > 10e3) {
 			hTot[layer] = new TH2F(
-				Form("hTot%c", LAYERS[layer]),
-				Form("tot vs xi (%c);xi;tot [ps]", LAYERS[layer]),
+				Form("hTot%c", LAYER_NAMES[layer]),
+				Form("tot vs xi (%c);xi;tot [ps]", LAYER_NAMES[layer]),
 				MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
 				MAX_TOT_BINS, totRange[0], totRange[1]
 			);
 		} else {
 			hTot[layer] = new TH2F(
-				Form("hTot%c", LAYERS[layer]),
-				Form("tot vs xi (%c);xi;tot (scaled)", LAYERS[layer]),
+				Form("hTot%c", LAYER_NAMES[layer]),
+				Form("tot vs xi (%c);xi;tot (scaled)", LAYER_NAMES[layer]),
 				MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
 				MAX_TOT_BINS, totRange[0], totRange[1]
 			);
@@ -55,9 +54,9 @@ void plotTotEnd(const DataBase& inData, const Float_t (&totRange)[2]) {
 	zoomAxisY(hTot, 0, 5);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		addStats(hTot[layer], {
-			Form("run%s", getVecString(inData.runNum).Data()),
+			Form("run%s", inData.runNum.Data()),
 			Form("entries = %.0f", hTot[layer]->GetEntries()), 
-			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1])	
+			Form("tot = {%.3g, %.3g}", totRange[0], totRange[1])
 		});
 	}
 }

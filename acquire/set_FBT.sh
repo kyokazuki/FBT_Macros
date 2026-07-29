@@ -96,7 +96,7 @@ fi
 		# create grouping. file while grouping because runs in background
 		touch ${DAQ_DIR}/${DATA_DIR}/grouping.${file_name}.root
 		root -l -b -q \
-			"/home/daq/FBT_Macros/analyze/processGroup.C+(\"${DAQ_DIR}/${DATA_DIR}/${file_name}.root\", ${GROUP_DT})" \
+			"/home/daq/FBT_Macros/analyze/processGroup.C+(\"${DAQ_DIR}/${DATA_DIR}/${file_name}.root\", ${GROUP_TIMING})" \
 			2>&1 | tee -a ${DAQ_DIR}/${DATA_DIR}/${file_name}.log
 		rm ${DAQ_DIR}/${DATA_DIR}/grouping.${file_name}.root
 	fi

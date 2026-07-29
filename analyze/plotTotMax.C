@@ -16,9 +16,9 @@ vector<TH2F*> hTotMax(3);
 void plotTotMaxStart(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 	inData.tree->SetBranchStatus("timeGate", 1);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("xi%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("time%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("tot%c", LAYER_NAMES[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYER_NAMES[layer]), 1);
+		inData.tree->SetBranchStatus(Form("time%c", LAYER_NAMES[layer]), 1);
 	}
 
 	delete hTotMaxAll;
@@ -40,15 +40,15 @@ void plotTotMaxStart(const DataFBT2& inData, const Float_t (&totRange)[2]) {
 		delete hTotMax[layer];
 		if (totRange[1] > 10e3) {
 			hTotMax[layer] = new TH2F(
-				Form("hTotMax%c", LAYERS[layer]),
-				Form("max tot vs xi (%c);xi;tot [ps]", LAYERS[layer]),
+				Form("hTotMax%c", LAYER_NAMES[layer]),
+				Form("max tot vs xi (%c);xi;tot [ps]", LAYER_NAMES[layer]),
 				MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
 				MAX_TOT_BINS, totRange[0], totRange[1]
 			);
 		} else {
 			hTotMax[layer] = new TH2F(
-				Form("hTotMax%c", LAYERS[layer]),
-				Form("max tot vs xi (%c);xi;tot (scaled)", LAYERS[layer]),
+				Form("hTotMax%c", LAYER_NAMES[layer]),
+				Form("max tot vs xi (%c);xi;tot (scaled)", LAYER_NAMES[layer]),
 				MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
 				MAX_TOT_BINS, totRange[0], totRange[1]
 			);
@@ -69,7 +69,7 @@ void plotTotMaxLoop(
 	}
 
 	// check pos
-	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + POS_OFFSET) / POS_SLOPE;
+	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_OFFSET) / POS_SLOPE;
 	if (!inRange(posAligned, posRange)) {
 		return;
 	}
@@ -86,9 +86,9 @@ void plotTotMaxEnd(
 ) {
 	zoomAxisX(hTotMaxAll, 0, 5);
 	addStats(hTotMaxAll, {
-		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("run%s", inData.runNum.Data()),
 		Form("entries = %.0f", hTotMaxAll->GetEntries()), 
-		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+		Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 
 		Form("pos = {%.1f, %.1f}", posRange[0], posRange[1])
 	});
@@ -96,9 +96,9 @@ void plotTotMaxEnd(
 	zoomAxisY(hTotMax, 0, 5);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		addStats(hTotMax[layer], {
-			Form("run%s", getVecString(inData.runNum).Data()),
+			Form("run%s", inData.runNum.Data()),
 			Form("entries = %.0f", hTotMax[layer]->GetEntries()), 
-			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+			Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 
 			Form("pos = {%.1f, %.1f}", posRange[0], posRange[1])
 		});

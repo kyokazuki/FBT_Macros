@@ -78,8 +78,13 @@ void plotTotMaxHodoLoop(
 	}
 
 	// check pos
-	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] + POS_OFFSET) / POS_SLOPE;
+	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_OFFSET) / POS_SLOPE;
 	if (!inRange(posAligned, posRange)) {
+		return;
+	}
+
+	// temp: remove multihit
+	if ((*inData.totV[maxTotLayer])[1] > totRange[0]) {
 		return;
 	}
 
@@ -101,7 +106,7 @@ void plotTotMaxHodoEnd(
 ) {
 	zoomAxisX(hTotMaxAll, 0, 5);
 	addStats(hTotMaxAll, {
-		Form("run%s", getVecString(inData.runNum).Data()),
+		Form("run%s", inData.runNum.Data()),
 		Form("entries = %.0f", hTotMaxAll->GetEntries()), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]), 
 		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 
@@ -115,7 +120,7 @@ void plotTotMaxHodoEnd(
 	zoomAxisY(hTotMax, 0, 5);
 	for (Int_t layer = 0; layer < 3; layer++) {
 		addStats(hTotMax[layer], {
-			Form("run%s", getVecString(inData.runNum).Data()), 
+			Form("run%s", inData.runNum.Data()), 
 			Form("entries = %.0f", hTotMax[layer]->GetEntries()), 
 			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
 			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 

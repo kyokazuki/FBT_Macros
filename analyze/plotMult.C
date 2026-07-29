@@ -8,21 +8,20 @@
 #include "utils/printProgress.C"
 #include "utils/zoomAxis.C"
 
-vector<TH1F*> hMult(3);
+vector<TH1F*> hMult(3, nullptr);
 
 void plotMultStart(const DataFBT2& inData) {
 	inData.tree->SetBranchStatus("timeGate", 1);
 	for (Int_t layer = 0; layer < 3; layer++) {
-		inData.tree->SetBranchStatus(Form("tot%c", LAYERS[layer]), 1);
-		inData.tree->SetBranchStatus(Form("time%c", LAYERS[layer]), 1);
+		inData.tree->SetBranchStatus(Form("tot%c", LAYER_NAMES[layer]), 1);
+		inData.tree->SetBranchStatus(Form("time%c", LAYER_NAMES[layer]), 1);
 	}
 
 	for (Int_t layer = 0; layer < 3; layer++) {
 		delete hMult[layer];
-		hMult[layer] = nullptr;
 		hMult[layer] = new TH1F(
-			Form("hMult%c", LAYERS[layer]),
-			Form("multiplicity %c;multiplicity", LAYERS[layer]),
+			Form("hMult%c", LAYER_NAMES[layer]),
+			Form("multiplicity %c;multiplicity", LAYER_NAMES[layer]),
 			100, -0.5, 99.5
 		);
 	}
@@ -61,9 +60,9 @@ void plotMultEnd(
 		Float_t total = hMult[layer]->GetEntries();
 		Float_t effcy = (total - hMult[layer]->GetBinContent(1)) / total;
 		addStats(hMult[layer], {
-			Form("run%s", getVecString(inData.runNum).Data()),
+			Form("run%s", inData.runNum.Data()),
 			Form("entries = %.0f", total), 
-			Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
+			Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]), 
 			Form("efficiency = %.4f", effcy)
 		});

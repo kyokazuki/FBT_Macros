@@ -17,15 +17,13 @@ CONVERT=1 # convert to root if 1
 SCALE=0
 SCALE_RUN="1074" # run used for scalling
 GROUP=1 # group events if 1
-GROUP_DT="{-3540000, -3490000}"
+GROUP_TIMING="{-3540000, -3490000}"
 
 # analysis variables
 ANALYZE_SINGLES=1 # save analysis graph for rootfile
 ANALYZE_SINGLES_SCALED=1 # save analysis graph for rootfile
 ANALYZE_GROUPED=1 # save analysis graph for grouped rootfile
-ANALYZE_GROUPED_TOT_RANGE="{50e3, 1e6}" # save analysis graph for grouped rootfile
 ANALYZE_GROUPED_SCALED=0 # save analysis graph for grouped rootfile
-ANALYZE_GROUPED_SCALED_TOT_RANGE="{0.5, 10}" # save analysis graph for grouped rootfile
 
 # copy variables
 COPY=1 # copy data if 1
