@@ -42,15 +42,12 @@ Double_t xiToPosY(Int_t xiY) {
 
 struct Track {
 	Int_t xiX, xiY, xiU;
-	Double_t intercept, slope, uDiff;
 	array<Double_t, 3> coordX, coordY, coordU;
+	Double_t intercept, slope, uDiff;
 
-	Track(Int_t xiX, Int_t xiY, Int_t xiU, const Double_t (&reactionCoord)[3]) 
-		: xiX(xiX), xiY(xiY), xiU(xiU)
+	Track(Int_t xiX, Int_t xiY, const Double_t (&reactionCoord)[3]) 
+		: xiX(xiX), xiY(xiY)
 	{
-		intercept = ((xiU - 160 - 0.5) * (-0.75) + uOffset) * sqrt(2);
-		slope = -1.0;
-
 		Double_t posX = xiToPosX(xiX);
 		Double_t posY = xiToPosY(xiY);
 		Double_t reactionDistance = fbtCenterCoord[2] - reactionCoord[2]; // mm
@@ -72,8 +69,12 @@ struct Track {
 			coordY[1] + (LAYER_COORDS[2] - LAYER_COORDS[1]) * tanY,
 			fbtCenterCoord[2] + LAYER_COORDS[2]
 		};
+	}
 
+	Double_t getUDiff(Int_t xiU) const {
 		// distance between projected hit position and u fiber
+		intercept = ((xiU - 160 - 0.5) * (-0.75) + uOffset) * sqrt(2);
+		slope = -1.0;
 		// uDiff = abs(
 		// 	(slope * coordU[0] - coordU[1] + intercept)
 		// 	/ sqrt(slope * slope + 1.0)
@@ -173,7 +174,7 @@ int printHitsAngleLoop(
 			for (const UInt_t& validHitU : validHits[2]) {
 				Double_t pos = abs(
 					(Double_t)((*inData.xiV[0])[validHitX] + (*inData.xiV[1])[validHitY])
-					- (Double_t)((*inData.xiV[2])[validHitU] - POS_OFFSET) / POS_SLOPE
+					- (Double_t)((*inData.xiV[2])[validHitU] - MISALIGNMENT_OFFSET) / MISALIGNMENT_SLOPE
 				);
 
 				if (pos < posBest[0]) {

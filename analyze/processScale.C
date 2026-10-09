@@ -18,7 +18,7 @@
 TFile* outFileScaled = nullptr;
 TTree* outTreeScaled = nullptr;
 vector<vector<Float_t>*> totScaledV{3, nullptr};
-vector<vector<Long64_t>*> timeCorrectedV{3, nullptr};
+// vector<vector<Long64_t>*> timeCorrectedV{3, nullptr};
 vector<vector<Float_t>> totMeans(3);
 
 void processScaleStart(const DataFBT2& inData, const char* inName) {
@@ -29,7 +29,7 @@ void processScaleStart(const DataFBT2& inData, const char* inName) {
 
 	for (Int_t layer = 0; layer < 3; layer++) {
 		outTreeScaled->SetBranchAddress(Form("tot%c", LAYER_NAMES[layer]), &totScaledV[layer]);
-		outTreeScaled->SetBranchAddress(Form("time%c", LAYER_NAMES[layer]), &timeCorrectedV[layer]);
+		// outTreeScaled->SetBranchAddress(Form("time%c", LAYER_NAMES[layer]), &timeCorrectedV[layer]);
 	}
 
 	// load tot means from tsv
@@ -58,9 +58,9 @@ void processScaleLoop(const DataFBT2& inData) {
 	// scale tot in events
 	for (Int_t layer = 0; layer < 3; layer++) {
 		for (UInt_t hit = 0; hit < inData.totV[layer]->size(); hit++) {
-			Long64_t slewOffset = (Long64_t) (SLEW_A * TMath::Exp(SLEW_B * (*inData.totV[layer])[hit]) + SLEW_C);
-			Long64_t timeCorrected = (*inData.timeV[layer])[hit] - slewOffset;
-			(*timeCorrectedV[layer]).push_back(timeCorrected);
+			// Long64_t slewOffset = (Long64_t) (SLEW_A * TMath::Exp(SLEW_B * (*inData.totV[layer])[hit]) + SLEW_C);
+			// Long64_t timeCorrected = (*inData.timeV[layer])[hit] - slewOffset;
+			// (*timeCorrectedV[layer]).push_back(timeCorrected);
 
 			Float_t totScaled = (*inData.totV[layer])[hit] * TOT_SCALE_TARGET / totMeans[layer][(*inData.xiV[layer])[hit]];
 			(*totScaledV[layer]).push_back(totScaled);
@@ -70,7 +70,7 @@ void processScaleLoop(const DataFBT2& inData) {
 	outTreeScaled->Fill();
 
 	for (Int_t layer = 0; layer < 3; layer++) {
-		(*timeCorrectedV[layer]).clear();
+		// (*timeCorrectedV[layer]).clear();
 		(*totScaledV[layer]).clear();
 	}
 }

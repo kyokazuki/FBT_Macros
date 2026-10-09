@@ -78,7 +78,7 @@ void plotTotMaxHodoLoop(
 	}
 
 	// check pos
-	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_OFFSET) / POS_SLOPE;
+	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - MISALIGNMENT_OFFSET) / MISALIGNMENT_SLOPE;
 	if (!inRange(posAligned, posRange)) {
 		return;
 	}
@@ -163,7 +163,7 @@ void plotTotMaxHodo(
 	const TString& inPath, 
 	const Float_t (&totRange)[2]		= MAX_TOT_RANGE,
 	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE,
-	const Float_t (&posRange)[2]		= MAX_POS_RANGE,
+	const Float_t (&posRange)[2]		= MAX_MISALIGNMENT_RANGE,
 	const Int_t (&idRange)[2]			= HODO_MAX_ID_RANGE, 
 	const Double_t (&tRange)[2]			= HODO_MAX_T_RANGE, 
 	const Double_t (&qRange)[2]			= HODO_MAX_Q_RANGE, 

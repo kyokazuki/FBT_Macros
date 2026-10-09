@@ -35,7 +35,7 @@ void plotTimingStart(
 	delete hTimingTot;
 	hTimingTot = new TH2F(
 		"hTimingTot",
-		"tot vs dt;dt [ps];tot [ps]", 
+		"tot vs timing;timing [ps];tot [ps]", 
 		MAX_TIMING_BINS, timingRange[0], timingRange[1], 
 		MAX_TOT_BINS, totRange[0], totRange[1]
 	);
@@ -43,7 +43,7 @@ void plotTimingStart(
 	delete hTimingXi;
 	hTimingXi = new TH2F(
 		"hTimingXi",
-		"xi vs dt;dt [ps];xi", 
+		"xi vs timing;timing [ps];xi", 
 		MAX_TIMING_BINS, timingRange[0], timingRange[1], 
 		MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5
 	);
@@ -51,7 +51,7 @@ void plotTimingStart(
 	delete hTimingDxi;
 	hTimingDxi = new TH2F(
 		"hTimingDxi",
-		"dxi vs dt;dt [ps];xi", 
+		"dxi vs timing;timing [ps];xi", 
 		MAX_TIMING_BINS, timingRange[0], timingRange[1], 
 		MAX_XI_BINS, MAX_XI_RANGE[0] - 1 - 0.5, MAX_XI_RANGE[1] - 1 + 0.5
 	);
@@ -128,6 +128,13 @@ void plotTimingEnd(
 	});
 
 	zoomAxisX(hTimingXi, 2, 2);
+	addStats(hTimingXi, {
+		Form("run%s", inData.runNum.Data()),
+		Form("entries = %.0f", hTimingTot->GetEntries()), 
+		Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
+		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1])	
+	});
+
 	zoomAxisX(hTimingDxi, 2, 2);
 }
 

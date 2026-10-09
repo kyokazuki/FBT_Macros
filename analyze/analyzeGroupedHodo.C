@@ -9,7 +9,7 @@
 
 #include "plotBeamspotHodo.C"
 #include "plotMultHodo.C"
-#include "plotPosHodo.C"
+#include "plotMisalignmentHodo.C"
 #include "plotTotMaxHodo.C"
 
 TCanvas *cGrouped = nullptr;
@@ -17,7 +17,7 @@ TCanvas *cGrouped = nullptr;
 void analyzeGroupedHodoStart(const DataFBTHodo& inData, const Float_t (&totRange)[2]) {
 	plotBeamspotHodoStart(inData);
 	plotMultHodoStart(inData);
-	plotPosHodoStart(inData);
+	plotMisalignmentHodoStart(inData);
 	plotTotMaxHodoStart(inData, {0, totRange[1] / 2});
 }
 
@@ -30,7 +30,7 @@ void analyzeGroupedHodoLoop(
 ) {
 	plotBeamspotHodoLoop(inData, totRange, idRange, qRange, coins);
 	plotMultHodoLoop(inData, totRange, idRange, qRange, coins);
-	plotPosHodoLoop(inData, totRange, idRange, qRange, coins);
+	plotMisalignmentHodoLoop(inData, totRange, idRange, qRange, coins);
 	plotTotMaxHodoLoop(inData, {0, totRange[1] / 2}, idRange, qRange, coins);
 }
 
@@ -44,7 +44,7 @@ void analyzeGroupedHodoEnd(
 ) {
 	plotBeamspotHodoEnd(inData, totRange, idRange, qRange, coins);
 	plotMultHodoEnd(inData, totRange, idRange, qRange, coins);
-	plotPosHodoEnd(inData, totRange, idRange, qRange, coins);
+	plotMisalignmentHodoEnd(inData, totRange, idRange, qRange, coins);
 	plotTotMaxHodoEnd(inData, {0, totRange[1] / 2}, idRange, qRange, coins);
 
 	// draw graphs

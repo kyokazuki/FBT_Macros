@@ -9,7 +9,7 @@
 
 #include "plotBeamspot.C"
 #include "plotMult.C"
-#include "plotPos.C"
+#include "plotMisalignment.C"
 #include "plotTotMax.C"
 
 TCanvas *cGrouped = nullptr;
@@ -21,7 +21,7 @@ void analyzeGroupedStart(
 	plotBeamspotStart(inData);
 	plotMultStart(inData);
 	plotTotMaxStart(inData, {0, totRange[1] / 2});
-	plotPosStart(inData);
+	plotMisalignmentStart(inData);
 }
 
 void analyzeGroupedLoop(
@@ -33,7 +33,7 @@ void analyzeGroupedLoop(
 	plotMultLoop(inData, totRange, timingRange);
 	plotBeamspotLoop(inData, totRange, timingRange, posRange);
 	plotTotMaxLoop(inData, {0, totRange[1] / 2}, timingRange, posRange);
-	plotPosLoop(inData, totRange, timingRange);
+	plotMisalignmentLoop(inData, totRange, timingRange);
 }
 
 void analyzeGroupedEnd(
@@ -46,7 +46,7 @@ void analyzeGroupedEnd(
 	plotMultEnd(inData, totRange, timingRange);
 	plotBeamspotEnd(inData, totRange, timingRange, posRange);
 	plotTotMaxEnd(inData, {0, totRange[1] / 2}, timingRange, posRange);
-	plotPosEnd(inData, totRange, timingRange);
+	plotMisalignmentEnd(inData, totRange, timingRange);
 
 	// draw graphs
 	delete cGrouped;
@@ -74,7 +74,7 @@ void analyzeGroupedEnd(
 	cGrouped->cd(6);
 	gPad->SetGrid();
 	gPad->SetLogz();
-	hPosAligned->Draw();
+	hMisalignmentShifted->Draw();
 
 	cGrouped->Print(graphPath);
 }
@@ -83,7 +83,7 @@ void analyzeGrouped(
 	const TString& inPath, 
 	const Float_t (&totRange)[2]		= {50e3, 1e6},
 	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE,
-	const Float_t (&posRange)[2]		= MAX_POS_RANGE
+	const Float_t (&posRange)[2]		= MAX_MISALIGNMENT_RANGE
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);

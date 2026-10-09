@@ -3,17 +3,17 @@
 
 #include <TH2F.h>
 
-#include "plotPos.C"
+#include "plotMisalignment.C"
 
-void plotPosHodoStart(const DataFBTHodo& inData) {
+void plotMisalignmentHodoStart(const DataFBTHodo& inData) {
 	inData.tree->SetBranchStatus("fID", 1);
 	inData.tree->SetBranchStatus("fQCal", 1);
 	inData.tree->SetBranchStatus("coin", 1);
 
-	plotPosStart(inData);
+	plotMisalignmentStart(inData);
 }
 
-void plotPosHodoLoop(
+void plotMisalignmentHodoLoop(
 	const DataFBTHodo& inData, 
 	const Float_t (&totRange)[2], 
 	const Long64_t (&timingRange)[2],
@@ -30,10 +30,10 @@ void plotPosHodoLoop(
 		return;
 	}
 
-	plotPosLoop(inData, totRange, timingRange);
+	plotMisalignmentLoop(inData, totRange, timingRange);
 }
 
-void plotPosHodoEnd(
+void plotMisalignmentHodoEnd(
 	const DataBase& inData, 
 	const Float_t (&totRange)[2], 
 	const Long64_t (&timingRange)[2],
@@ -41,15 +41,15 @@ void plotPosHodoEnd(
 	const Double_t (&qRange)[2], 
 	const vector<Int_t>& coins
 ) {
-	delete hPosAlignedX;
-	hPosAlignedX = hPosAligned->ProjectionX("hPosAlignedX");
+	delete hMisalignmentShiftedX;
+	hMisalignmentShiftedX = hMisalignmentShifted->ProjectionX("hMisalignmentShiftedX");
 
-	Float_t trackedEntries = hPosAlignedX->Integral(
-		hPosAlignedX->FindBin(-5),
-		hPosAlignedX->FindBin(5)
+	Float_t trackedEntries = hMisalignmentShiftedX->Integral(
+		hMisalignmentShiftedX->FindBin(-5),
+		hMisalignmentShiftedX->FindBin(5)
 	);
-	Float_t totalEntries = hPosAligned->GetEntries();
-	addStats(hPosAligned, {
+	Float_t totalEntries = hMisalignmentShifted->GetEntries();
+	addStats(hMisalignmentShifted, {
 		Form("run%s", inData.runNum.Data()),
 		Form("entries = %.0f", totalEntries), 
 		Form("tot = {%.0e, %.0e}", totRange[0], totRange[1]),
@@ -61,7 +61,7 @@ void plotPosHodoEnd(
 	});
 }
 
-void plotPosHodo(
+void plotMisalignmentHodo(
 	const TString& inPath, 
 	const Float_t (&totRange)[2]	= MAX_TOT_RANGE, 
 	const Int_t (&idRange)[2]		= HODO_MAX_ID_RANGE, 
@@ -71,16 +71,16 @@ void plotPosHodo(
 	DataFBTHodo inData({inPath}, "tree");
 	inData.tree->SetBranchStatus("*", 0);
 
-	plotPosStart(inData);
+	plotMisalignmentStart(inData);
 
 	// loop through all events
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		plotPosHodoLoop(inData, totRange, timingRange, idRange, qRange, coins);
+		plotMisalignmentHodoLoop(inData, totRange, timingRange, idRange, qRange, coins);
 	}
 
-	plotPosHodoEnd(inData, totRange, timingRange, idRange, qRange, coins);
+	plotMisalignmentHodoEnd(inData, totRange, timingRange, idRange, qRange, coins);
 }
 

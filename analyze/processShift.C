@@ -59,21 +59,20 @@ void processShiftStart(const DataFBT2& inData, const char* inName) {
 
 void processShiftLoop(const DataFBT2& inData) {
 	// calculate gate offset once per event
-	// 1250: 0 offsets; 2500: 1 offset; 3750: 2 offsets; 5000 (0): 3 offsets
-	Long64_t gateOffset;
-	Long64_t gateNum = (*inData.timeGate)[0] % 5000;
-	if (gateNum == 0) {
-		gateOffset = (4 - 1) * 2500;
-	} else {
-		gateOffset = (gateNum / 1250 - 1) * 2500;
-	}
+	// 1250: 0 offsets; 2500: 1 offset; 3750: 2 offsets; 0 (5000): 3 offsets
+	// Long64_t gateNum = (*inData.timeGate)[0] % 5000;
+	// Long64_t gateOffset;
+	// if (gateNum == 0) {
+	// 	gateOffset = (4 - 1) * 2500;
+	// } else {
+	// 	gateOffset = (gateNum / 1250 - 1) * 2500;
+	// }
 
 	for (Int_t layer = 0; layer < 3; layer++) {
 		for (UInt_t hit = 0; hit < inData.timeV[layer]->size(); hit++) {
 			Long64_t timeShifted =
 				(*inData.timeV[layer])[hit]
-				+ timeOffsets[layer][(*inData.xiV[layer])[hit]]
-				+ gateOffset;
+				+ timeOffsets[layer][(*inData.xiV[layer])[hit]];
 			(*timeShiftedV[layer]).push_back(timeShifted);
 		}
 	}

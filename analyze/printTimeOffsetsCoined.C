@@ -15,7 +15,8 @@ void printTimeOffsetsCoinedLoop(
 	const Float_t (&totRange)[2],
 	const Long64_t (&timingRange)[2]
 ) {
-	if (inData.coin[0] != 1) {
+	// if (!((inData.coin[1]==1 || inData.coin[2]==1 || inData.coin[3]==1 || inData.coin[4]==1 || inData.coin[5]==1) && inData.coin[6]==0)) {
+	if (!(inData.coin[0]==0 && (inData.coin[1]==1 || inData.coin[2]==1) && inData.coin[3]==0 && inData.coin[4]==0 && inData.coin[5]==0 && inData.coin[6]==0)) {
 		return;
 	}
 
@@ -33,8 +34,9 @@ void printTimeOffsetsCoinedEnd(
 
 void printTimeOffsetsCoined(
 	const vector<TString>& inPaths, 
-	const Float_t (&totRange)[2] = {0.5, 10},
-	const Long64_t (&timingRange)[2] = {-3540000, -3488000}
+	const Float_t (&totRange)[2] = {30e3, 1e6},
+	// const Long64_t (&timingRange)[2] = {-3540000, -3490000}
+	const Long64_t (&timingRange)[2] = {-10000, 35000}
 ) {
 	DataFBTCoin inData(inPaths, "events");
 	inData.tree->SetBranchStatus("*", 0);
@@ -48,6 +50,6 @@ void printTimeOffsetsCoined(
 		printTimeOffsetsCoinedLoop(inData, totRange, timingRange);
 	}
 
-	TString outName = Form("%s_timeOffsetsCoined", inData.runNum.Data());
+	TString outName = Form("%s_timeOffsetsCoined_slewed2", inData.runNum.Data());
 	printTimeOffsetsCoinedEnd(inData, totRange, timingRange, outName);
 }

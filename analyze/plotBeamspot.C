@@ -30,7 +30,7 @@ void plotBeamspotLoop(
 	const DataFBT2& inData, 
 	const Float_t (&totRange)[2],
 	const Long64_t (&timingRange)[2],
-	const Float_t (&posRange)[2]
+	const Float_t (&misalignmentRange)[2]
 ) {
 	// check all layers
 	for (Int_t layer = 0; layer < 3; layer++) {
@@ -49,8 +49,8 @@ void plotBeamspotLoop(
 	}
 
 	// check pos
-	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_OFFSET) / POS_SLOPE;
-	if (!inRange(posAligned, posRange)) {
+	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - MISALIGNMENT_OFFSET) / MISALIGNMENT_SLOPE;
+	if (!inRange(posAligned, misalignmentRange)) {
 		return;
 	}
 
@@ -61,14 +61,14 @@ void plotBeamspotEnd(
 	const DataBase& inData, 
 	const Float_t (&totRange)[2],
 	const Long64_t (&timingRange)[2],
-	const Float_t (&posRange)[2]
+	const Float_t (&misalignmentRange)[2]
 ) {
 	addStats(hBeamspot, {
 		Form("run%s", inData.runNum.Data()),
 		Form("entries = %.0f", hBeamspot->GetEntries()), 
 		Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
-		Form("pos = {%.1f, %.1f}", posRange[0], posRange[1])
+		Form("misalignment = {%.1f, %.1f}", misalignmentRange[0], misalignmentRange[1])
 	});
 }
 
@@ -76,7 +76,7 @@ void plotBeamspot(
 	const TString& inPath, 
 	const Float_t (&totRange)[2]		= MAX_TOT_RANGE,
 	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE,
-	const Float_t (&posRange)[2]		= MAX_POS_RANGE
+	const Float_t (&misalignmentRange)[2]		= MAX_MISALIGNMENT_RANGE
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
@@ -87,9 +87,9 @@ void plotBeamspot(
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		plotBeamspotLoop(inData, totRange, timingRange, posRange);
+		plotBeamspotLoop(inData, totRange, timingRange, misalignmentRange);
 	}
 
-	plotBeamspotEnd(inData, totRange, timingRange, posRange);
+	plotBeamspotEnd(inData, totRange, timingRange, misalignmentRange);
 }
 

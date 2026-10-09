@@ -32,4 +32,22 @@ void addStats(T* obj, const std::vector<TString>& values) {
     obj->GetListOfFunctions()->Add(stat);
 }
 
+template <typename T>
+TString vectorToString(const std::vector<T>& v)
+{
+    std::ostringstream oss;
+    oss << "{";
+
+    for (size_t i = 0; i < v.size(); ++i) {
+        if (i > 0)
+            oss << ", ";
+
+        oss << v[i];
+    }
+
+    oss << "}";
+
+    return TString(oss.str());
+}
+
 #endif

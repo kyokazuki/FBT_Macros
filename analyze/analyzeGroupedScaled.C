@@ -4,7 +4,7 @@ void analyzeGroupedScaled(
 	const TString& inPath, 
 	const Float_t (&totRange)[2] 		= {0.5, 10},
 	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE,
-	const Float_t (&posRange)[2]		= MAX_POS_RANGE
+	const Float_t (&posRange)[2]		= MAX_MISALIGNMENT_RANGE
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);

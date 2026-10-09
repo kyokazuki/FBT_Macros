@@ -15,7 +15,11 @@ void plotSlewCoinedLoop(
 	const Float_t (&totRange)[2],
 	const Long64_t (&timingRange)[2]
 ) {
-	if (inData.coin[0] != 1) {
+	// if (!(inData.coin[0] == 1)) {
+	// if (!((inData.coin[1]==1 || inData.coin[2]==1 || inData.coin[3]==1 || inData.coin[4]==1 || inData.coin[5]==1) && inData.coin[6]==0)) {
+	if (!(inData.coin[0]==1 && inData.coin[1]==0 && inData.coin[2]==0 && inData.coin[3]==0 && inData.coin[4]==0 && inData.coin[5]==0 && inData.coin[6]==0)) {
+	// if (!(inData.coin[0]==0 && inData.coin[1]==1 && inData.coin[2]==0 && inData.coin[3]==0 && inData.coin[4]==0 && inData.coin[5]==0 && inData.coin[6]==0)) {
+	// if (!(inData.coin[0]==0 && (inData.coin[1]==1 || inData.coin[2]==1) && inData.coin[3]==0 && inData.coin[4]==0 && inData.coin[5]==0 && inData.coin[6]==0)) {
 		return;
 	}
 
@@ -34,8 +38,9 @@ void plotSlewCoinedEnd(
 
 void plotSlewCoined(
 	const vector<TString>& inPaths,
-	const Float_t (&totRange)[2] = {0.5, 10.0},
-	const Long64_t (&timingRange)[2] = {-10000, 20000},
+	const Float_t (&totRange)[2] = {30e3, 160e3},
+	const Long64_t (&timingRange)[2] = {-3530000, -3510000},
+	// const Long64_t (&timingRange)[2] = {-5000, 15000},
 	Bool_t saveGraph = 1
 ) {
 	DataFBTCoin inData(inPaths, "events");

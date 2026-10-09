@@ -55,7 +55,7 @@ void printUPosLoop(const DataFBT2& inData, Double_t targetDistance, Bool_t adjus
 		}
 	}
 	// filter out irrelevant hits
-	if (!inRange(((*inData.xiV[0])[0] + (*inData.xiV[1])[0]) - ((*inData.xiV[2])[0] - POS_OFFSET) / POS_SLOPE, {-10, 10})) {
+	if (!inRange(((*inData.xiV[0])[0] + (*inData.xiV[1])[0]) - ((*inData.xiV[2])[0] - MISALIGNMENT_OFFSET) / MISALIGNMENT_SLOPE, {-10, 10})) {
 		return;
 	}
 

@@ -69,7 +69,7 @@ void plotTotMaxLoop(
 	}
 
 	// check pos
-	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - POS_OFFSET) / POS_SLOPE;
+	Float_t posAligned = (*inData.xiV[0])[0] + (*inData.xiV[1])[0] - ((*inData.xiV[2])[0] - MISALIGNMENT_OFFSET) / MISALIGNMENT_SLOPE;
 	if (!inRange(posAligned, posRange)) {
 		return;
 	}
@@ -109,7 +109,7 @@ void plotTotMax(
 	const TString& inPath, 
 	const Float_t (&totRange)[2]		= MAX_TOT_RANGE,
 	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE,
-	const Float_t (&posRange)[2]		= MAX_POS_RANGE
+	const Float_t (&posRange)[2]		= MAX_MISALIGNMENT_RANGE
 ) {
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);

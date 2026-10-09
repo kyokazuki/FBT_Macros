@@ -17,6 +17,7 @@ TH2F* hTotTiming = nullptr;
 TH1D *py = nullptr;
 TGraph* gPeaks = nullptr;
 TF1* fitAll = nullptr;
+TGraph* gTimeResTot = nullptr;
 
 void plotSlewStart(
 	const DataFBT2& inData,
@@ -27,6 +28,7 @@ void plotSlewStart(
 	for (Int_t layer = 0; layer < 3; layer++) {
 		inData.tree->SetBranchStatus(Form("tot%c", LAYER_NAMES[layer]), 1);
 		inData.tree->SetBranchStatus(Form("time%c", LAYER_NAMES[layer]), 1);
+		inData.tree->SetBranchStatus(Form("xi%c", LAYER_NAMES[layer]), 1);
 	}
 
 	delete c1;
@@ -35,13 +37,16 @@ void plotSlewStart(
 	delete hTotTiming;
 	hTotTiming = new TH2F(
 		"hTimingTot",
-		"timing vs tot;tot;timing [ps]", 
+		"timing vs tot;tot [ps];timing [ps]", 
 		200, 0, totRange[1],
 		200, timingRange[0], timingRange[1]
 	);
 
 	delete gPeaks;
 	gPeaks = new TGraph();
+
+	delete gTimeResTot;
+	gTimeResTot = new TGraph();
 }
 
 void plotSlewLoop(
@@ -49,21 +54,55 @@ void plotSlewLoop(
 	const Float_t (&totRange)[2],
 	const Long64_t (&timingRange)[2]
 ) {
-	for (Int_t layer = 0; layer < 3; layer++) {
-		for (UInt_t hit = 0; hit < inData.totV[layer]->size(); hit++) {
-			if (!inRange((*inData.totV[layer])[hit], totRange)) {
-				continue;
-			}
-			Long64_t timing = (*inData.timeV[layer])[hit] - (*inData.timeGate)[0];
-			if (!inRange(timing, timingRange)) {
-				continue;
-			}
-			hTotTiming->Fill(
-				(*inData.totV[layer])[hit],
-				timing
-			);
+	// for (Int_t layer = 0; layer < 3; layer++) {
+	// // temporary position condition
+	// // for (Int_t layer = 0; layer < 1; layer++) {
+	// 	for (UInt_t hit = 0; hit < inData.totV[layer]->size(); hit++) {
+	// 		// temporary position condition
+	// 		// if (!inRange((*inData.xiV[layer])[hit], {145, 160})) {
+	// 		// 	continue;
+	// 		// }
+	// 		if (!inRange((*inData.totV[layer])[hit], totRange)) {
+	// 			continue;
+	// 		}
+	// 		Long64_t timing = (*inData.timeV[layer])[hit] - (*inData.timeGate)[0];
+	// 		if (!inRange(timing, timingRange)) {
+	// 			continue;
+	// 		}
+	// 		hTotTiming->Fill(
+	// 			(*inData.totV[layer])[hit],
+	// 			timing
+	// 		);
+	// 	}
+	// }
+
+	// single-hit
+	Int_t layer = 1;
+
+	if (inData.xiV[layer]->size() == 0) {
+		return;
+	}
+	// if (!inRange((*inData.xiV[layer])[0], {145, 160})) {
+	// if (!inRange((*inData.xiV[layer])[0], {97, 112})) {
+	if (!inRange((*inData.xiV[layer])[0], {81, 96})) {
+		return;
+	}
+	if (!inRange((*inData.totV[layer])[0], totRange)) {
+		return;
+	}
+	if (inData.xiV[layer]->size() > 1) {
+		if (inRange((*inData.totV[layer])[1], totRange)) {
+			return;
 		}
 	}
+	Long64_t timing = (*inData.timeV[layer])[0] - (*inData.timeGate)[0];
+	if (!inRange(timing, timingRange)) {
+		return;
+	}
+	hTotTiming->Fill(
+		(*inData.totV[layer])[0],
+		timing
+	);
 }
 
 void plotSlewEnd(
@@ -99,15 +138,20 @@ void plotSlewEnd(
 			cout << "Invalid fit for bin " << xbin << "!" << endl;
 			cout << "Mean: " << peak << endl;
 			cout << "Error: " << gaus.GetParError(1) << endl;
-			// return;
 		}
 
 		// plot to gPeaks
 		gPeaks->SetPoint(
 			gPeaks->GetN(), 
 			hTotTiming->GetXaxis()->GetBinCenter(xbin),
-			// hTimingTot->GetYaxis()->GetBinCenter(ybin)
 			peak
+		);
+
+		// plot to gTimeResTot
+		gTimeResTot->SetPoint(
+			gTimeResTot->GetN(), 
+			hTotTiming->GetXaxis()->GetBinCenter(xbin),
+			gaus.GetParameter(2)
 		);
 
 		if (saveGraph) {
@@ -122,18 +166,9 @@ void plotSlewEnd(
 	// fit the peaks
 	// fitAll = new TF1("f", "[0]*(x - [1])*(x - [1])", timingRange[0], timingRange[1]);
 
-	// fitAll = new TF1("f", "[0]*exp([1]*x) + [2]", timingRange[0], timingRange[1]);
-	// fitAll->SetParameters(100e3, -0.01, 30e3);
-	// fitAll = new TF1("f", "exp([0]*(x - [1])) + [2]", 0, totRange[1]);
-	// fitAll->SetParameters(-2e-5, 400e3, -100);
 	fitAll = new TF1("f", "[0]*exp([1]*x) + [2]", 0, totRange[1]);
-	fitAll->SetParameters(1e3, -2e-5, -100);
-
-	// fitAll = new TF1("f", "[0]/(x - [1]) + [2]", timingRange[0], timingRange[1]);
-	// fitAll->SetParameters(200e6, -2000, 0);
-
-	// fitAll = new TF1("f", "[0]*log(x - [1]) + [2]", timingRange[0], timingRange[1]);
-	// fitAll->SetParameters(-600e3, -6e3, 2400e3);
+	// fitAll->SetParameters(1e3, -2e-5, -100);
+	fitAll->SetParameters(1e3, -2e-5, -3525e3);
 
 	gPeaks->Fit(fitAll, "RN");
 	fitAll->SetLineWidth(1);
@@ -146,9 +181,9 @@ void plotSlewEnd(
 		Form("entries = %.0f", hTotTiming->GetEntries()), 
 		Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
-		Form("a = %.4g", a),
-		Form("b = %.4g", b),
-		Form("c = %.4g", c)
+		Form("a = %.6g", a),
+		Form("b = %.6g", b),
+		Form("c = %.6g", c)
 	});
 
 	hTotTiming->Draw();
@@ -156,7 +191,19 @@ void plotSlewEnd(
 	gPeaks->Draw("PX SAME");
 
 	if (saveGraph) {
+		c1->SetLeftMargin(0.15);
 		c1->SetLogz();
+		c1->SetGrid();
+		c1->Print(graphPath);
+		c1->Clear();
+	}
+
+	gTimeResTot->SetMarkerStyle(20);
+	gTimeResTot->SetMarkerSize(0.5);
+	gTimeResTot->Draw();
+	gTimeResTot->SetTitle("time resolution vs tot;tot [ps];sigma [ps]");
+
+	if (saveGraph) {
 		c1->SetGrid();
 		c1->Print(graphPath);
 		c1->Print(Form("%s]", graphPath.Data()));
@@ -165,8 +212,9 @@ void plotSlewEnd(
 
 void plotSlew(
 	const vector<TString>& inPaths,
-	const Float_t (&totRange)[2] = {0.5, 10.0},
-	const Long64_t (&timingRange)[2] = {-10000, 20000},
+	const Float_t (&totRange)[2] = {30e3, 160e3},
+	const Long64_t (&timingRange)[2] = {-3530000, -3510000},
+	// const Long64_t (&timingRange)[2] = {-5000, 15000},
 	Bool_t saveGraph = 1
 ) {
 	DataFBT2 inData(inPaths, "events");

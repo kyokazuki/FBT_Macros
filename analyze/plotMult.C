@@ -1,7 +1,7 @@
-#include <TH1F.h>
-
 #include <iostream>
 #include <stdlib.h>
+
+#include <TH1F.h>
 
 #include "utils/addStats.C"
 #include "utils/loadData.C"
@@ -70,11 +70,11 @@ void plotMultEnd(
 }
 
 void plotMult(
-	const TString& inPath, 
+	const vector<TString>& inPaths, 
 	const Float_t (&totRange)[2]		= MAX_TOT_RANGE,
 	const Long64_t (&timingRange)[2]	= MAX_TIMING_RANGE
 ) {
-	DataFBT2 inData({inPath}, "events");
+	DataFBT2 inData(inPaths, "events");
 	inData.tree->SetBranchStatus("*", 0);
 
 	plotMultStart(inData);

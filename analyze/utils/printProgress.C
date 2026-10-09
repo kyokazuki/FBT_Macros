@@ -9,7 +9,7 @@ void printProgress(Long64_t entry, Long64_t entries) {
 
 	Long64_t freq = std::max<Long64_t>(100, entries / 100);
 
-	if (entry % freq == 0 || entry == entries) {
+	if (entry % freq == 1 || entry == entries) {
 		Int_t progress = (Float_t) entry / (Float_t) entries * 100;
 		cout << "Progress: " << entry << "/" << entries << " (" << progress << "%)\r" << flush;
 	}

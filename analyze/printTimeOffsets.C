@@ -9,6 +9,7 @@
 #include <TGraph.h>
 #include <TROOT.h>
 #include <TCanvas.h>
+#include <TMath.h>
 
 #include "utils/addStats.C"
 #include "utils/loadData.C"
@@ -17,6 +18,7 @@
 vector<TH2F*> hTimingXi(3);
 TH1D* hTiming = nullptr;
 vector<TGraph*> gTimingMeans(3);
+Int_t binEntries[3][320] = {};
 
 void printTimeOffsetsStart(
 	const DataFBT2& inData,
@@ -37,10 +39,10 @@ void printTimeOffsetsStart(
 		hTimingXi[layer] = new TH2F(
 			Form("hTimingXi%c", LAYER_NAMES[layer]),
 			Form(
-				"xi%c vs timing (timeGate%%5000=1250);timing [ps];xi%c", 
+				"xi%c vs timing;timing [ps];xi%c", 
 				LAYER_NAMES[layer], LAYER_NAMES[layer]
 			),
-			200, timingRange[0], timingRange[1], 
+			300, timingRange[0], timingRange[1], 
 			320, 0.5, 320.5
 		);
 	}
@@ -51,25 +53,77 @@ void printTimeOffsetsLoop(
 	const Float_t (&totRange)[2],
 	const Long64_t (&timingRange)[2]
 ) {
-	if ((*inData.timeGate)[0] % 5000 != 1250) {
-		return;
-	}
+	// fit all hits
+	// for (Int_t layer = 0; layer < 3; layer++) {
+	// 	for (UInt_t hit = 0; hit < inData.xiV[layer]->size(); hit++) {
+	// 		// tot and timing conditions
+	// 		if (!inRange((*inData.totV[layer])[hit], totRange)) {
+	// 			continue;
+	// 		}
+	// 		Long64_t timing = (*inData.timeV[layer])[hit] - (*inData.timeGate)[0];
+	// 		if (!inRange(timing, timingRange)) {
+	// 			continue;
+	// 		}
+	// 		hTimingXi[layer]->Fill(
+	// 			timing,
+	// 			(*inData.xiV[layer])[hit]
+	// 		);
+	// 	}
+	// }
 
-	// append fiber entries
+	// only fit for the earlies hit
+	// for (Int_t layer = 0; layer < 3; layer++) {
+	// 	Int_t firstHit = -1;
+	// 	Long64_t firstTiming = 0;
+	//
+	// 	// find the earlies hit
+	// 	for (UInt_t hit = 0; hit < inData.xiV[layer]->size(); hit++) {
+	// 		// tot and timing conditions
+	// 		if (!inRange((*inData.totV[layer])[hit], totRange)) {
+	// 			continue;
+	// 		}
+	// 		Long64_t timing = (*inData.timeV[layer])[hit] - (*inData.timeGate)[0];
+	// 		if (!inRange(timing, timingRange)) {
+	// 			continue;
+	// 		}
+	// 		if (timing < firstTiming) {
+	// 			firstTiming = timing;
+	// 			firstHit = hit;
+	// 		}
+	// 	}
+	//
+	// 	if (firstHit == -1) {
+	// 		continue;
+	// 	}
+	// 	hTimingXi[layer]->Fill(
+	// 		firstTiming,
+	// 		(*inData.xiV[layer])[firstHit]
+	// 	);
+	// }
+
 	for (Int_t layer = 0; layer < 3; layer++) {
-		for (UInt_t hit = 0; hit < inData.xiV[layer]->size(); hit++) {
-			if (!inRange((*inData.totV[layer])[hit], totRange)) {
-				continue;
-			}
-			Long64_t timing = (*inData.timeV[layer])[hit] - (*inData.timeGate)[0];
-			if (!inRange(timing, timingRange)) {
-				continue;
-			}
-			hTimingXi[layer]->Fill(
-				timing,
-				(*inData.xiV[layer])[hit]
-			);
+		// check if is single-hit
+		if (inData.totV[layer]->size() == 0) {
+			continue;
 		}
+		if (!inRange((*inData.totV[layer])[0], totRange)) {
+			continue;
+		}
+		if (inData.totV[layer]->size() > 1) {
+			if (inRange((*inData.totV[layer])[1], totRange)) {
+				continue;
+			}
+		}
+
+		// check timing
+		Long64_t timing = (*inData.timeV[layer])[0] - (*inData.timeGate)[0];
+		if (!inRange(timing, timingRange)) {
+			continue;
+		}
+		hTimingXi[layer]->Fill(
+			timing,
+			(*inData.xiV[layer])[0]
+		);
 	}
 }
 
@@ -96,19 +150,20 @@ void printTimeOffsetsEnd(
 
 			if (hTiming->GetEntries() <= 0) {
 				cout << "Not enough entries for layer " << LAYER_NAMES[layer] << " bin " << ybin << "!" << endl;
-				// continue;
-				return;
+				out << ybin << "\t" << 0 << endl;
+				continue;
+				// return;
 			} 
 
 			Double_t peakMax = hTiming->GetBinCenter(hTiming->GetMaximumBin());
-			TF1 gaus(Form("g_y%d", ybin), "gaus", peakMax - 5000, peakMax + 2000);
+
+			TF1 gaus(Form("g_y%d", ybin), "gaus", peakMax - 5000, peakMax + 1000);
 			gaus.SetParameters(hTiming->GetMaximum(), peakMax, hTiming->GetRMS());
 			hTiming->Fit(&gaus, "QSR");
 			Double_t peakMean = gaus.GetParameter(1);
+
 			gTimingMeans[layer]->SetPoint(ybin, peakMean, ybin);
-			out << ybin << "\t" 
-				<< Form("%.0f", gaus.GetParameter(1) * -1) << "\t" 
-				<< gaus.GetParError(1) << endl;
+			out << ybin << "\t" << Form("%.0f", peakMean * -1) << endl;
 
 			c1->SetGrid();
 			c1->Print(graphPath);
@@ -138,8 +193,9 @@ void printTimeOffsetsEnd(
 
 void printTimeOffsets(
 	const vector<TString>& inPaths, 
-	const Float_t (&totRange)[2] = {50e3, 1e6},
-	const Long64_t (&timingRange)[2] = {-3540000, -3488000}
+	const Float_t (&totRange)[2] = {30e3, 1e6},
+	const Long64_t (&timingRange)[2] = {-3540000, -3490000}
+	// const Long64_t (&timingRange)[2] = {-10000, 35000}
 ) {
 	DataFBT2 inData(inPaths, "events");
 	inData.tree->SetBranchStatus("*", 0);
