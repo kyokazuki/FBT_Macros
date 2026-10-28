@@ -101,30 +101,69 @@ void printTimeOffsetsLoop(
 	// 	);
 	// }
 
+	// plot single-hits
 	for (Int_t layer = 0; layer < 3; layer++) {
-		// check if is single-hit
 		if (inData.totV[layer]->size() == 0) {
-			continue;
+			return;
 		}
 		if (!inRange((*inData.totV[layer])[0], totRange)) {
-			continue;
+			return;
 		}
 		if (inData.totV[layer]->size() > 1) {
 			if (inRange((*inData.totV[layer])[1], totRange)) {
-				continue;
+				return;
 			}
 		}
+	}
 
-		// check timing
-		Long64_t timing = (*inData.timeV[layer])[0] - (*inData.timeGate)[0];
-		if (!inRange(timing, timingRange)) {
-			continue;
+	// filter out irrelevant hits
+	if (!inRange(
+		((*inData.xiV[0])[0] + (*inData.xiV[1])[0]) - ((*inData.xiV[2])[0] - MISALIGNMENT_OFFSET) / MISALIGNMENT_SLOPE, {-5, 5}
+	)) {
+		return;
+	}
+
+	// check timing
+	Long64_t timing[3];
+	for (Int_t layer = 0; layer < 3; layer++) {
+		timing[layer] = (*inData.timeV[layer])[0] - (*inData.timeGate)[0];
+		if (!inRange(timing[layer], timingRange)) {
+			return;
 		}
+	}
+
+	// plot
+	for (Int_t layer = 0; layer < 3; layer++) {
 		hTimingXi[layer]->Fill(
-			timing,
+			timing[layer],
 			(*inData.xiV[layer])[0]
 		);
 	}
+
+	// for (Int_t layer = 0; layer < 3; layer++) {
+	// 	// check if is single-hit
+	// 	if (inData.totV[layer]->size() == 0) {
+	// 		continue;
+	// 	}
+	// 	if (!inRange((*inData.totV[layer])[0], totRange)) {
+	// 		continue;
+	// 	}
+	// 	if (inData.totV[layer]->size() > 1) {
+	// 		if (inRange((*inData.totV[layer])[1], totRange)) {
+	// 			continue;
+	// 		}
+	// 	}
+	//
+	// 	// check timing
+	// 	Long64_t timing = (*inData.timeV[layer])[0] - (*inData.timeGate)[0];
+	// 	if (!inRange(timing, timingRange)) {
+	// 		continue;
+	// 	}
+	// 	hTimingXi[layer]->Fill(
+	// 		timing,
+	// 		(*inData.xiV[layer])[0]
+	// 	);
+	// }
 }
 
 void printTimeOffsetsEnd(
@@ -172,7 +211,7 @@ void printTimeOffsetsEnd(
 		}
 
 		addStats(hTimingXi[layer], {
-			Form("run%s", inData.runNum.Data()),
+			Form("%s", inData.runNum.Data()),
 			Form("entries = %.0f", hTimingXi[layer]->GetEntries()), 
 			Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1])

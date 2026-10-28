@@ -26,16 +26,16 @@ void processGroup(const TString& inPath, const Long64_t (&dtRange)[2] = MAX_TIMI
 	TFile* outFile = createOutFile(inPath, "_grouped.root");
 	TTree* outTree = new TTree("events", "outTree");
 
-	vector<vector <Long64_t>> timeV(3);
-	vector<vector <Long64_t>> timeVSorted(3);
-	vector<vector <Float_t>> energyV(3);
-	vector<vector <Float_t>> energyVSorted(3);
-	vector<vector <Float_t>> totV(3);
-	vector<vector <Float_t>> totVSorted(3);
-	vector<vector <UInt_t>> channelIdV(3);
-	vector<vector <UInt_t>> channelIdVSorted(3);
-	vector<vector <Int_t>> xiV(3);
-	vector<vector <Int_t>> xiVSorted(3);
+	vector<vector<Long64_t>> timeV(3);
+	vector<vector<Long64_t>> timeVSorted(3);
+	vector<vector<Float_t>> energyV(3);
+	vector<vector<Float_t>> energyVSorted(3);
+	vector<vector<Float_t>> totV(3);
+	vector<vector<Float_t>> totVSorted(3);
+	vector<vector<UInt_t>> channelIdV(3);
+	vector<vector<UInt_t>> channelIdVSorted(3);
+	vector<vector<Int_t>> xiV(3);
+	vector<vector<Int_t>> xiVSorted(3);
 	vector<Long64_t> timeGate;
 	for (Int_t i = 0; i < 3; i++) {
 		outTree->Branch(Form("time%c", LAYER_NAMES[i]), &timeVSorted[i]);

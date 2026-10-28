@@ -17,18 +17,27 @@
 
 TFile* outFileShifted = nullptr;
 TTree* outTreeShifted = nullptr;
-vector<vector<Long64_t>*> timeShiftedV{3, nullptr};
 vector<vector<Long64_t>> timeOffsets(3);
 
-void processShiftStart(const DataFBT2& inData, const char* inName) {
+vector<vector<Long64_t>> timeVShifted(3);
+vector<vector<Float_t>> energyVShifted(3);
+vector<vector<Float_t>> totVShifted(3);
+vector<vector<UInt_t>> channelIdVShifted(3);
+vector<vector<Int_t>> xiVShifted(3);
+vector<Long64_t> timeGateShifted;
+
+void processShiftStart(DataFBTCoin& inData, const char* inName) {
+	// branches settings
 	inData.tree->SetBranchStatus("*", 1);
 
-	// create output file and tree
-	outTreeShifted = inData.tree->CloneTree(0);
-
 	for (Int_t layer = 0; layer < 3; layer++) {
-		outTreeShifted->SetBranchAddress(Form("time%c", LAYER_NAMES[layer]), &timeShiftedV[layer]);
+		outTreeShifted->Branch(Form("time%c", LAYER_NAMES[layer]), &timeVShifted[layer]);
+		outTreeShifted->Branch(Form("energy%c", LAYER_NAMES[layer]), &energyVShifted[layer]);
+		outTreeShifted->Branch(Form("tot%c", LAYER_NAMES[layer]), &totVShifted[layer]);
+		outTreeShifted->Branch(Form("channelID%c", LAYER_NAMES[layer]), &channelIdVShifted[layer]);
+		outTreeShifted->Branch(Form("xi%c", LAYER_NAMES[layer]), &xiVShifted[layer]);
 	}
+	outTreeShifted->Branch("timeGate", &(*inData.timeGate));
 
 	// load time offsets from tsv
 	for (Int_t layer = 0; layer < 3; layer++) {
@@ -57,30 +66,36 @@ void processShiftStart(const DataFBT2& inData, const char* inName) {
 	}
 }
 
-void processShiftLoop(const DataFBT2& inData) {
-	// calculate gate offset once per event
-	// 1250: 0 offsets; 2500: 1 offset; 3750: 2 offsets; 0 (5000): 3 offsets
-	// Long64_t gateNum = (*inData.timeGate)[0] % 5000;
-	// Long64_t gateOffset;
-	// if (gateNum == 0) {
-	// 	gateOffset = (4 - 1) * 2500;
-	// } else {
-	// 	gateOffset = (gateNum / 1250 - 1) * 2500;
-	// }
-
+void processShiftLoop(
+	const DataFBTCoin& inData,
+	const Long64_t (&timingRange)[2]
+) {
 	for (Int_t layer = 0; layer < 3; layer++) {
 		for (UInt_t hit = 0; hit < inData.timeV[layer]->size(); hit++) {
 			Long64_t timeShifted =
 				(*inData.timeV[layer])[hit]
 				+ timeOffsets[layer][(*inData.xiV[layer])[hit]];
-			(*timeShiftedV[layer]).push_back(timeShifted);
+
+			if (!inRange(timeShifted - (*inData.timeGate)[0], timingRange)) {
+				continue;
+			}
+
+			timeVShifted[layer].push_back(timeShifted);
+			energyVShifted[layer].push_back((*inData.energyV[layer])[hit]);
+			totVShifted[layer].push_back((*inData.totV[layer])[hit]);
+			channelIdVShifted[layer].push_back((*inData.channelIdV[layer])[hit]);
+			xiVShifted[layer].push_back((*inData.xiV[layer])[hit]);
 		}
 	}
 
 	outTreeShifted->Fill();
 
 	for (Int_t layer = 0; layer < 3; layer++) {
-		(*timeShiftedV[layer]).clear();
+		timeVShifted[layer].clear();
+		energyVShifted[layer].clear();
+		totVShifted[layer].clear();
+		channelIdVShifted[layer].clear();
+		xiVShifted[layer].clear();
 	}
 }
 
@@ -89,14 +104,19 @@ void processShiftEnd() {
 	outFileShifted->Close();
 }
 
-// inName: "1074_timeOffsets" or "1074_timeOffsetsCoined"
-void processShift(const TString& inPath, const char* inName) {
+void processShift(
+	const TString& inPath, 
+	const char* inName,
+	const Long64_t (&timingRange)[2] = {-14000, 34000}
+) {
 	cout << "Shifting timestamps for " << inPath << " with " << inName << "[X-U].tsv" << endl;
 
 	// load trees
-	DataFBT2 inData({inPath}, "events");
+	DataFBTCoin inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
 	outFileShifted = createOutFile(inPath, "_shifted.root");
+	// outTreeShifted = inData.tree->CloneTree(0);
+	outTreeShifted = new TTree("events", "outTree");
 
 	processShiftStart(inData, inName);
 
@@ -104,7 +124,7 @@ void processShift(const TString& inPath, const char* inName) {
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		processShiftLoop(inData);
+		processShiftLoop(inData, timingRange);
 	}
 
 	processShiftEnd();

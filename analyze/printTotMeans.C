@@ -24,7 +24,8 @@ TGraph* gPeaks = nullptr;
 
 void printTotMeansStart(
 	const DataFBT2& inData,
-	Int_t layer
+	Int_t layer,
+	const Float_t (&totRange)[2]
 ) {
 	gROOT->SetBatch(kTRUE);
 
@@ -39,19 +40,18 @@ void printTotMeansStart(
 		Form("hXiTot%c", LAYER_NAMES[layer]),
 		Form("tot vs xi (%c);xi;tot [ps]", LAYER_NAMES[layer]),
 		MAX_XI_BINS, MAX_XI_RANGE[0] - 0.5, MAX_XI_RANGE[1] + 0.5,
-		MAX_TOT_BINS / 2, MAX_TOT_RANGE[0], MAX_TOT_RANGE[1] / 2
+		200, 0, totRange[1]
 	);
 }
 
 void printTotMeansLoop(
 	const DataFBT2& inData,
-	Int_t layer,
-	Float_t minTot
+	Int_t layer
 ) {
 	for (UInt_t hit = 0; hit < inData.totV[layer]->size(); hit++) {
-		if ((*inData.totV[layer])[hit] < minTot) {
-			continue;
-		}
+		// if ((*inData.totV[layer])[hit] < totRange[0]) {
+		// 	continue;
+		// }
 		hXiTot->Fill(
 			(*inData.xiV[layer])[hit],
 			(*inData.totV[layer])[hit]
@@ -62,7 +62,7 @@ void printTotMeansLoop(
 void printTotMeansEnd(
 	const DataFBT2& inData,
 	Int_t layer,
-	Double_t minTot,
+	const Float_t (&totRange)[2],
 	const TString& outName,
 	Bool_t saveGraph
 ) {
@@ -78,6 +78,7 @@ void printTotMeansEnd(
 
 	for (Int_t xbin = 1; xbin <= LAYER_CHANNELS[layer]; xbin++) {
 		py = hXiTot->ProjectionY(Form("py_x%d", xbin), xbin, xbin);
+		py->GetXaxis()->SetRangeUser(totRange[0], totRange[1]);
 		py->Draw();
 
 		if (py->GetEntries() <= 1000) {
@@ -104,13 +105,13 @@ void printTotMeansEnd(
 		cout << "Found peak mean " << peakMean << endl;
 
 		// fit
-		TF1 gaus(Form("g_y%d", xbin), "gaus", minTot, peakMean + 100e3);
+		TF1 gaus(Form("g_y%d", xbin), "gaus", totRange[0], peakMean + 100e3);
 		gaus.SetParameters(py->GetMaximum(), peakMean, py->GetRMS());
 		py->Fit(&gaus, "QSR");
 
 		// fit twice
 		peakMean = gaus.GetParameter(1);
-		TF1 gaus2(Form("g2_y%d", xbin), "gaus", TMath::Max(peakMean - 30e3, minTot), peakMean + 100e3);
+		TF1 gaus2(Form("g2_y%d", xbin), "gaus", TMath::Max(peakMean - (Float_t)30e3, totRange[0]), peakMean + 100e3);
 		gaus2.SetParameters(py->GetMaximum(), peakMean, py->GetRMS());
 		py->Fit(&gaus2, "QSR");
 
@@ -145,7 +146,7 @@ void printTotMeansEnd(
 	addStats(hXiTot, {
 		Form("run%s", inData.runNum.Data()),
 		Form("entries = %.0f", hXiTot->GetEntries()), 
-		Form("tot = {%.3g, %.3g}", minTot, MAX_TOT_RANGE[1] / 2),
+		Form("tot fit range = {%.3g, %.3g}", totRange[0], totRange[1]),
 	});
 	hXiTot->Draw();
 	gPeaks->SetMarkerStyle(20);	// circle marker
@@ -163,26 +164,27 @@ void printTotMeansEnd(
 
 // X layer: minTot = 30e3 (xi = 224 has low ToT)
 // Y layer: minTot = 30e3
-// U layer: minTot = 40e3 (xi = 33 has high ToT, xi = 60 has low ToT)
+// U layer: minTot = 41e3 (xi = 33 has high ToT, xi = 60 has low ToT)
 void printTotMeans(
 	const vector<TString>& inPaths,
 	Int_t layer,
-	Double_t minTot = 30e3,
+	const Float_t (&totRange)[2] = {30e3, 500e3},
+	// const Float_t (&totRange)[2] = {0.5, 7},
 	Bool_t saveGraph = 1
 ) {
 	DataFBT2 inData(inPaths, "events");
 	inData.tree->SetBranchStatus("*", 0);
 
-	printTotMeansStart(inData, layer);
+	printTotMeansStart(inData, layer, totRange);
 
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		printTotMeansLoop(inData, layer, minTot);
+		printTotMeansLoop(inData, layer);
 	}
 
 	TString outName = Form("%s_totMeans", inData.runNum.Data());
-	printTotMeansEnd(inData, layer, minTot, outName, saveGraph);
+	printTotMeansEnd(inData, layer, totRange, outName, saveGraph);
 }
 

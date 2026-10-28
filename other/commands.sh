@@ -146,7 +146,7 @@ const vector<TString> DATASET3 	= {
 
 # s074 anchor runs
 # tot_cali
-{"1070_grouped.root", "1071_grouped.root", "1072_grouped.root", "1073_grouped.root", "1074_grouped.root", "1075_grouped.root"}
+{"1071_grouped.root", "1072_grouped.root", "1073_grouped.root", "1074_grouped.root", "1075_grouped.root"}
 
 # grouped
 {"1071_grouped.root", "1072_grouped.root", "1073_grouped.root", "1074_grouped.root", "1075_grouped.root", "1192_grouped.root", "1193_grouped.root", "1195_grouped.root", "1200_grouped.root", "1201_grouped.root", "1202_grouped.root", "1203_grouped.root"}
@@ -159,6 +159,8 @@ const vector<TString> DATASET3 	= {
 # grouped + gated + shifted + coined + scaled
 {"1071_grouped_gated_shifted_coined_scaled.root", "1072_grouped_gated_shifted_coined_scaled.root", "1073_grouped_gated_shifted_coined_scaled.root", "1074_grouped_gated_shifted_coined_scaled.root", "1075_grouped_gated_shifted_coined_scaled.root", "1192_grouped_gated_shifted_coined_scaled.root", "1193_grouped_gated_shifted_coined_scaled.root", "1195_grouped_gated_shifted_coined_scaled.root", "1200_grouped_gated_shifted_coined_scaled.root", "1201_grouped_gated_shifted_coined_scaled.root", "1202_grouped_gated_shifted_coined_scaled.root", "1203_grouped_gated_shifted_coined_scaled.root"}
 
+# grouped (dataset2)
+{"1211_grouped.root", "1213_grouped.root", "1215_grouped.root", "1217_grouped.root", "1218_grouped.root", "1219_grouped.root", "1221_grouped.root", "1222_grouped.root", "1224_grouped.root", "1226_grouped.root", "1227_grouped.root", "1228_grouped.root", "1229_grouped.root", "1230_grouped.root", "1231_grouped.root", "1232_grouped.root", "1233_grouped.root", "1234_grouped.root"}
 # grouped + gated (dataset2)
 {"1211_grouped_gated.root", "1213_grouped_gated.root", "1215_grouped_gated.root", "1217_grouped_gated.root", "1218_grouped_gated.root", "1219_grouped_gated.root", "1221_grouped_gated.root", "1222_grouped_gated.root", "1224_grouped_gated.root", "1226_grouped_gated.root", "1227_grouped_gated.root", "1228_grouped_gated.root", "1229_grouped_gated.root", "1230_grouped_gated.root", "1231_grouped_gated.root", "1232_grouped_gated.root", "1233_grouped_gated.root", "1234_grouped_gated.root"}
 # grouped + gated + coined (dataset2)

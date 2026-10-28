@@ -33,13 +33,17 @@ void processGateStart(const DataFBT2& inData) {
 void processGateLoop(const DataFBT2& inData) {
 	// calculate gate offset once per event
 	// 1250: 0 offsets; 2500: 1 offset; 3750: 2 offsets; 0 (5000): 3 offsets
-	Long64_t gateNum = (*inData.timeGate)[0] % 5000;
-	Long64_t gateOffset;
-	if (gateNum == 0) {
-		gateOffset = (4 - 1) * 2500;
-	} else {
-		gateOffset = (gateNum / 1250 - 1) * 2500;
-	}
+	Int_t gateRemain = (*inData.timeGate)[0] % 5000;
+	Int_t gateType = (gateRemain / 1250 + 3) % 4;
+	Long64_t gateOffset = gateType * 2500;
+
+	// Long64_t gateNum = (*inData.timeGate)[0] % 5000;
+	// Long64_t gateOffset;
+	// if (gateNum == 0) {
+	// 	gateOffset = (4 - 1) * 2500;
+	// } else {
+	// 	gateOffset = (gateNum / 1250 - 1) * 2500;
+	// }
 
 	for (Int_t layer = 0; layer < 3; layer++) {
 		for (UInt_t hit = 0; hit < inData.timeV[layer]->size(); hit++) {

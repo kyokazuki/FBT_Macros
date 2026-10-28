@@ -17,6 +17,7 @@ void printTimeOffsetsCoinedLoop(
 ) {
 	// if (!((inData.coin[1]==1 || inData.coin[2]==1 || inData.coin[3]==1 || inData.coin[4]==1 || inData.coin[5]==1) && inData.coin[6]==0)) {
 	if (!(inData.coin[0]==0 && (inData.coin[1]==1 || inData.coin[2]==1) && inData.coin[3]==0 && inData.coin[4]==0 && inData.coin[5]==0 && inData.coin[6]==0)) {
+	// if (!(inData.coin[0]==0 && (inData.coin[1]==1 || inData.coin[2]==1 || inData.coin[3]==1 || inData.coin[4]==1 || inData.coin[6]==1) && inData.coin[5]==0)) {
 		return;
 	}
 
@@ -50,6 +51,6 @@ void printTimeOffsetsCoined(
 		printTimeOffsetsCoinedLoop(inData, totRange, timingRange);
 	}
 
-	TString outName = Form("%s_timeOffsetsCoined_slewed2", inData.runNum.Data());
+	TString outName = Form("%s_timeOffsetsCoined", inData.runNum.Data());
 	printTimeOffsetsCoinedEnd(inData, totRange, timingRange, outName);
 }

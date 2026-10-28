@@ -38,9 +38,8 @@ void plotSlewCoinedEnd(
 
 void plotSlewCoined(
 	const vector<TString>& inPaths,
-	const Float_t (&totRange)[2] = {30e3, 160e3},
-	const Long64_t (&timingRange)[2] = {-3530000, -3510000},
-	// const Long64_t (&timingRange)[2] = {-5000, 15000},
+	const Float_t (&totRange)[2] = {30e3, 180e3},
+	const Long64_t (&timingRange)[2] = {-3528000, -3518000},
 	Bool_t saveGraph = 1
 ) {
 	DataFBTCoin inData(inPaths, "events");

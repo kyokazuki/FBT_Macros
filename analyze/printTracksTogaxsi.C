@@ -22,6 +22,8 @@ void printTracksTogaxsiStart(
 int printTracksTogaxsiLoop(
 	const DataFBTTOGAXSI& inData,
 	Int_t clusterSize,
+	Bool_t windowed,
+	Bool_t propagated,
 	const TString& outName,
 	Bool_t saveGraph
 ) {
@@ -55,7 +57,7 @@ int printTracksTogaxsiLoop(
 		vertexes++;
 	}
 	// bc_vtx //////////////////////////////////////////////
-	// for (UInt_t cluster = 0; cluster < 2; recoil++) {
+	// for (UInt_t cluster = 0; cluster < 2; cluster++) {
 	// 	if (isnan(inData.bc_vtx[cluster][0])) {
 	// 		continue;
 	// 	}
@@ -87,7 +89,7 @@ int printTracksTogaxsiLoop(
 		// 	inData.bc_vtx[index1][2]
 		// };
 		////////////////////////////////////////////////////
-		return printTracksLoop(inData, reactionCoord, clusterSize, outName, saveGraph);
+		return printTracksLoop(inData, reactionCoord, clusterSize, windowed, propagated, outName, saveGraph);
 	} else {
 		return 0;
 	}
@@ -96,41 +98,43 @@ int printTracksTogaxsiLoop(
 void printTracksTogaxsiEnd(
 	const DataBase& inData,
 	Int_t clusterSize,
+	Bool_t windowed,
+	Bool_t propagated,
 	const TString& outName
 ) {
-	printTracksEnd(inData, clusterSize, outName);
+	printTracksEnd(inData, clusterSize, windowed, propagated, outName);
 }
 
 void printTracksTogaxsi(
 	const vector<TString>& inPaths,
 	Int_t clusterSize = 0,
-	Long64_t loopEvents = 100
+	Bool_t windowed = 1,
+	Bool_t propagated = 1,
+	Long64_t printEvents = 100
 ) {
 	// load data
 	DataFBTTOGAXSI inData(inPaths, "events");
 	inData.tree->SetBranchStatus("*", 0);
 
-	TString outName = Form("%s_tracksTogaxsi_clusterSize%d.pdf", inData.runNum.Data(), clusterSize);
+	TString outName = Form("%s_tracksTogaxsi_clusterSize%d", inData.runNum.Data(), clusterSize);
+	outName += windowed ? "_windowed" : "_unwindowed";
+	outName += propagated ? "_propagated" : "_unpropagated";
+	outName += ".pdf";
 	printTracksTogaxsiStart(inData, outName);
 
-	// only draw loopEvents of events
-	Long64_t drawnEvents = 0;
-	if (loopEvents == 0) {
-		loopEvents = inData.entries;
-	}
-
 	// event loop
+	Long64_t printedEvents = 0;
 	for (Long64_t entry = 0; entry < inData.entries; entry++) {
 		printProgress(entry, inData.entries);
 		inData.tree->GetEntry(entry);
 
-		if (drawnEvents < loopEvents) {
-			drawnEvents += printTracksTogaxsiLoop(inData, clusterSize, outName, 1);
+		if (printedEvents < printEvents) {
+			printedEvents += printTracksTogaxsiLoop(inData, clusterSize, windowed, propagated, outName, 1);
 		} else {
-			printTracksTogaxsiLoop(inData, clusterSize, outName, 0);
+			printTracksTogaxsiLoop(inData, clusterSize, windowed, propagated, outName, 0);
 		}
 	}
 
-	printTracksTogaxsiEnd(inData, clusterSize, outName);
+	printTracksTogaxsiEnd(inData, clusterSize, windowed, propagated, outName);
 }
 

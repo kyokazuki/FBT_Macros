@@ -16,9 +16,10 @@
 #include "utils/loadData.C"
 #include "utils/printProgress.C"
 
-vector<TH1F*> hTiming(7);
 vector<TH1F*> hTotX(7);
+vector<TH1F*> hTimingCenter(7);
 vector<TH1F*> hXiX(7);
+vector<TH2F*> hTimingXiX(7);
 
 void printCheckCoinStart(
 	const DataFBTCoin& inData,
@@ -36,25 +37,33 @@ void printCheckCoinStart(
 	}
 
 	for (Int_t coin = 0; coin < 7; coin++) {
-		delete hTiming[coin];
-		hTiming[coin] = new TH1F(
-			Form("hTimingCoin%d", coin),
-			Form("timing (xiX = 145~160) (coin = %d)", coin),
-			200, timingRange[0], timingRange[1]
-		);
-
 		delete hTotX[coin];
 		hTotX[coin] = new TH1F(
 			Form("hTotXCoin%d", coin),
-			Form("totX (coin = %d)", coin),
+			Form("totX (trigger = %d)", coin + 1),
 			200, 0, totRange[1]
 		);
 
 		delete hXiX[coin];
 		hXiX[coin] = new TH1F(
 			Form("hXiXCoin%d", coin),
-			Form("xiX (coin = %d)", coin),
+			Form("xiX (trigger = %d)", coin + 1),
 			320, 0.5, 320.5
+		);
+
+		delete hTimingXiX[coin];
+		hTimingXiX[coin] = new TH2F(
+			Form("hTimingXiXCoin%d", coin),
+			Form("xiX vs timing (trigger = %d); timing [ps]; xiX", coin + 1),
+			200, timingRange[0], timingRange[1],
+			320, 0.5, 320.5
+		);
+
+		delete hTimingCenter[coin];
+		hTimingCenter[coin] = new TH1F(
+			Form("hTimingCenterCoin%d", coin),
+			Form("timing (xiX = 145~160) (trigger = %d)", coin + 1),
+			200, timingRange[0], timingRange[1]
 		);
 	}
 }
@@ -78,34 +87,42 @@ void printCheckCoinLoop(
 	}
 
 	// plot single-hits
-	if (inData.xiV[0]->size() == 0) {
+	for (Int_t layer = 0; layer < 3; layer++) {
+		if (inData.xiV[layer]->size() == 0) {
+			return;
+		}
+		// if (!inRange((*inData.totV[layer])[0], totRange)) {
+		if ((*inData.totV[layer])[0] < 30e3) {
+			return;
+		}
+		if (inData.xiV[layer]->size() > 1) {
+			// if (inRange((*inData.totV[layer])[1], totRange)) {
+			if ((*inData.totV[layer])[1] > 30e3) {
+				return;
+			}
+		}
+	}
+
+	// filter out irrelevant hits
+	if (!inRange(
+		((*inData.xiV[0])[0] + (*inData.xiV[1])[0]) - ((*inData.xiV[2])[0] - MISALIGNMENT_OFFSET) / MISALIGNMENT_SLOPE, {-5, 5}
+	)) {
 		return;
 	}
+
+	// only use Z=1 (ToT = 100e3 ~ 120e3)
 	if (!inRange((*inData.totV[0])[0], totRange)) {
 		return;
 	}
-	if (inData.xiV[0]->size() > 1) {
-		if (inRange((*inData.totV[0])[1], totRange)) {
-			return;
-		}
-	}
-	hXiX[coinOne]->Fill((*inData.xiV[0])[0]);
-	hTotX[coinOne]->Fill((*inData.totV[0])[0]);
-	if (inRange((*inData.xiV[0])[0], {145, 160})) {
-		hTiming[coinOne]->Fill((*inData.timeV[0])[0] - (*inData.timeGate)[0]);
-	}
 
-	// plot multiple hits
-	// for (UInt_t hit = 0; hit < inData.xiV[0]->size(); hit++) {
-	// 	if (!inRange((*inData.totV[0])[hit], totRange)) {
-	// 		break;
-	// 	}
-	// 	hXiX[coinOne]->Fill((*inData.xiV[0])[hit]);
-	// 	hTotX[coinOne]->Fill((*inData.totV[0])[hit]);
-	// 	if (inRange((*inData.xiV[0])[hit], {145, 160})) {
-	// 		hTiming[coinOne]->Fill((*inData.timeV[0])[hit] - (*inData.timeGate)[0]);
-	// 	}
-	// }
+	hTotX[coinOne]->Fill((*inData.totV[0])[0]);
+	hXiX[coinOne]->Fill((*inData.xiV[0])[0]);
+	Long64_t timing = (*inData.timeV[0])[0] - (*inData.timeGate)[0];
+	hTimingXiX[coinOne]->Fill(timing, (*inData.xiV[0])[0]);
+
+	if (inRange((*inData.xiV[0])[0], {145, 160})) {
+		hTimingCenter[coinOne]->Fill(timing);
+	}
 }
 
 void printCheckCoinEnd(
@@ -122,11 +139,12 @@ void printCheckCoinEnd(
 
 	for (Int_t coin = 0; coin < 7; coin++) {
 		addStats(hXiX[coin], {
-			Form("run%s", inData.runNum.Data()),
+			Form("%s", inData.runNum.Data()),
 			Form("entries = %.0f", hXiX[coin]->GetEntries()), 
-			Form("coin = %d", coin),
+			Form("trigger = %d", coin),
 			Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
-			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1])
+			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
+			"misalignment = {-5, 5}"
 		});
 		hXiX[coin]->Draw();
 		c1->Print(graphPath);
@@ -134,32 +152,49 @@ void printCheckCoinEnd(
 
 	for (Int_t coin = 0; coin < 7; coin++) {
 		addStats(hTotX[coin], {
-			Form("run%s", inData.runNum.Data()),
+			Form("%s", inData.runNum.Data()),
 			Form("entries = %.0f", hTotX[coin]->GetEntries()), 
-			Form("coin = %d", coin),
+			Form("trigger = %d", coin),
 			Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
-			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1])
+			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
+			"misalignment = {-5, 5}"
 		});
 		hTotX[coin]->Draw();
 		c1->Print(graphPath);
 	}
 
+	for (Int_t coin = 0; coin < 7; coin++) {
+		addStats(hTimingXiX[coin], {
+			Form("%s", inData.runNum.Data()),
+			Form("entries = %.0f", hTimingXiX[coin]->GetEntries()), 
+			Form("trigger = %d", coin),
+			Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
+			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
+			"misalignment = {-5, 5}"
+		});
+		hTimingXiX[coin]->Draw();
+		c1->SetLogz();
+		c1->Print(graphPath);
+		c1->SetLogz(0);
+	}
+
 	Double_t beamCoinPeak = 0;
 	for (Int_t coin = 0; coin < 7; coin++) {
-		Double_t peakMax = hTiming[coin]->GetBinCenter(hTiming[coin]->GetMaximumBin());
+		Double_t peakMax = hTimingCenter[coin]->GetBinCenter(hTimingCenter[coin]->GetMaximumBin());
 		TF1 gaus(Form("g_coin%d", coin), "gaus", peakMax - 3000, peakMax + 600);
-		gaus.SetParameters(hTiming[coin]->GetMaximum(), peakMax, hTiming[coin]->GetRMS());
-		hTiming[coin]->Fit(&gaus, "QSR");
+		gaus.SetParameters(hTimingCenter[coin]->GetMaximum(), peakMax, hTimingCenter[coin]->GetRMS());
+		hTimingCenter[coin]->Fit(&gaus, "QSR");
 		Double_t peakMean = gaus.GetParameter(1);
 		if (coin == 0) {
 			beamCoinPeak = peakMean;
 		}
-		addStats(hTiming[coin], {
-			Form("run%s", inData.runNum.Data()),
-			Form("entries = %.0f", hTotX[coin]->GetEntries()), 
-			Form("coin = %d", coin),
+		addStats(hTimingCenter[coin], {
+			Form("%s", inData.runNum.Data()),
+			Form("entries = %.0f", hTimingCenter[coin]->GetEntries()), 
+			Form("trigger = %d", coin),
 			Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 			Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
+			"misalignment = {-5, 5}",
 			Form("xiX = {%d, %d}", 145, 160),
 			Form("amplitude = %.5g", gaus.GetParameter(0)),
 			Form("mean [ps] = %.2f", gaus.GetParameter(1)),

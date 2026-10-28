@@ -13,7 +13,7 @@ TARGET_DATA_DIR=remapped
 # RUN_NUM=($(seq -f "%04g" 1071 1 1075))
 # RUN_NUM=($(seq -f "%04g" 1071 1075) 1192 1193 1195 $(seq -f "%04g" 1200 1203))
 RUN_NUM=(1352)
-# RUN_NUM=($(seq -f "%04g" 1070 1075)) # tot_cali
+# RUN_NUM=($(seq -f "%04g" 1071 1075)) # tot_cali
 # RUN_NUM=(1211 1213 1215 1217 1218 1219 1221 1222 1224 $(seq -f "%04g" 1226 1234)) # time_cali
 # RUN_NUM=(1029 1031 1035 1037 1040 1041 1043 1044 1045 1049 1051 1052) # effcy
 
@@ -23,11 +23,13 @@ GROUP_TIMING="{-3540000, -3490000}"
 SELECT=0
 GATE=0
 COIN=0
-SLEW=1
-SHIFT=1
-SHIFT_RUN="/home/daq/daq_setup11/beamtime/remapped/time_cali/1211+1213+1215+1217-1219+1221-1222+1224+1226-1234_timeOffsetsCoined"
+SLEW=0
+SHIFT=0
+# SHIFT_RUN="/home/daq/daq_setup11/beamtime/remapped/time_cali/1211+1213+1215+1217-1219+1221-1222+1224+1226-1234_timeOffsetsCoined"
+SHIFT_RUN="/home/daq/daq_setup11/beamtime/remapped/time_cali/dataset2_timeOffsetsCoined"
 SCALE=1
-SCALE_RUN="/home/daq/daq_setup11/beamtime/remapped/tot_cali/1070-1075_totMeans"
+# SCALE_RUN="/home/daq/daq_setup11/beamtime/remapped/tot_cali/1070-1075_totMeans"
+SCALE_RUN="/home/daq/daq_setup11/beamtime/remapped/tot_cali/dataset1_totMeans"
 PAD=0
 HODO=0
 
@@ -81,16 +83,14 @@ for runNum in "${RUN_NUM[@]}"; do
 		# 	"/home/daq/FBT_Macros/analyze/processGate.C+(\"${DAQ_DIR}/${TARGET_DATA_DIR}/${runNum}_grouped.root\")"
 	fi
 	if [ ${SHIFT} -eq 1 ]; then
-		# root -l -b -q \
-		# 	"/home/daq/FBT_Macros/analyze/processShift.C+(\"${DAQ_DIR}/${TARGET_DATA_DIR}/${runNum}_grouped.root\", \"${SHIFT_RUN}\")"
 		root -l -b -q \
-			"/home/daq/FBT_Macros/analyze/processShift.C+(\"${DAQ_DIR}/${TARGET_DATA_DIR}/${runNum}_grouped_gated_coined_slewed2.root\", \"${SHIFT_RUN}\")"
+			"/home/daq/FBT_Macros/analyze/processShiftCoined.C+(\"${DAQ_DIR}/${TARGET_DATA_DIR}/${runNum}_grouped_gated_coined_slewed.root\", \"${SHIFT_RUN}\")"
 	fi
 	if [ ${SCALE} -eq 1 ]; then
 		root -l -b -q \
-			"/home/daq/FBT_Macros/analyze/processScale.C+(\"${DAQ_DIR}/${TARGET_DATA_DIR}/${runNum}_grouped_gated_coined_slewed2_shifted.root\", \"${SCALE_RUN}\")"
+			"/home/daq/FBT_Macros/analyze/processScale.C+(\"${DAQ_DIR}/${TARGET_DATA_DIR}/${runNum}_grouped_gated_coined_slewed_shifted.root\", \"${SCALE_RUN}\")"
 		# root -l -b -q \
-		# 	"/home/daq/FBT_Macros/analyze/processScale.C+(\"${DAQ_DIR}/${TARGET_DATA_DIR}/${runNum}_grouped_gated_coined.root\", \"${SCALE_RUN}\")"
+		# 	"/home/daq/FBT_Macros/analyze/processScale.C+(\"${DAQ_DIR}/${TARGET_DATA_DIR}/${runNum}_grouped.root\", \"${SCALE_RUN}\")"
 	fi
 	if [ ${PAD} -eq 1 ]; then
 		root -l -b -q \

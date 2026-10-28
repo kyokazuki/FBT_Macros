@@ -37,7 +37,7 @@ void plotSlewStart(
 	delete hTotTiming;
 	hTotTiming = new TH2F(
 		"hTimingTot",
-		"timing vs tot;tot [ps];timing [ps]", 
+		";tot [ps];timing [ps]", 
 		200, 0, totRange[1],
 		200, timingRange[0], timingRange[1]
 	);
@@ -54,54 +54,36 @@ void plotSlewLoop(
 	const Float_t (&totRange)[2],
 	const Long64_t (&timingRange)[2]
 ) {
-	// for (Int_t layer = 0; layer < 3; layer++) {
-	// // temporary position condition
-	// // for (Int_t layer = 0; layer < 1; layer++) {
-	// 	for (UInt_t hit = 0; hit < inData.totV[layer]->size(); hit++) {
-	// 		// temporary position condition
-	// 		// if (!inRange((*inData.xiV[layer])[hit], {145, 160})) {
-	// 		// 	continue;
-	// 		// }
-	// 		if (!inRange((*inData.totV[layer])[hit], totRange)) {
-	// 			continue;
-	// 		}
-	// 		Long64_t timing = (*inData.timeV[layer])[hit] - (*inData.timeGate)[0];
-	// 		if (!inRange(timing, timingRange)) {
-	// 			continue;
-	// 		}
-	// 		hTotTiming->Fill(
-	// 			(*inData.totV[layer])[hit],
-	// 			timing
-	// 		);
-	// 	}
-	// }
-
-	// single-hit
-	Int_t layer = 1;
-
-	if (inData.xiV[layer]->size() == 0) {
-		return;
-	}
-	// if (!inRange((*inData.xiV[layer])[0], {145, 160})) {
-	// if (!inRange((*inData.xiV[layer])[0], {97, 112})) {
-	if (!inRange((*inData.xiV[layer])[0], {81, 96})) {
-		return;
-	}
-	if (!inRange((*inData.totV[layer])[0], totRange)) {
-		return;
-	}
-	if (inData.xiV[layer]->size() > 1) {
-		if (inRange((*inData.totV[layer])[1], totRange)) {
+	// plot single-hits
+	for (Int_t layer = 0; layer < 3; layer++) {
+		if (inData.xiV[layer]->size() == 0) {
 			return;
 		}
+		if (!inRange((*inData.totV[layer])[0], totRange)) {
+			return;
+		}
+		if (inData.xiV[layer]->size() > 1) {
+			if (inRange((*inData.totV[layer])[1], totRange)) {
+				return;
+			}
+		}
 	}
-	Long64_t timing = (*inData.timeV[layer])[0] - (*inData.timeGate)[0];
-	if (!inRange(timing, timingRange)) {
+
+	// filter out irrelevant hits
+	if (!inRange(
+		((*inData.xiV[0])[0] + (*inData.xiV[1])[0]) - ((*inData.xiV[2])[0] - MISALIGNMENT_OFFSET) / MISALIGNMENT_SLOPE, {-5, 5}
+	)) {
 		return;
 	}
+
+	// detector center
+	if (!inRange((*inData.xiV[0])[0], {145, 160})) {
+		return;
+	}
+
 	hTotTiming->Fill(
-		(*inData.totV[layer])[0],
-		timing
+		(*inData.totV[0])[0],
+		(*inData.timeV[0])[0] - (*inData.timeGate)[0]	
 	);
 }
 
@@ -177,17 +159,21 @@ void plotSlewEnd(
 	Double_t c = fitAll->GetParameter(2);
 
 	addStats(hTotTiming, {
-		Form("run%s", inData.runNum.Data()),
+		Form("%s", inData.runNum.Data()),
 		Form("entries = %.0f", hTotTiming->GetEntries()), 
+		"trigger = 0",
 		Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
 		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
-		Form("a = %.6g", a),
-		Form("b = %.6g", b),
-		Form("c = %.6g", c)
+		"misalignment = {-5, 5}",
+		"xiX = {145, 160}"
+		// "xiX = {145, 160}",
+		// Form("a = %.6g", a),
+		// Form("b = %.6g", b),
+		// Form("c = %.6g", c)
 	});
 
 	hTotTiming->Draw();
-	fitAll->Draw("SAME");
+	// fitAll->Draw("SAME");
 	gPeaks->Draw("PX SAME");
 
 	if (saveGraph) {
@@ -198,6 +184,14 @@ void plotSlewEnd(
 		c1->Clear();
 	}
 
+	addStats(gTimeResTot, {
+		Form("%s", inData.runNum.Data()),
+		"trigger = 0",
+		Form("tot = {%.3g, %.3g}", totRange[0], totRange[1]),
+		Form("timing = {%lld, %lld}", timingRange[0], timingRange[1]),
+		"misalignment = {-5, 5}",
+		"xiX = {145, 160}"
+	});
 	gTimeResTot->SetMarkerStyle(20);
 	gTimeResTot->SetMarkerSize(0.5);
 	gTimeResTot->Draw();
@@ -212,9 +206,8 @@ void plotSlewEnd(
 
 void plotSlew(
 	const vector<TString>& inPaths,
-	const Float_t (&totRange)[2] = {30e3, 160e3},
-	const Long64_t (&timingRange)[2] = {-3530000, -3510000},
-	// const Long64_t (&timingRange)[2] = {-5000, 15000},
+	const Float_t (&totRange)[2] = {30e3, 180e3},
+	const Long64_t (&timingRange)[2] = {-3528000, -3518000},
 	Bool_t saveGraph = 1
 ) {
 	DataFBT2 inData(inPaths, "events");

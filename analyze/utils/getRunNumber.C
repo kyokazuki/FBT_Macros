@@ -71,6 +71,13 @@ TString getRunNumberMult(const std::vector<TString>& paths) {
     // Append the final range
     appendRun(start, prev);
 
+	// datasets
+	if (result == "1071-1075") {
+		result = "dataset1";
+	} else if (result == "1211+1213+1215+1217-1219+1221-1222+1224+1226-1234") {
+		result = "dataset2";
+	}
+
     return result;
 }
 #endif

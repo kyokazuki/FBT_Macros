@@ -295,9 +295,9 @@ struct DataTOGAXSI : virtual public DataBase {
     }
 };
 
-struct DataFBTTOGAXSI : public DataFBT2, public DataTOGAXSI {
+struct DataFBTTOGAXSI : public DataFBTCoin, public DataTOGAXSI {
 	DataFBTTOGAXSI(const vector<TString>& paths, const TString& treeName)
-		: DataBase(paths, treeName), DataFBT2(paths, treeName), DataTOGAXSI(paths, treeName) {}
+		: DataBase(paths, treeName), DataFBTCoin(paths, treeName), DataTOGAXSI(paths, treeName) {}
 };
 
 #endif

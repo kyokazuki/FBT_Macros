@@ -32,11 +32,11 @@ void processSlewLoop(const DataFBT2& inData) {
 	for (Int_t layer = 0; layer < 3; layer++) {
 		for (UInt_t hit = 0; hit < inData.totV[layer]->size(); hit++) {
 			// use different parameters for each layer
-			Long64_t slewOffset = 
-				(Long64_t) (SLEW_A[layer] * TMath::Exp(SLEW_B[layer] * (*inData.totV[layer])[hit]) + SLEW_C[layer]);
-			// use X layer parameters for all layers
 			// Long64_t slewOffset = 
-			// 	(Long64_t) (SLEW_A[0] * TMath::Exp(SLEW_B[0] * (*inData.totV[0])[hit]) + SLEW_C[0]);
+			// 	(Long64_t) (SLEW_A[layer] * TMath::Exp(SLEW_B[layer] * (*inData.totV[layer])[hit]) + SLEW_C[layer]);
+			// use X layer parameters for all layers
+			Long64_t slewOffset = 
+				(Long64_t) (SLEW_A[0] * TMath::Exp(SLEW_B[0] * (*inData.totV[layer])[hit]) + SLEW_C[0]);
 			Long64_t timeSlewed = (*inData.timeV[layer])[hit] - slewOffset;
 			(*timeSlewedV[layer]).push_back(timeSlewed);
 		}
@@ -56,13 +56,13 @@ void processSlewEnd() {
 
 // inName: "1074_totMeans" or "1074_totMeansCoined"
 void processSlew(const TString& inPath) {
-	cout << "Scaling events for " << inPath << endl;
+	cout << "Shifting events for " << inPath << endl;
 
 	// load trees
 	DataFBT2 inData({inPath}, "events");
 	inData.tree->SetBranchStatus("*", 0);
-	outFileSlewed = createOutFile(inPath, "_slewed2.root");
-	// outFileSlewed = createOutFile(inPath, "_slewed.root");
+	// outFileSlewed = createOutFile(inPath, "_slewed2.root");
+	outFileSlewed = createOutFile(inPath, "_slewed.root");
 
 	processSlewStart(inData);
 

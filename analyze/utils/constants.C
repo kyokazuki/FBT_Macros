@@ -27,12 +27,15 @@ const Double_t 		U_OFFSET_LOCAL				= 0.19153 + 0.225;
 // processing
 // slewOffset = SLEW_A * exp(SLEW_B * tot) + SLEW_C
 // timeCorrected = time - slewOffset
-const Double_t		SLEW_A[3]					= {4598.80, 4441.42, 3958.31};
-const Double_t		SLEW_B[3]					= {-2.06046e-5, -1.31647e-5, -1.85376e-5};
-const Double_t		SLEW_C[3]					= {-3.52492e6, -3.52181e6, -3.52348e6};
+// const Double_t		SLEW_A[3]					= {4598.80, 4441.42, 3958.31};
+// const Double_t		SLEW_B[3]					= {-2.06046e-5, -1.31647e-5, -1.85376e-5};
+// const Double_t		SLEW_C[3]					= {-3.52492e6, -3.52181e6, -3.52348e6};
+const Double_t		SLEW_A[3]					= {4567, 0, 0};
+const Double_t		SLEW_B[3]					= {-2.02684e-5, 0, 0};
+const Double_t		SLEW_C[3]					= {-3.52494e6, 0, 0};
 const Float_t		TOT_SCALE_TARGET			= 1;
-const Double_t		PROPAGATION_SLOPE			= 5.827;
-const Double_t		PROPAGATION_INTERCEPT		= -23.246;
+const Double_t		PROPAGATION_SLOPE			= 5.625;
+const Double_t		PROPAGATION_INTERCEPT		= 31.470;
 
 // Hodoscope
 const Int_t			HODO_MAX_ID_BINS			= 41;
